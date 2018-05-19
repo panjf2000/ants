@@ -4,6 +4,7 @@ import (
 	"testing"
 	"github.com/panjf2000/ants"
 	"sync"
+	"runtime"
 )
 
 var n = 100000
@@ -34,9 +35,9 @@ func TestDefaultPool(t *testing.T) {
 
 	ants.Wait()
 
-	//mem := runtime.MemStats{}
-	//runtime.ReadMemStats(&mem)
-	//fmt.Println("memory usage:", mem.TotalAlloc/1024)
+	mem := runtime.MemStats{}
+	runtime.ReadMemStats(&mem)
+	t.Logf("memory usage:%d", mem.TotalAlloc/1024)
 }
 
 //func TestCustomPool(t *testing.T) {
@@ -63,9 +64,10 @@ func TestNoPool(t *testing.T) {
 			demoFunc()
 		}()
 	}
+
 	wg.Wait()
-	//mem := runtime.MemStats{}
-	//runtime.ReadMemStats(&mem)
-	//fmt.Println("memory usage:", mem.TotalAlloc/1024)
+	mem := runtime.MemStats{}
+	runtime.ReadMemStats(&mem)
+	t.Logf("memory usage:%d", mem.TotalAlloc/1024)
 
 }
