@@ -3,11 +3,17 @@ package ants_test
 import (
 	"testing"
 	"github.com/panjf2000/ants"
+	"sync"
 )
+
+const RunTimes = 10000
 
 func BenchmarkPoolGroutine(b *testing.B) {
 	for i := 0; i < b.N; i++ {
-		ants.Push(demoFunc)
+		for j := 0; j < RunTimes; j++ {
+			ants.Push(demoFunc)
+		}
+		ants.Wait()
 	}
 }
 
@@ -21,6 +27,14 @@ func BenchmarkPoolGroutine(b *testing.B) {
 
 func BenchmarkGoroutine(b *testing.B) {
 	for i := 0; i < b.N; i++ {
-		go demoFunc()
+		var wg sync.WaitGroup
+		for j := 0; j < RunTimes; j++ {
+			wg.Add(1)
+			go func() {
+				defer wg.Done()
+				demoFunc()
+			}()
+		}
+		wg.Wait()
 	}
 }
