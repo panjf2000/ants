@@ -22,6 +22,6 @@ func Free() int {
 	return defaultPool.Free()
 }
 
-//func Wait() {
-//	defaultPool.Wait()
-//}
+func Wait() {
+	defaultPool.Wait()
+}

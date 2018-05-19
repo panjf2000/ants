@@ -20,7 +20,7 @@ type Pool struct {
 	launchSignal chan sig
 	destroy      chan sig
 	m            *sync.Mutex
-	//wg           *sync.WaitGroup
+	wg           *sync.WaitGroup
 }
 
 func NewPool(size int) *Pool {
@@ -31,7 +31,7 @@ func NewPool(size int) *Pool {
 		freeSignal:   make(chan sig, math.MaxInt32),
 		launchSignal: make(chan sig, math.MaxInt32),
 		destroy:      make(chan sig, runtime.GOMAXPROCS(-1)),
-		//wg:           &sync.WaitGroup{},
+		wg:           &sync.WaitGroup{},
 	}
 	p.loop()
 	return p
@@ -59,8 +59,8 @@ func (p *Pool) Push(task f) error {
 		return nil
 	}
 	p.tasks.push(task)
+	p.wg.Add(1)
 	p.launchSignal <- sig{}
-	//p.wg.Add(1)
 	return nil
 }
 func (p *Pool) Running() int {
@@ -75,9 +75,9 @@ func (p *Pool) Cap() int {
 	return int(atomic.LoadInt32(&p.capacity))
 }
 
-//func (p *Pool) Wait() {
-//	p.wg.Wait()
-//}
+func (p *Pool) Wait() {
+	p.wg.Wait()
+}
 
 func (p *Pool) Destroy() error {
 	p.m.Lock()

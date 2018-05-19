@@ -19,7 +19,7 @@ func (w *Worker) run() {
 			case f := <-w.task:
 				f()
 				w.pool.workers.push(w)
-				//w.pool.wg.Done()
+				w.pool.wg.Done()
 			case <-w.exit:
 				atomic.AddInt32(&w.pool.running, -1)
 				return

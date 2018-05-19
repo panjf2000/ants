@@ -3,16 +3,18 @@ package ants_test
 import (
 	"testing"
 	"github.com/panjf2000/ants"
-	"fmt"
-	"runtime"
+	"sync"
 )
 
 var n = 100000
 
 func demoFunc() {
+	var n int
 	for i := 0; i < 1000000; i++ {
+		n += i
 	}
 }
+
 //func demoFunc() {
 //	var n int
 //	for i := 0; i < 10000; i++ {
@@ -30,11 +32,11 @@ func TestDefaultPool(t *testing.T) {
 	t.Logf("running workers number:%d", ants.Running())
 	t.Logf("free workers number:%d", ants.Free())
 
-	//ants.Wait()
+	ants.Wait()
 
-	mem := runtime.MemStats{}
-	runtime.ReadMemStats(&mem)
-	fmt.Println("memory usage:", mem.TotalAlloc/1024)
+	//mem := runtime.MemStats{}
+	//runtime.ReadMemStats(&mem)
+	//fmt.Println("memory usage:", mem.TotalAlloc/1024)
 }
 
 //func TestCustomPool(t *testing.T) {
@@ -53,11 +55,17 @@ func TestDefaultPool(t *testing.T) {
 //}
 
 func TestNoPool(t *testing.T) {
+	var wg sync.WaitGroup
 	for i := 0; i < n; i++ {
-		go demoFunc()
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			demoFunc()
+		}()
 	}
-	mem := runtime.MemStats{}
-	runtime.ReadMemStats(&mem)
-	fmt.Println("memory usage:", mem.TotalAlloc/1024)
+	wg.Wait()
+	//mem := runtime.MemStats{}
+	//runtime.ReadMemStats(&mem)
+	//fmt.Println("memory usage:", mem.TotalAlloc/1024)
 
 }
