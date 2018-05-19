@@ -3,7 +3,6 @@ package ants
 import (
 	"runtime"
 	"sync/atomic"
-	"math"
 	"sync"
 )
 
@@ -23,7 +22,7 @@ type Pool struct {
 func NewPool(size int) *Pool {
 	p := &Pool{
 		capacity: int32(size),
-		tasks:    make(chan f, math.MaxInt32),
+		tasks:    make(chan f, 1000),
 		//workers:  &sync.Pool{New: func() interface{} { return &Worker{} }},
 		workers: make(chan *Worker, size),
 		destroy: make(chan sig, runtime.GOMAXPROCS(-1)),
