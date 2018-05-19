@@ -4,7 +4,6 @@ import (
 	"runtime"
 	"sync/atomic"
 	"sync"
-	"math"
 )
 
 type sig struct{}
@@ -12,57 +11,39 @@ type sig struct{}
 type f func()
 
 type Pool struct {
-	capacity     int32
-	running      int32
-	tasks        *ConcurrentQueue
-	workers      *ConcurrentQueue
-	freeSignal   chan sig
-	launchSignal chan sig
-	destroy      chan sig
-	m            *sync.Mutex
-	wg           *sync.WaitGroup
+	capacity   int32
+	running    int32
+	freeSignal chan sig
+	workers    []*Worker
+	workerPool sync.Pool
+	destroy    chan sig
+	m          sync.Mutex
+	wg         *sync.WaitGroup
 }
 
 func NewPool(size int) *Pool {
 	p := &Pool{
-		capacity:     int32(size),
-		tasks:        NewConcurrentQueue(),
-		workers:      NewConcurrentQueue(),
-		freeSignal:   make(chan sig, math.MaxInt32),
-		launchSignal: make(chan sig, math.MaxInt32),
-		destroy:      make(chan sig, runtime.GOMAXPROCS(-1)),
-		wg:           &sync.WaitGroup{},
+		capacity:   int32(size),
+		freeSignal: make(chan sig, size),
+		destroy:    make(chan sig, runtime.GOMAXPROCS(-1)),
+		wg:         &sync.WaitGroup{},
 	}
-	p.loop()
 	return p
 }
 
 //-------------------------------------------------------------------------
 
-func (p *Pool) loop() {
-	for i := 0; i < runtime.GOMAXPROCS(-1); i++ {
-		go func() {
-			for {
-				select {
-				case <-p.launchSignal:
-					p.getWorker().sendTask(p.tasks.pop().(f))
-				case <-p.destroy:
-					return
-				}
-			}
-		}()
-	}
-}
-
 func (p *Pool) Push(task f) error {
 	if len(p.destroy) > 0 {
 		return nil
 	}
-	p.tasks.push(task)
 	p.wg.Add(1)
-	p.launchSignal <- sig{}
+	w := p.getWorker()
+	w.sendTask(task)
+	//p.launchSignal <- sig{}
 	return nil
 }
+
 func (p *Pool) Running() int {
 	return int(atomic.LoadInt32(&p.running))
 }
@@ -102,7 +83,6 @@ func (p *Pool) newWorker() *Worker {
 	worker := &Worker{
 		pool: p,
 		task: make(chan f),
-		exit: make(chan sig),
 	}
 	worker.run()
 	atomic.AddInt32(&p.running, 1)
@@ -110,15 +90,18 @@ func (p *Pool) newWorker() *Worker {
 }
 
 func (p *Pool) getWorker() *Worker {
-	if w := p.workers.pop(); w != nil {
+	if w := p.workerPool.Get(); w != nil {
 		return w.(*Worker)
 	}
 	return p.newWorker()
 }
 
 func (p *Pool) putWorker(worker *Worker) {
-	p.workers.push(worker)
+	p.workerPool.Put(worker)
+	p.m.Lock()
+	p.workers = append(p.workers, worker)
 	if p.reachLimit() {
 		p.freeSignal <- sig{}
 	}
+	p.m.Unlock()
 }

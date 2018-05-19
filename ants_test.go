@@ -29,9 +29,9 @@ func TestDefaultPool(t *testing.T) {
 		ants.Push(demoFunc)
 	}
 
-	t.Logf("pool capacity:%d", ants.Cap())
-	t.Logf("running workers number:%d", ants.Running())
-	t.Logf("free workers number:%d", ants.Free())
+	//t.Logf("pool capacity:%d", ants.Cap())
+	//t.Logf("running workers number:%d", ants.Running())
+	//t.Logf("free workers number:%d", ants.Free())
 
 	ants.Wait()
 
@@ -69,5 +69,4 @@ func TestNoPool(t *testing.T) {
 	mem := runtime.MemStats{}
 	runtime.ReadMemStats(&mem)
 	t.Logf("memory usage:%d", mem.TotalAlloc/1024)
-
 }

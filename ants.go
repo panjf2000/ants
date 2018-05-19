@@ -1,6 +1,6 @@
 package ants
 
-const DEFAULT_POOL_SIZE = 10000
+const DEFAULT_POOL_SIZE = 50000
 
 var defaultPool = NewPool(DEFAULT_POOL_SIZE)
 
