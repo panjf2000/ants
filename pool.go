@@ -22,7 +22,7 @@ type Pool struct {
 func NewPool(size int) *Pool {
 	p := &Pool{
 		capacity: int32(size),
-		tasks:    make(chan f, 1000),
+		tasks:    make(chan f, size),
 		//workers:  &sync.Pool{New: func() interface{} { return &Worker{} }},
 		workers: make(chan *Worker, size),
 		destroy: make(chan sig, runtime.GOMAXPROCS(-1)),
