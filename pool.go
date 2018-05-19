@@ -97,13 +97,14 @@ func (p *Pool) newWorker() *Worker {
 func (p *Pool) getWorker() *Worker {
 	var worker *Worker
 	if p.reachLimit() {
+		worker = <-p.workers
+	} else {
 		select {
-			case worker = <-p.workers:
-				return worker
+		case worker = <-p.workers:
+			return worker
 		default:
 			worker = p.newWorker()
 		}
 	}
-	worker = <-p.workers
 	return worker
 }
