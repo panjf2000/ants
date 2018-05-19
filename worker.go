@@ -15,7 +15,7 @@ func (w *Worker) run() {
 			case f := <-w.task:
 				f()
 				w.pool.workers <- w
-				atomic.AddInt32(&w.pool.free, 1)
+				atomic.AddInt32(&w.pool.running, -1)
 			case <-w.exit:
 				return
 			}
