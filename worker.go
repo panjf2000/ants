@@ -9,22 +9,6 @@ type Worker struct {
 	task chan f
 }
 
-//func (w *Worker) run() {
-//	go func() {
-//		for {
-//			select {
-//			case f := <-w.task:
-//				f()
-//				w.pool.putWorker(w)
-//				w.pool.wg.Done()
-//			case <-w.exit:
-//				atomic.AddInt32(&w.pool.running, -1)
-//				return
-//			}
-//		}
-//	}()
-//}
-
 func (w *Worker) run() {
 	go func() {
 		for f := range w.task {

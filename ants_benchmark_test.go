@@ -6,7 +6,7 @@ import (
 	"sync"
 )
 
-const RunTimes = 10000
+const RunTimes = 100000
 
 func BenchmarkPoolGroutine(b *testing.B) {
 	for i := 0; i < b.N; i++ {

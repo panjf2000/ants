@@ -76,24 +76,41 @@ func (p *Pool) reachLimit() bool {
 }
 
 func (p *Pool) newWorker() *Worker {
+	var w *Worker
 	if p.reachLimit() {
 		<-p.freeSignal
 		return p.getWorker()
 	}
-	worker := &Worker{
-		pool: p,
-		task: make(chan f),
+	wp := p.workerPool.Get()
+	if wp == nil {
+		w = &Worker{
+			pool: p,
+			task: make(chan f),
+		}
+	} else {
+		w = wp.(*Worker)
 	}
-	worker.run()
+	w.run()
 	atomic.AddInt32(&p.running, 1)
-	return worker
+	return w
 }
 
 func (p *Pool) getWorker() *Worker {
-	if w := p.workerPool.Get(); w != nil {
-		return w.(*Worker)
+	var w *Worker
+	p.m.Lock()
+	workers := p.workers
+	n := len(workers) - 1
+	if n < 0 {
+		p.m.Unlock()
+		return p.newWorker()
+	} else {
+		w = workers[n]
+		workers[n] = nil
+		p.workers = workers[:n]
+		atomic.AddInt32(&p.running, 1)
 	}
-	return p.newWorker()
+	p.m.Unlock()
+	return w
 }
 
 func (p *Pool) putWorker(worker *Worker) {
