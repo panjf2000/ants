@@ -14,6 +14,7 @@ func (w *Worker) run() {
 			select {
 			case f := <-w.task:
 				f()
+				w.pool.workers <- w
 			case <-w.exit:
 				atomic.AddInt32(&w.pool.length, -1)
 				return
