@@ -11,33 +11,27 @@ type sig struct{}
 
 type f func()
 
-//type er interface{}
-
 type Pool struct {
-	capacity int32
-	running  int32
-	//tasks    chan er
-	//workers  chan er
-	tasks        *sync.Pool
-	workers      *sync.Pool
+	capacity     int32
+	running      int32
+	tasks        *ConcurrentQueue
+	workers      *ConcurrentQueue
 	freeSignal   chan sig
 	launchSignal chan sig
 	destroy      chan sig
 	m            *sync.Mutex
-	wg           *sync.WaitGroup
+	//wg           *sync.WaitGroup
 }
 
 func NewPool(size int) *Pool {
 	p := &Pool{
-		capacity: int32(size),
-		//tasks:    make(chan er, size),
-		//workers:  make(chan er, size),
-		tasks:        &sync.Pool{},
-		workers:      &sync.Pool{},
+		capacity:     int32(size),
+		tasks:        NewConcurrentQueue(),
+		workers:      NewConcurrentQueue(),
 		freeSignal:   make(chan sig, math.MaxInt32),
 		launchSignal: make(chan sig, math.MaxInt32),
 		destroy:      make(chan sig, runtime.GOMAXPROCS(-1)),
-		wg:           &sync.WaitGroup{},
+		//wg:           &sync.WaitGroup{},
 	}
 	p.loop()
 	return p
@@ -51,7 +45,7 @@ func (p *Pool) loop() {
 			for {
 				select {
 				case <-p.launchSignal:
-					p.getWorker().sendTask(p.tasks.Get().(f))
+					p.getWorker().sendTask(p.tasks.pop().(f))
 				case <-p.destroy:
 					return
 				}
@@ -64,10 +58,9 @@ func (p *Pool) Push(task f) error {
 	if len(p.destroy) > 0 {
 		return nil
 	}
-	//p.tasks <- task
-	p.tasks.Put(task)
+	p.tasks.push(task)
 	p.launchSignal <- sig{}
-	p.wg.Add(1)
+	//p.wg.Add(1)
 	return nil
 }
 func (p *Pool) Running() int {
@@ -82,9 +75,9 @@ func (p *Pool) Cap() int {
 	return int(atomic.LoadInt32(&p.capacity))
 }
 
-func (p *Pool) Wait() {
-	p.wg.Wait()
-}
+//func (p *Pool) Wait() {
+//	p.wg.Wait()
+//}
 
 func (p *Pool) Destroy() error {
 	p.m.Lock()
@@ -115,42 +108,16 @@ func (p *Pool) newWorker() *Worker {
 	return worker
 }
 
-//func (p *Pool) newWorker() *Worker {
-//	worker := &Worker{
-//		pool: p,
-//		task: make(chan f),
-//		exit: make(chan sig),
-//	}
-//	worker.run()
-//	return worker
-//}
-
-//func (p *Pool) getWorker() *Worker {
-//	defer atomic.AddInt32(&p.running, 1)
-//	var worker *Worker
-//	if p.reachLimit() {
-//		worker = (<-p.workers).(*Worker)
-//	} else {
-//		select {
-//		case w := <-p.workers:
-//			return w.(*Worker)
-//		default:
-//			worker = p.newWorker()
-//		}
-//	}
-//	return worker
-//}
-
 func (p *Pool) getWorker() *Worker {
 	defer atomic.AddInt32(&p.running, 1)
-	if w := p.workers.Get(); w != nil {
+	if w := p.workers.pop(); w != nil {
 		return w.(*Worker)
 	}
 	return p.newWorker()
 }
 
 func (p *Pool) PutWorker(worker *Worker) {
-	p.workers.Put(worker)
+	p.workers.push(worker)
 	if p.reachLimit() {
 		p.freeSignal <- sig{}
 	}

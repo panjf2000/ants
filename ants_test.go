@@ -7,15 +7,19 @@ import (
 	"runtime"
 )
 
-var n = 10
+var n = 100000
 
 func demoFunc() {
-	var n int
-	for i := 0; i < 10000; i++ {
-		n += i
+	for i := 0; i < 1000000; i++ {
 	}
-	fmt.Printf("finish task with result:%d\n", n)
 }
+//func demoFunc() {
+//	var n int
+//	for i := 0; i < 10000; i++ {
+//		n += i
+//	}
+//	fmt.Printf("finish task with result:%d\n", n)
+//}
 
 func TestDefaultPool(t *testing.T) {
 	for i := 0; i < n; i++ {
@@ -26,7 +30,7 @@ func TestDefaultPool(t *testing.T) {
 	t.Logf("running workers number:%d", ants.Running())
 	t.Logf("free workers number:%d", ants.Free())
 
-	ants.Wait()
+	//ants.Wait()
 
 	mem := runtime.MemStats{}
 	runtime.ReadMemStats(&mem)
