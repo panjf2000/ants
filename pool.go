@@ -105,18 +105,18 @@ func (p *Pool) newWorker() *Worker {
 		exit: make(chan sig),
 	}
 	worker.run()
+	atomic.AddInt32(&p.running, 1)
 	return worker
 }
 
 func (p *Pool) getWorker() *Worker {
-	defer atomic.AddInt32(&p.running, 1)
 	if w := p.workers.pop(); w != nil {
 		return w.(*Worker)
 	}
 	return p.newWorker()
 }
 
-func (p *Pool) PutWorker(worker *Worker) {
+func (p *Pool) putWorker(worker *Worker) {
 	p.workers.push(worker)
 	if p.reachLimit() {
 		p.freeSignal <- sig{}

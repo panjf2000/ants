@@ -18,7 +18,7 @@ func (w *Worker) run() {
 			select {
 			case f := <-w.task:
 				f()
-				w.pool.workers.push(w)
+				w.pool.putWorker(w)
 				w.pool.wg.Done()
 			case <-w.exit:
 				atomic.AddInt32(&w.pool.running, -1)
@@ -58,7 +58,7 @@ func (q *ConcurrentQueue) push(v interface{}) {
 func (q *ConcurrentQueue) pop() interface{} {
 	defer q.m.Unlock()
 	q.m.Lock()
-	if elem := q.queue.Back(); elem != nil{
+	if elem := q.queue.Back(); elem != nil {
 		return q.queue.Remove(elem)
 	}
 	return nil

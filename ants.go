@@ -1,8 +1,6 @@
 package ants
 
-import "math"
-
-const DEFAULT_POOL_SIZE = math.MaxInt32
+const DEFAULT_POOL_SIZE = 10000
 
 var defaultPool = NewPool(DEFAULT_POOL_SIZE)
 
