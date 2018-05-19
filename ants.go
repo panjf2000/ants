@@ -1,6 +1,8 @@
 package ants
 
-const DEFAULT_POOL_SIZE = 1000
+import "math"
+
+const DEFAULT_POOL_SIZE = math.MaxInt32
 
 var defaultPool = NewPool(DEFAULT_POOL_SIZE)
 
@@ -18,4 +20,8 @@ func Cap() int {
 
 func Free() int {
 	return defaultPool.Free()
+}
+
+func Wait() {
+	defaultPool.Wait()
 }

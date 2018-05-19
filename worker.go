@@ -14,9 +14,11 @@ func (w *Worker) run() {
 			select {
 			case f := <-w.task:
 				f()
-				w.pool.workers <- w
-				atomic.AddInt32(&w.pool.running, -1)
+				//w.pool.workers <- w
+				w.pool.workers.Put(w)
+				w.pool.wg.Done()
 			case <-w.exit:
+				atomic.AddInt32(&w.pool.running, -1)
 				return
 			}
 		}
