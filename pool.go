@@ -18,7 +18,7 @@ type Pool struct {
 	workerPool sync.Pool
 	destroy    chan sig
 	m          sync.Mutex
-	wg         *sync.WaitGroup
+	wg         sync.WaitGroup
 }
 
 func NewPool(size int) *Pool {
@@ -26,7 +26,6 @@ func NewPool(size int) *Pool {
 		capacity:   int32(size),
 		freeSignal: make(chan sig, size),
 		destroy:    make(chan sig, runtime.GOMAXPROCS(-1)),
-		wg:         &sync.WaitGroup{},
 	}
 	return p
 }
