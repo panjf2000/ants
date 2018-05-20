@@ -6,7 +6,7 @@ import (
 	"sync"
 )
 
-const RunTimes = 10
+const RunTimes = 10000000
 
 func BenchmarkGoroutine(b *testing.B) {
 	for i := 0; i < b.N; i++ {
