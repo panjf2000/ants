@@ -40,7 +40,6 @@ func (p *Pool) Push(task f) error {
 	p.wg.Add(1)
 	w := p.getWorker()
 	w.sendTask(task)
-	//p.launchSignal <- sig{}
 	return nil
 }
 
