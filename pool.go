@@ -19,9 +19,9 @@
 package ants
 
 import (
-	"sync/atomic"
-	"sync"
 	"math"
+	"sync"
+	"sync/atomic"
 	"time"
 )
 
@@ -33,27 +33,27 @@ type f func()
 // of goroutines to a given number by recycling goroutines.
 type Pool struct {
 	// Capacity of the pool.
-	capacity   int32
+	capacity int32
 
 	// The number of the currently running goroutines.
-	running    int32
+	running int32
 
 	// Signal is used to notice pool there are available
 	// workers which can be sent to work.
 	freeSignal chan sig
 
 	// A slice that store the available workers.
-	workers    []*Worker
+	workers []*Worker
 
 	workerPool sync.Pool
 
 	// It is used to notice the pool to closed itself.
-	release    chan sig
+	release chan sig
 
-	lock       sync.Mutex
+	lock sync.Mutex
 
 	// It is used to confirm whether this pool has been closed.
-	closed     int32
+	closed int32
 }
 
 func NewPool(size int) (*Pool, error) {

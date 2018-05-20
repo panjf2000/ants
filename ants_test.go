@@ -20,10 +20,10 @@
 package ants_test
 
 import (
-	"testing"
 	"github.com/panjf2000/ants"
-	"sync"
 	"runtime"
+	"sync"
+	"testing"
 	"time"
 )
 
