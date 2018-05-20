@@ -2,7 +2,9 @@
 
 <div align="center"><img src="https://github.com/panjf2000/ants/blob/master/ants_logo.png"/></div>
 
-<center>A goroutine pool for Go</center>
+```
+<p align="center">A goroutine pool for Go</p>
+```
 
 
 [![godoc for panjf2000/ants][1]][2]
@@ -88,6 +90,8 @@ All the tasks submitted to ants pool will not be guaranteed to be processed in o
 ## Benchmarks
 
 <div align="center"><img src="https://github.com/panjf2000/ants/blob/master/ants_benchmarks.png"/></div>
+
+Benchmarks with 1000w tasks, both unlimited goroutines and ants pool, and the capacity of this ants goroutine-pool was limited to 5w.
 
 - BenchmarkGoroutine-4 represent the benchmarks with unlimited goroutines in golang
 
