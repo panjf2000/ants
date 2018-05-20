@@ -1,3 +1,5 @@
+// go test -bench=. -benchmem=true -run=none
+
 package ants_test
 
 import (
