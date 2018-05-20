@@ -22,7 +22,7 @@ func BenchmarkGoroutine(b *testing.B) {
 	}
 }
 
-func BenchmarkPoolGroutine(b *testing.B) {
+func BenchmarkPoolGoroutine(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		var wg sync.WaitGroup
 		for j := 0; j < RunTimes; j++ {
@@ -35,11 +35,3 @@ func BenchmarkPoolGroutine(b *testing.B) {
 		wg.Wait()
 	}
 }
-
-//func BenchmarkPoolGroutine(b *testing.B) {
-//	p := ants.NewPool(size)
-//	b.ResetTimer()
-//	for i := 0; i < b.N; i++ {
-//		p.Push(demoFunc)
-//	}
-//}
