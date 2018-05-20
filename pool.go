@@ -29,14 +29,30 @@ type sig struct{}
 
 type f func()
 
+// Pool accept the tasks from client,it will limit the total
+// of goroutines to a given number by recycling goroutines.
 type Pool struct {
+	// Capacity of the pool.
 	capacity   int32
+
+	// The number of the currently running goroutines.
 	running    int32
+
+	// Signal is used to notice pool there are available
+	// workers which can be sent to work.
 	freeSignal chan sig
+
+	// A slice that store the available workers.
 	workers    []*Worker
+
 	workerPool sync.Pool
+
+	// It is used to notice the pool to closed itself.
 	release    chan sig
+
 	lock       sync.Mutex
+
+	// It is used to confirm whether this pool has been closed.
 	closed     int32
 }
 
@@ -56,6 +72,8 @@ func NewPool(size int) (*Pool, error) {
 
 //-------------------------------------------------------------------------
 
+// scanAndClean is a goroutine who will periodically clean up
+// after it is noticed that this pool is closed.
 func (p *Pool) scanAndClean() {
 	ticker := time.NewTicker(DEFAULT_CLEAN_INTERVAL_TIME * time.Second)
 	go func() {
@@ -72,6 +90,7 @@ func (p *Pool) scanAndClean() {
 	}()
 }
 
+// Push submit a task to pool
 func (p *Pool) Push(task f) error {
 	if atomic.LoadInt32(&p.closed) == 1 {
 		return PoolClosedError
@@ -81,18 +100,22 @@ func (p *Pool) Push(task f) error {
 	return nil
 }
 
+// Running returns the number of the currently running goroutines
 func (p *Pool) Running() int {
 	return int(atomic.LoadInt32(&p.running))
 }
 
+// Free returns the available goroutines to work
 func (p *Pool) Free() int {
 	return int(atomic.LoadInt32(&p.capacity) - atomic.LoadInt32(&p.running))
 }
 
+// Cap returns the capacity of this pool
 func (p *Pool) Cap() int {
 	return int(atomic.LoadInt32(&p.capacity))
 }
 
+// Release Closed this pool
 func (p *Pool) Release() error {
 	p.lock.Lock()
 	atomic.StoreInt32(&p.closed, 1)
@@ -101,12 +124,14 @@ func (p *Pool) Release() error {
 	return nil
 }
 
+// Resize change the capacity of this pool
 func (p *Pool) ReSize(size int) {
 	atomic.StoreInt32(&p.capacity, int32(size))
 }
 
 //-------------------------------------------------------------------------
 
+// getWorker returns a available worker to run the tasks.
 func (p *Pool) getWorker() *Worker {
 	var w *Worker
 	waiting := false
@@ -157,6 +182,7 @@ func (p *Pool) getWorker() *Worker {
 	return w
 }
 
+// putWorker puts a worker back into free pool, recycling the goroutines.
 func (p *Pool) putWorker(worker *Worker) {
 	p.workerPool.Put(worker)
 	p.lock.Lock()

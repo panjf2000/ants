@@ -22,32 +22,42 @@ package ants
 import "github.com/iris-contrib/errors"
 
 const (
-	DEFAULT_POOL_SIZE           = 50000
+	// Default capacity for a default goroutine pool
+	DEFAULT_POOL_SIZE = 50000
+
+	// Interval time to clean up goroutines
 	DEFAULT_CLEAN_INTERVAL_TIME = 30
 )
 
+// Init a instance pool when importing ants
 var defaultPool, _ = NewPool(DEFAULT_POOL_SIZE)
 
+// Push submit a task to pool
 func Push(task f) error {
 	return defaultPool.Push(task)
 }
 
+// Running returns the number of the currently running goroutines
 func Running() int {
 	return defaultPool.Running()
 }
 
+// Cap returns the capacity of this default pool
 func Cap() int {
 	return defaultPool.Cap()
 }
 
+// Free returns the available goroutines to work
 func Free() int {
 	return defaultPool.Free()
 }
 
+// Release Closed the default pool
 func Release() {
-
+	defaultPool.Release()
 }
 
+// Errors for the Ants API
 var (
 	PoolSizeInvalidError = errors.New("invalid size for pool")
 	PoolClosedError      = errors.New("this pool has been closed")

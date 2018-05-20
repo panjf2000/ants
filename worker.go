@@ -24,11 +24,19 @@ import (
 	"sync/atomic"
 )
 
+// Worker is the actual executor who run the tasks,
+// it will start a goroutine that accept tasks and
+// perform function calls.
 type Worker struct {
+	// A pool who owns this worker.
 	pool *Pool
+
+	// The job should be done.
 	task chan f
 }
 
+// run will start a goroutine to repeat the process
+// that perform the function calls.
 func (w *Worker) run() {
 	go func() {
 		for f := range w.task {
@@ -42,10 +50,12 @@ func (w *Worker) run() {
 	}()
 }
 
+// stop this worker.
 func (w *Worker) stop() {
 	w.task <- nil
 }
 
+// sendTask send a task to this worker.
 func (w *Worker) sendTask(task f) {
 	w.task <- task
 }

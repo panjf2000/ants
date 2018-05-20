@@ -26,9 +26,7 @@ var n = 1000000
 //}
 
 func forSleep() {
-	time.Sleep(time.Millisecond)
-	//for i := 0; i < 10000; i++ {
-	//}
+	time.Sleep(3 * time.Millisecond)
 }
 
 func TestNoPool(t *testing.T) {
