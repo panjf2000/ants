@@ -8,6 +8,7 @@
 
 [![godoc for panjf2000/ants][1]][2]
 [![goreportcard for panjf2000/ants][3]][4]
+![License](https://img.shields.io/dub/l/vibe-d.svg)
 
 Package ants implements a fixed goroutine pool for managing and recycling a massive number of goroutines, allowing developers to limit the number of goroutines that created by your concurrent programs.
 
