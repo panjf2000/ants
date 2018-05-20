@@ -16,6 +16,7 @@
 // HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
 // OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 // SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
 package ants
 
 import (
@@ -56,9 +57,10 @@ type Pool struct {
 	closed int32
 }
 
+// NewPool generates a instance of ants pool
 func NewPool(size int) (*Pool, error) {
 	if size <= 0 {
-		return nil, PoolSizeInvalidError
+		return nil, ErrPoolSizeInvalid
 	}
 	p := &Pool{
 		capacity:   int32(size),
@@ -75,7 +77,7 @@ func NewPool(size int) (*Pool, error) {
 // scanAndClean is a goroutine who will periodically clean up
 // after it is noticed that this pool is closed.
 func (p *Pool) scanAndClean() {
-	ticker := time.NewTicker(DEFAULT_CLEAN_INTERVAL_TIME * time.Second)
+	ticker := time.NewTicker(DefaultCleanIntervalTime * time.Second)
 	go func() {
 		ticker.Stop()
 		for range ticker.C {
@@ -93,7 +95,7 @@ func (p *Pool) scanAndClean() {
 // Push submit a task to pool
 func (p *Pool) Push(task f) error {
 	if atomic.LoadInt32(&p.closed) == 1 {
-		return PoolClosedError
+		return ErrPoolClosed
 	}
 	w := p.getWorker()
 	w.sendTask(task)
@@ -124,7 +126,7 @@ func (p *Pool) Release() error {
 	return nil
 }
 
-// Resize change the capacity of this pool
+// ReSize change the capacity of this pool
 func (p *Pool) ReSize(size int) {
 	atomic.StoreInt32(&p.capacity, int32(size))
 }
