@@ -22,9 +22,9 @@
 package ants_test
 
 import (
-	"testing"
 	"github.com/panjf2000/ants"
 	"sync"
+	"testing"
 )
 
 const RunTimes = 10000000
