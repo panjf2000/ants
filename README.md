@@ -91,7 +91,7 @@ All the tasks submitted to ants pool will not be guaranteed to be processed in o
 
 <div align="center"><img src="https://github.com/panjf2000/ants/blob/master/ants_benchmarks.png"/></div>
 
-Benchmarks with 1000w tasks, both unlimited goroutines and ants pool, and the capacity of this ants goroutine-pool was limited to 5w.
+ In that benchmark-picture, the first and second benchmarks performed test with 100w tasks and the rest of benchmarks performed test with 1000w tasks, both unlimited goroutines and ants pool, and the capacity of this ants goroutine-pool was limited to 5w.
 
 - BenchmarkGoroutine-4 represent the benchmarks with unlimited goroutines in golang
 
