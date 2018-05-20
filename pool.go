@@ -19,10 +19,10 @@
 package ants
 
 import (
-	"runtime"
 	"sync/atomic"
 	"sync"
 	"math"
+	"time"
 )
 
 type sig struct{}
@@ -35,25 +35,46 @@ type Pool struct {
 	freeSignal chan sig
 	workers    []*Worker
 	workerPool sync.Pool
-	destroy    chan sig
+	release    chan sig
 	lock       sync.Mutex
+	closed     int32
 }
 
-func NewPool(size int) *Pool {
+func NewPool(size int) (*Pool, error) {
+	if size <= 0 {
+		return nil, PoolSizeInvalidError
+	}
 	p := &Pool{
 		capacity:   int32(size),
 		freeSignal: make(chan sig, math.MaxInt32),
-		destroy:    make(chan sig, runtime.GOMAXPROCS(-1)),
+		release:    make(chan sig),
+		closed:     0,
 	}
 
-	return p
+	return p, nil
 }
 
 //-------------------------------------------------------------------------
 
+func (p *Pool) scanAndClean() {
+	ticker := time.NewTicker(DEFAULT_CLEAN_INTERVAL_TIME * time.Second)
+	go func() {
+		ticker.Stop()
+		for range ticker.C {
+			if atomic.LoadInt32(&p.closed) == 1 {
+				p.lock.Lock()
+				for _, w := range p.workers {
+					w.stop()
+				}
+				p.lock.Unlock()
+			}
+		}
+	}()
+}
+
 func (p *Pool) Push(task f) error {
-	if len(p.destroy) > 0 {
-		return nil
+	if atomic.LoadInt32(&p.closed) == 1 {
+		return PoolClosedError
 	}
 	w := p.getWorker()
 	w.sendTask(task)
@@ -72,13 +93,16 @@ func (p *Pool) Cap() int {
 	return int(atomic.LoadInt32(&p.capacity))
 }
 
-func (p *Pool) Destroy() error {
+func (p *Pool) Release() error {
 	p.lock.Lock()
-	defer p.lock.Unlock()
-	for i := 0; i < runtime.GOMAXPROCS(-1)+1; i++ {
-		p.destroy <- sig{}
-	}
+	atomic.StoreInt32(&p.closed, 1)
+	close(p.release)
+	p.lock.Unlock()
 	return nil
+}
+
+func (p *Pool) ReSize(size int) {
+	atomic.StoreInt32(&p.capacity, int32(size))
 }
 
 //-------------------------------------------------------------------------

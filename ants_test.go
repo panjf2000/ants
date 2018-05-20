@@ -4,8 +4,8 @@ import (
 	"testing"
 	"github.com/panjf2000/ants"
 	"sync"
-	"time"
 	"runtime"
+	"time"
 )
 
 var n = 1000000
@@ -27,6 +27,8 @@ var n = 1000000
 
 func forSleep() {
 	time.Sleep(time.Millisecond)
+	//for i := 0; i < 10000; i++ {
+	//}
 }
 
 func TestNoPool(t *testing.T) {
@@ -68,7 +70,7 @@ func TestDefaultPool(t *testing.T) {
 }
 
 func TestCustomPool(t *testing.T) {
-	p := ants.NewPool(30000)
+	p, _ := ants.NewPool(30000)
 	var wg sync.WaitGroup
 	for i := 0; i < n; i++ {
 		wg.Add(1)

@@ -19,9 +19,14 @@
 
 package ants
 
-const DEFAULT_POOL_SIZE = 50000
+import "github.com/iris-contrib/errors"
 
-var defaultPool = NewPool(DEFAULT_POOL_SIZE)
+const (
+	DEFAULT_POOL_SIZE           = 50000
+	DEFAULT_CLEAN_INTERVAL_TIME = 30
+)
+
+var defaultPool, _ = NewPool(DEFAULT_POOL_SIZE)
 
 func Push(task f) error {
 	return defaultPool.Push(task)
@@ -38,3 +43,12 @@ func Cap() int {
 func Free() int {
 	return defaultPool.Free()
 }
+
+func Release() {
+
+}
+
+var (
+	PoolSizeInvalidError = errors.New("invalid size for pool")
+	PoolClosedError      = errors.New("this pool has been closed")
+)
