@@ -11,17 +11,12 @@ func myFunc() {
 }
 
 func main() {
-	//
 	runTimes := 10000
-
-	// set 100 the size of goroutine pool
-	p, _ := ants.NewPool(100)
-
 	var wg sync.WaitGroup
-	// submit
+	// submit all your tasks to ants pool
 	for i := 0; i < runTimes; i++ {
 		wg.Add(1)
-		p.Push(func() {
+		ants.Push(func() {
 			myFunc()
 			wg.Done()
 		})
@@ -29,3 +24,22 @@ func main() {
 	wg.Wait()
 	fmt.Println("finish all tasks!")
 }
+
+//func main() {
+//	runTimes := 10000
+//
+//	// set 100 the size of goroutine pool
+//	p, _ := ants.NewPool(100)
+//
+//	var wg sync.WaitGroup
+//	// submit
+//	for i := 0; i < runTimes; i++ {
+//		wg.Add(1)
+//		p.Push(func() {
+//			myFunc()
+//			wg.Done()
+//		})
+//	}
+//	wg.Wait()
+//	fmt.Println("finish all tasks!")
+//}
