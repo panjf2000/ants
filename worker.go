@@ -18,7 +18,6 @@ func (w *Worker) run() {
 			}
 			f()
 			w.pool.putWorker(w)
-			w.pool.wg.Done()
 		}
 	}()
 }

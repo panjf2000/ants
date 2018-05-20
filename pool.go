@@ -18,7 +18,6 @@ type Pool struct {
 	workerPool sync.Pool
 	destroy    chan sig
 	m          sync.Mutex
-	wg         sync.WaitGroup
 }
 
 func NewPool(size int) *Pool {
@@ -27,16 +26,30 @@ func NewPool(size int) *Pool {
 		freeSignal: make(chan sig, size),
 		destroy:    make(chan sig, runtime.GOMAXPROCS(-1)),
 	}
+
 	return p
 }
 
 //-------------------------------------------------------------------------
+//func (p *Pool) loop() {
+//	for i := 0; i < runtime.GOMAXPROCS(-1); i++ {
+//		go func() {
+//			for {
+//				select {
+//				case <-p.launchSignal:
+//					p.getWorker().sendTask(p.tasks.pop().(f))
+//				case <-p.destroy:
+//					return
+//				}
+//			}
+//		}()
+//	}
+//}
 
 func (p *Pool) Push(task f) error {
 	if len(p.destroy) > 0 {
 		return nil
 	}
-	p.wg.Add(1)
 	w := p.getWorker()
 	w.sendTask(task)
 	return nil
@@ -52,10 +65,6 @@ func (p *Pool) Free() int {
 
 func (p *Pool) Cap() int {
 	return int(atomic.LoadInt32(&p.capacity))
-}
-
-func (p *Pool) Wait() {
-	p.wg.Wait()
 }
 
 func (p *Pool) Destroy() error {

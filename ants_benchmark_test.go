@@ -6,14 +6,33 @@ import (
 	"sync"
 )
 
-const RunTimes = 100000
+const RunTimes = 10
+
+func BenchmarkGoroutine(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		var wg sync.WaitGroup
+		for j := 0; j < RunTimes; j++ {
+			wg.Add(1)
+			go func() {
+				forSleep()
+				wg.Done()
+			}()
+		}
+		wg.Wait()
+	}
+}
 
 func BenchmarkPoolGroutine(b *testing.B) {
 	for i := 0; i < b.N; i++ {
+		var wg sync.WaitGroup
 		for j := 0; j < RunTimes; j++ {
-			ants.Push(demoFunc)
+			wg.Add(1)
+			ants.Push(func() {
+				forSleep()
+				wg.Done()
+			})
 		}
-		ants.Wait()
+		wg.Wait()
 	}
 }
 
@@ -25,16 +44,3 @@ func BenchmarkPoolGroutine(b *testing.B) {
 //	}
 //}
 
-func BenchmarkGoroutine(b *testing.B) {
-	for i := 0; i < b.N; i++ {
-		var wg sync.WaitGroup
-		for j := 0; j < RunTimes; j++ {
-			wg.Add(1)
-			go func() {
-				defer wg.Done()
-				demoFunc()
-			}()
-		}
-		wg.Wait()
-	}
-}

@@ -5,16 +5,17 @@ import (
 	"github.com/panjf2000/ants"
 	"sync"
 	"runtime"
+	"time"
 )
 
-var n = 100000
+var n = 1000000
 
-func demoFunc() {
-	var n int
-	for i := 0; i < 1000000; i++ {
-		n += i
-	}
-}
+//func demoFunc() {
+//	var n int
+//	for i := 0; i < 1000000; i++ {
+//		n += i
+//	}
+//}
 
 //func demoFunc() {
 //	var n int
@@ -24,16 +25,40 @@ func demoFunc() {
 //	fmt.Printf("finish task with result:%d\n", n)
 //}
 
-func TestDefaultPool(t *testing.T) {
+func forSleep() {
+	time.Sleep(time.Millisecond)
+}
+
+func TestNoPool(t *testing.T) {
+	var wg sync.WaitGroup
 	for i := 0; i < n; i++ {
-		ants.Push(demoFunc)
+		wg.Add(1)
+		go func() {
+			forSleep()
+			wg.Done()
+		}()
 	}
+
+	wg.Wait()
+	mem := runtime.MemStats{}
+	runtime.ReadMemStats(&mem)
+	t.Logf("memory usage:%d", mem.TotalAlloc/1024)
+}
+
+func TestDefaultPool(t *testing.T) {
+	var wg sync.WaitGroup
+	for i := 0; i < n; i++ {
+		wg.Add(1)
+		ants.Push(func() {
+			forSleep()
+			wg.Done()
+		})
+	}
+	wg.Wait()
 
 	//t.Logf("pool capacity:%d", ants.Cap())
 	//t.Logf("running workers number:%d", ants.Running())
 	//t.Logf("free workers number:%d", ants.Free())
-
-	ants.Wait()
 
 	mem := runtime.MemStats{}
 	runtime.ReadMemStats(&mem)
@@ -54,19 +79,3 @@ func TestDefaultPool(t *testing.T) {
 //	runtime.ReadMemStats(&mem)
 //
 //}
-
-func TestNoPool(t *testing.T) {
-	var wg sync.WaitGroup
-	for i := 0; i < n; i++ {
-		wg.Add(1)
-		go func() {
-			defer wg.Done()
-			demoFunc()
-		}()
-	}
-
-	wg.Wait()
-	mem := runtime.MemStats{}
-	runtime.ReadMemStats(&mem)
-	t.Logf("memory usage:%d", mem.TotalAlloc/1024)
-}
