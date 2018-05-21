@@ -71,7 +71,7 @@ ants.Push(func() {})
 ```
 
 ## Custom limited pool
-Ants also supports the custom limited pool. You can use the `NewPool` method to generate a pool with the given capacity, as following:
+Ants also supports custom limited pool. You can use the `NewPool` method to create a pool with the given capacity, as following:
 
 ``` go
 // set 10000 the size of goroutine pool
