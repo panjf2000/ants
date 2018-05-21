@@ -36,27 +36,28 @@ type f func()
 // Pool accept the tasks from client,it will limit the total
 // of goroutines to a given number by recycling goroutines.
 type Pool struct {
-	// Capacity of the pool.
+	// capacity of the pool.
 	capacity int32
 
-	// The number of the currently running goroutines.
+	// running is the number of the currently running goroutines.
 	running int32
 
-	// Signal is used to notice pool there are available
+	// signal is used to notice pool there are available
 	// workers which can be sent to work.
 	freeSignal chan sig
 
-	// A slice that store the available workers.
+	// workers is a slice that store the available workers.
 	workers []*Worker
 
+	// workerPool is a pool that saves a set of temporary objects.
 	workerPool sync.Pool
 
-	// It is used to notice the pool to closed itself.
+	// release is used to notice the pool to closed itself.
 	release chan sig
 
 	lock sync.Mutex
 
-	// It is used to confirm whether this pool has been closed.
+	// closed is used to confirm whether this pool has been closed.
 	closed int32
 }
 
