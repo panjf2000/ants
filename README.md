@@ -32,7 +32,6 @@ glide get github.com/panjf2000/ants
 ```
 
 ## How to use
-
 If your program will generate a massive number of goroutines and you don't want them to consume a vast amount of memory, with ants, all you need to do is to import ants package and submit all your tasks to the default limited pool created when ants was imported:
 
 ``` go
@@ -65,15 +64,23 @@ func main() {
 
 ```
 
-And ants also supports the custom limited pool. You can use the `NewPool` method to generate a pool with the given capacity, as following:
+## Submit tasks
+Tasks can be submitted by calling `ants.Push(func())`
+```go
+ants.Push(func() {})
+```
+
+## Custom limited pool
+Ants also supports the custom limited pool. You can use the `NewPool` method to generate a pool with the given capacity, as following:
 
 ``` go
-	// set 10000 the size of goroutine pool
-	p, _ := ants.NewPool(10000)
+// set 10000 the size of goroutine pool
+p, _ := ants.NewPool(10000)
+// submit a task
+p.Push(func() {})
 ```
 
 ## Readjusting pool capacity
-
 You can change ants pool capacity at any time with `ReSize(int)`:
 
 ``` go
@@ -84,11 +91,9 @@ pool.ReSize(100000) // Readjust its capacity to 100000
 Don't worry about the synchronous problems in this case, this method is thread-safe.
 
 ## About sequence
-
 All the tasks submitted to ants pool will not be guaranteed to be processed in order, because those tasks distribute among a series of concurrent workers, thus those tasks are processed concurrently.
 
 ## Benchmarks
-
 <div align="center"><img src="https://github.com/panjf2000/ants/blob/master/ants_benchmarks.png"/></div>
 
  In that benchmark-picture, the first and second benchmarks performed test with 100w tasks and the rest of benchmarks performed test with 1000w tasks, both unlimited goroutines and ants pool, and the capacity of this ants goroutine-pool was limited to 5w.
