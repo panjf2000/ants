@@ -22,7 +22,7 @@
 
 package ants
 
-import "github.com/iris-contrib/errors"
+import "errors"
 
 const (
 	// DefaultPoolSize is the default capacity for a default goroutine pool
