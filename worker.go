@@ -30,10 +30,10 @@ import (
 // it will start a goroutine that accept tasks and
 // perform function calls.
 type Worker struct {
-	// A pool who owns this worker.
+	// pool who owns this worker.
 	pool *Pool
 
-	// The job should be done.
+	// task is a job should be done.
 	task chan f
 }
 
