@@ -14,9 +14,9 @@ Package ants implements a fixed goroutine pool for managing and recycling a mass
 
 ## Features:
 
-- Automatically managing and recycling a massive number of goroutines
-- Friendly interfaces: submitting tasks, getting the number of running goroutines, readjusting capacity of pool dynamically, closing pool
-- Efficient in memory usage and it even achieves higher performance than unlimited goroutines in golang
+- Automatically managing and recycling a massive number of goroutines.
+- Friendly interfaces: submitting tasks, getting the number of running goroutines, readjusting capacity of pool dynamically, closing pool.
+- Efficient in memory usage and it even achieves higher performance than unlimited goroutines in golang.
 
 
 ## How to install
@@ -93,9 +93,9 @@ All the tasks submitted to ants pool will not be guaranteed to be processed in o
 
  In that benchmark-picture, the first and second benchmarks performed test with 100w tasks and the rest of benchmarks performed test with 1000w tasks, both unlimited goroutines and ants pool, and the capacity of this ants goroutine-pool was limited to 5w.
 
-- BenchmarkGoroutine-4 represent the benchmarks with unlimited goroutines in golang
+- BenchmarkGoroutine-4 represent the benchmarks with unlimited goroutines in golang.
 
-- BenchmarkPoolGroutine-4 represent the benchmarks with a ants pool
+- BenchmarkPoolGroutine-4 represent the benchmarks with a ants pool.
 
 The test data above is a basic benchmark and the more detailed benchmarks will be uploaded later.
 
