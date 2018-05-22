@@ -41,8 +41,10 @@ func demoPoolFunc(args interface{}) error {
 }
 
 func BenchmarkGoroutine(b *testing.B) {
+	b.N = 1
 	for i := 0; i < b.N; i++ {
 		var wg sync.WaitGroup
+		b.ResetTimer()
 		for j := 0; j < RunTimes; j++ {
 			wg.Add(1)
 			go func() {
