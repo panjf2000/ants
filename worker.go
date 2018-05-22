@@ -40,6 +40,7 @@ type Worker struct {
 // run will start a goroutine to repeat the process
 // that perform the function calls.
 func (w *Worker) run() {
+	atomic.AddInt32(&w.pool.running, 1)
 	go func() {
 		for f := range w.task {
 			if f == nil {

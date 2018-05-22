@@ -178,20 +178,19 @@ func (p *PoolWithFunc) getWorker() *WorkerWithFunc {
 		if wp == nil {
 			w = &WorkerWithFunc{
 				pool: p,
-				args: make(chan interface{}),
+				args: make(chan interface{}, workerArgsCap),
 			}
-			w.run()
-			atomic.AddInt32(&p.running, 1)
 		} else {
 			w = wp.(*WorkerWithFunc)
 		}
+		w.run()
+		p.workerPool.Put(w)
 	}
 	return w
 }
 
 // putWorker puts a worker back into free pool, recycling the goroutines.
 func (p *PoolWithFunc) putWorker(worker *WorkerWithFunc) {
-	p.workerPool.Put(worker)
 	p.lock.Lock()
 	p.workers = append(p.workers, worker)
 	p.lock.Unlock()
