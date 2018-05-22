@@ -173,7 +173,7 @@ func (p *PoolWithFunc) getWorker() *WorkerWithFunc {
 			p.lock.Unlock()
 			break
 		}
-	} else {
+	} else if w == nil {
 		wp := p.workerPool.Get()
 		if wp == nil {
 			w = &WorkerWithFunc{
