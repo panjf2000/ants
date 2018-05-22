@@ -36,7 +36,7 @@ func BenchmarkGoroutine(b *testing.B) {
 		for j := 0; j < RunTimes; j++ {
 			wg.Add(1)
 			go func() {
-				forSleep()
+				demoFunc()
 				wg.Done()
 			}()
 		}
@@ -50,7 +50,7 @@ func BenchmarkPoolGoroutine(b *testing.B) {
 		for j := 0; j < RunTimes; j++ {
 			wg.Add(1)
 			ants.Push(func() {
-				forSleep()
+				demoFunc()
 				wg.Done()
 			})
 		}
