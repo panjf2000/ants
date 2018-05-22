@@ -29,7 +29,7 @@ import (
 	"testing"
 )
 
-var n = 10000000
+var n = 1000000
 
 //func demoFunc() {
 //	var n int
@@ -54,21 +54,59 @@ func demoFunc() {
 	}
 }
 
-func TestDefaultPool(t *testing.T) {
+//func TestDefaultPool(t *testing.T) {
+//	var wg sync.WaitGroup
+//	for i := 0; i < n; i++ {
+//		wg.Add(1)
+//		ants.Push(func() {
+//			demoFunc()
+//			wg.Done()
+//		})
+//	}
+//	wg.Wait()
+//
+//	//t.Logf("pool capacity:%d", ants.Cap())
+//	//t.Logf("free workers number:%d", ants.Free())
+//
+//	t.Logf("running workers number:%d", ants.Running())
+//	mem := runtime.MemStats{}
+//	runtime.ReadMemStats(&mem)
+//	t.Logf("memory usage:%d", mem.TotalAlloc/1024)
+//}
+
+//func TestNoPool(t *testing.T) {
+//	var wg sync.WaitGroup
+//	for i := 0; i < n; i++ {
+//		wg.Add(1)
+//		go func() {
+//			demoFunc()
+//			wg.Done()
+//		}()
+//	}
+//
+//	wg.Wait()
+//	mem := runtime.MemStats{}
+//	runtime.ReadMemStats(&mem)
+//	t.Logf("memory usage:%d", mem.TotalAlloc/1024)
+//}
+
+func TestAntsPoolWithFunc(t *testing.T) {
 	var wg sync.WaitGroup
+	p, _ := ants.NewPoolWithFunc(100000, func(i interface{}) error {
+		demoPoolFunc(i)
+		wg.Done()
+		return nil
+	})
 	for i := 0; i < n; i++ {
 		wg.Add(1)
-		ants.Push(func() {
-			demoFunc()
-			wg.Done()
-		})
+		p.Serve(n)
 	}
 	wg.Wait()
 
 	//t.Logf("pool capacity:%d", ants.Cap())
 	//t.Logf("free workers number:%d", ants.Free())
 
-	t.Logf("running workers number:%d", ants.Running())
+	t.Logf("running workers number:%d", p.Running())
 	mem := runtime.MemStats{}
 	runtime.ReadMemStats(&mem)
 	t.Logf("memory usage:%d", mem.TotalAlloc/1024)
@@ -79,7 +117,7 @@ func TestNoPool(t *testing.T) {
 	for i := 0; i < n; i++ {
 		wg.Add(1)
 		go func() {
-			demoFunc()
+			demoPoolFunc(n)
 			wg.Done()
 		}()
 	}

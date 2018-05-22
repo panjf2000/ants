@@ -39,7 +39,7 @@ type WorkerWithFunc struct {
 
 // run will start a goroutine to repeat the process
 // that perform the function calls.
-func (w *WorkerWithFunc) runWithFunc() {
+func (w *WorkerWithFunc) run() {
 	go func() {
 		for args := range w.args {
 			if args == nil {
@@ -47,17 +47,17 @@ func (w *WorkerWithFunc) runWithFunc() {
 				return
 			}
 			w.pool.poolFunc(args)
-			w.pool.putWorkerWithFunc(w)
+			w.pool.putWorker(w)
 		}
 	}()
 }
 
 // stop this worker.
-func (w *WorkerWithFunc) stopWithFunc() {
+func (w *WorkerWithFunc) stop() {
 	w.args <- nil
 }
 
 // sendTask send a task to this worker.
-func (w *WorkerWithFunc) sendTaskWithFunc(args interface{}) {
+func (w *WorkerWithFunc) sendTask(args interface{}) {
 	w.args <- args
 }
