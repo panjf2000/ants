@@ -97,7 +97,7 @@ func (p *PoolWithFunc) scanAndClean() {
 	}()
 }
 
-// Push submit a task to pool
+// Serve submit a task to pool
 func (p *PoolWithFunc) Serve(args interface{}) error {
 	if atomic.LoadInt32(&p.closed) == 1 {
 		return ErrPoolClosed

@@ -23,9 +23,10 @@
 package ants_test
 
 import (
-	"github.com/panjf2000/ants"
 	"sync"
 	"testing"
+
+	"github.com/panjf2000/ants"
 )
 
 const RunTimes = 1000000
@@ -53,24 +54,29 @@ func BenchmarkGoroutine(b *testing.B) {
 	}
 }
 
-//func BenchmarkAntsPool(b *testing.B) {
-//	for i := 0; i < b.N; i++ {
-//		var wg sync.WaitGroup
-//		for j := 0; j < RunTimes; j++ {
-//			wg.Add(1)
-//			ants.Push(func() {
-//				demoFunc()
-//				wg.Done()
-//			})
-//		}
-//		wg.Wait()
-//	}
-//}
-
-func BenchmarkAntsPoolWithFunc(b *testing.B) {
-	p, _ := ants.NewPoolWithFunc(100000, demoPoolFunc)
+func BenchmarkAntsPool(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		var wg sync.WaitGroup
+		for j := 0; j < RunTimes; j++ {
+			wg.Add(1)
+			ants.Push(func() {
+				demoFunc()
+				wg.Done()
+			})
+		}
+		wg.Wait()
+	}
+}
+
+func BenchmarkAntsPoolWithFunc(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		var wg sync.WaitGroup
+		p, _ := ants.NewPoolWithFunc(100000, func(i interface{}) error {
+			demoPoolFunc(i)
+			wg.Done()
+			return nil
+		})
+		b.ResetTimer()
 		for j := 0; j < RunTimes; j++ {
 			wg.Add(1)
 			p.Serve(RunTimes)

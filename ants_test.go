@@ -23,13 +23,14 @@
 package ants_test
 
 import (
-	"github.com/panjf2000/ants"
 	"runtime"
 	"sync"
 	"testing"
+
+	"github.com/panjf2000/ants"
 )
 
-var n = 1000000
+var n = 100000
 
 //func demoFunc() {
 //	var n int
@@ -92,7 +93,7 @@ func demoFunc() {
 
 func TestAntsPoolWithFunc(t *testing.T) {
 	var wg sync.WaitGroup
-	p, _ := ants.NewPoolWithFunc(100000, func(i interface{}) error {
+	p, _ := ants.NewPoolWithFunc(50000, func(i interface{}) error {
 		demoPoolFunc(i)
 		wg.Done()
 		return nil
