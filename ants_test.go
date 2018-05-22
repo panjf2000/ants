@@ -23,14 +23,14 @@
 package ants_test
 
 import (
-	"github.com/panjf2000/ants"
 	"runtime"
 	"sync"
 	"testing"
-	"time"
+
+	"github.com/panjf2000/ants"
 )
 
-var n = 1000000
+var n = 100000
 
 //func demoFunc() {
 //	var n int
@@ -47,8 +47,70 @@ var n = 1000000
 //	fmt.Printf("finish task with result:%d\n", n)
 //}
 
-func forSleep() {
-	time.Sleep(time.Millisecond)
+func demoFunc() {
+	//time.Sleep(time.Millisecond)
+	var n int
+	for i := 0; i < 1000000; i++ {
+		n += i
+	}
+}
+
+//func TestDefaultPool(t *testing.T) {
+//	var wg sync.WaitGroup
+//	for i := 0; i < n; i++ {
+//		wg.Add(1)
+//		ants.Push(func() {
+//			demoFunc()
+//			wg.Done()
+//		})
+//	}
+//	wg.Wait()
+//
+//	//t.Logf("pool capacity:%d", ants.Cap())
+//	//t.Logf("free workers number:%d", ants.Free())
+//
+//	t.Logf("running workers number:%d", ants.Running())
+//	mem := runtime.MemStats{}
+//	runtime.ReadMemStats(&mem)
+//	t.Logf("memory usage:%d", mem.TotalAlloc/1024)
+//}
+
+//func TestNoPool(t *testing.T) {
+//	var wg sync.WaitGroup
+//	for i := 0; i < n; i++ {
+//		wg.Add(1)
+//		go func() {
+//			demoFunc()
+//			wg.Done()
+//		}()
+//	}
+//
+//	wg.Wait()
+//	mem := runtime.MemStats{}
+//	runtime.ReadMemStats(&mem)
+//	t.Logf("memory usage:%d", mem.TotalAlloc/1024)
+//}
+
+func TestAntsPoolWithFunc(t *testing.T) {
+	var wg sync.WaitGroup
+	p, _ := ants.NewPoolWithFunc(50000, func(i interface{}) error {
+		demoPoolFunc(i)
+		wg.Done()
+		return nil
+	})
+	for i := 0; i < n; i++ {
+		wg.Add(1)
+		p.Serve(n)
+	}
+	wg.Wait()
+
+	//t.Logf("pool capacity:%d", ants.Cap())
+	//t.Logf("free workers number:%d", ants.Free())
+
+	t.Logf("running workers number:%d", p.Running())
+	mem := runtime.MemStats{}
+	runtime.ReadMemStats(&mem)
+	t.Logf("memory usage:%d", mem.TotalAlloc/1024)
 }
 
 func TestNoPool(t *testing.T) {
@@ -56,8 +118,7 @@ func TestNoPool(t *testing.T) {
 	for i := 0; i < n; i++ {
 		wg.Add(1)
 		go func() {
-			forSleep()
-			//demoFunc()
+			demoPoolFunc(n)
 			wg.Done()
 		}()
 	}
@@ -68,45 +129,24 @@ func TestNoPool(t *testing.T) {
 	t.Logf("memory usage:%d", mem.TotalAlloc/1024)
 }
 
-func TestDefaultPool(t *testing.T) {
-	var wg sync.WaitGroup
-	for i := 0; i < n; i++ {
-		wg.Add(1)
-		ants.Push(func() {
-			forSleep()
-			//demoFunc()
-			wg.Done()
-		})
-	}
-	wg.Wait()
-
-	//t.Logf("pool capacity:%d", ants.Cap())
-	//t.Logf("free workers number:%d", ants.Free())
-
-	t.Logf("running workers number:%d", ants.Running())
-	mem := runtime.MemStats{}
-	runtime.ReadMemStats(&mem)
-	t.Logf("memory usage:%d", mem.TotalAlloc/1024)
-}
-
-func TestCustomPool(t *testing.T) {
-	p, _ := ants.NewPool(30000)
-	var wg sync.WaitGroup
-	for i := 0; i < n; i++ {
-		wg.Add(1)
-		p.Push(func() {
-			forSleep()
-			//demoFunc()
-			wg.Done()
-		})
-	}
-	wg.Wait()
-
-	//t.Logf("pool capacity:%d", p.Cap())
-	//t.Logf("free workers number:%d", p.Free())
-
-	t.Logf("running workers number:%d", p.Running())
-	mem := runtime.MemStats{}
-	runtime.ReadMemStats(&mem)
-	t.Logf("memory usage:%d", mem.TotalAlloc/1024)
-}
+//func TestCustomPool(t *testing.T) {
+//	p, _ := ants.NewPool(30000)
+//	var wg sync.WaitGroup
+//	for i := 0; i < n; i++ {
+//		wg.Add(1)
+//		p.Push(func() {
+//			demoFunc()
+//			//demoFunc()
+//			wg.Done()
+//		})
+//	}
+//	wg.Wait()
+//
+//	//t.Logf("pool capacity:%d", p.Cap())
+//	//t.Logf("free workers number:%d", p.Free())
+//
+//	t.Logf("running workers number:%d", p.Running())
+//	mem := runtime.MemStats{}
+//	runtime.ReadMemStats(&mem)
+//	t.Logf("memory usage:%d", mem.TotalAlloc/1024)
+//}

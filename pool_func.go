@@ -29,13 +29,11 @@ import (
 	"time"
 )
 
-type sig struct{}
+type pf func(interface{}) error
 
-type f func()
-
-// Pool accept the tasks from client,it will limit the total
+// PoolWithFunc accept the tasks from client,it will limit the total
 // of goroutines to a given number by recycling goroutines.
-type Pool struct {
+type PoolWithFunc struct {
 	// capacity of the pool.
 	capacity int32
 
@@ -47,7 +45,7 @@ type Pool struct {
 	freeSignal chan sig
 
 	// workers is a slice that store the available workers.
-	workers []*Worker
+	workers []*WorkerWithFunc
 
 	// workerPool is a pool that saves a set of temporary objects.
 	workerPool sync.Pool
@@ -59,18 +57,21 @@ type Pool struct {
 
 	// closed is used to confirm whether this pool has been closed.
 	closed int32
+
+	poolFunc pf
 }
 
-// NewPool generates a instance of ants pool
-func NewPool(size int) (*Pool, error) {
+// NewPoolWithFunc generates a instance of ants pool with a specific function.
+func NewPoolWithFunc(size int, f pf) (*PoolWithFunc, error) {
 	if size <= 0 {
 		return nil, ErrPoolSizeInvalid
 	}
-	p := &Pool{
+	p := &PoolWithFunc{
 		capacity:   int32(size),
 		freeSignal: make(chan sig, math.MaxInt32),
 		release:    make(chan sig),
 		closed:     0,
+		poolFunc:   f,
 	}
 
 	return p, nil
@@ -80,7 +81,7 @@ func NewPool(size int) (*Pool, error) {
 
 // scanAndClean is a goroutine who will periodically clean up
 // after it is noticed that this pool is closed.
-func (p *Pool) scanAndClean() {
+func (p *PoolWithFunc) scanAndClean() {
 	ticker := time.NewTicker(DefaultCleanIntervalTime * time.Second)
 	go func() {
 		ticker.Stop()
@@ -96,33 +97,33 @@ func (p *Pool) scanAndClean() {
 	}()
 }
 
-// Push submit a task to pool
-func (p *Pool) Push(task f) error {
+// Serve submit a task to pool
+func (p *PoolWithFunc) Serve(args interface{}) error {
 	if atomic.LoadInt32(&p.closed) == 1 {
 		return ErrPoolClosed
 	}
 	w := p.getWorker()
-	w.sendTask(task)
+	w.sendTask(args)
 	return nil
 }
 
 // Running returns the number of the currently running goroutines
-func (p *Pool) Running() int {
+func (p *PoolWithFunc) Running() int {
 	return int(atomic.LoadInt32(&p.running))
 }
 
 // Free returns the available goroutines to work
-func (p *Pool) Free() int {
+func (p *PoolWithFunc) Free() int {
 	return int(atomic.LoadInt32(&p.capacity) - atomic.LoadInt32(&p.running))
 }
 
 // Cap returns the capacity of this pool
-func (p *Pool) Cap() int {
+func (p *PoolWithFunc) Cap() int {
 	return int(atomic.LoadInt32(&p.capacity))
 }
 
 // Release Closed this pool
-func (p *Pool) Release() error {
+func (p *PoolWithFunc) Release() error {
 	p.lock.Lock()
 	atomic.StoreInt32(&p.closed, 1)
 	close(p.release)
@@ -131,15 +132,15 @@ func (p *Pool) Release() error {
 }
 
 // ReSize change the capacity of this pool
-func (p *Pool) ReSize(size int) {
+func (p *PoolWithFunc) ReSize(size int) {
 	atomic.StoreInt32(&p.capacity, int32(size))
 }
 
 //-------------------------------------------------------------------------
 
 // getWorker returns a available worker to run the tasks.
-func (p *Pool) getWorker() *Worker {
-	var w *Worker
+func (p *PoolWithFunc) getWorker() *WorkerWithFunc {
+	var w *WorkerWithFunc
 	waiting := false
 
 	p.lock.Lock()
@@ -175,12 +176,12 @@ func (p *Pool) getWorker() *Worker {
 	} else if w == nil {
 		wp := p.workerPool.Get()
 		if wp == nil {
-			w = &Worker{
+			w = &WorkerWithFunc{
 				pool: p,
-				task: make(chan f, workerArgsCap),
+				args: make(chan interface{}, workerArgsCap),
 			}
 		} else {
-			w = wp.(*Worker)
+			w = wp.(*WorkerWithFunc)
 		}
 		w.run()
 		p.workerPool.Put(w)
@@ -189,7 +190,7 @@ func (p *Pool) getWorker() *Worker {
 }
 
 // putWorker puts a worker back into free pool, recycling the goroutines.
-func (p *Pool) putWorker(worker *Worker) {
+func (p *PoolWithFunc) putWorker(worker *WorkerWithFunc) {
 	p.lock.Lock()
 	p.workers = append(p.workers, worker)
 	p.lock.Unlock()

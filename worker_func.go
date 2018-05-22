@@ -29,36 +29,36 @@ import (
 // Worker is the actual executor who run the tasks,
 // it will start a goroutine that accept tasks and
 // perform function calls.
-type Worker struct {
+type WorkerWithFunc struct {
 	// pool who owns this worker.
-	pool *Pool
+	pool *PoolWithFunc
 
-	// task is a job should be done.
-	task chan f
+	// args is a job should be done.
+	args chan interface{}
 }
 
 // run will start a goroutine to repeat the process
 // that perform the function calls.
-func (w *Worker) run() {
+func (w *WorkerWithFunc) run() {
 	atomic.AddInt32(&w.pool.running, 1)
 	go func() {
-		for f := range w.task {
-			if f == nil {
+		for args := range w.args {
+			if args == nil {
 				atomic.AddInt32(&w.pool.running, -1)
 				return
 			}
-			f()
+			w.pool.poolFunc(args)
 			w.pool.putWorker(w)
 		}
 	}()
 }
 
 // stop this worker.
-func (w *Worker) stop() {
-	w.task <- nil
+func (w *WorkerWithFunc) stop() {
+	w.args <- nil
 }
 
 // sendTask send a task to this worker.
-func (w *Worker) sendTask(task f) {
-	w.task <- task
+func (w *WorkerWithFunc) sendTask(args interface{}) {
+	w.args <- args
 }

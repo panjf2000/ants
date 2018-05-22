@@ -22,11 +22,15 @@
 
 package ants
 
-import "errors"
+import (
+	"errors"
+	"math"
+	"runtime"
+)
 
 const (
 	// DefaultPoolSize is the default capacity for a default goroutine pool
-	DefaultPoolSize = 50000
+	DefaultPoolSize = math.MaxInt32
 
 	// DefaultCleanIntervalTime is the interval time to clean up goroutines
 	DefaultCleanIntervalTime = 30
@@ -65,3 +69,10 @@ var (
 	ErrPoolSizeInvalid = errors.New("invalid size for pool")
 	ErrPoolClosed      = errors.New("this pool has been closed")
 )
+
+var workerArgsCap = func() int {
+	if runtime.GOMAXPROCS(0) == 1 {
+		return 0
+	}
+	return 1
+}()

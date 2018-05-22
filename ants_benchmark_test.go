@@ -23,20 +23,32 @@
 package ants_test
 
 import (
-	"github.com/panjf2000/ants"
 	"sync"
 	"testing"
+
+	"github.com/panjf2000/ants"
 )
 
-const RunTimes = 10000000
+const RunTimes = 1000000
+const loop = 1000000
+
+func demoPoolFunc(args interface{}) error {
+	m := args.(int)
+	var n int
+	for i := 0; i < m; i++ {
+		n += i
+	}
+	return nil
+}
 
 func BenchmarkGoroutine(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		var wg sync.WaitGroup
+		b.ResetTimer()
 		for j := 0; j < RunTimes; j++ {
 			wg.Add(1)
 			go func() {
-				forSleep()
+				demoPoolFunc(loop)
 				wg.Done()
 			}()
 		}
@@ -44,15 +56,32 @@ func BenchmarkGoroutine(b *testing.B) {
 	}
 }
 
-func BenchmarkPoolGoroutine(b *testing.B) {
+//func BenchmarkAntsPool(b *testing.B) {
+//	for i := 0; i < b.N; i++ {
+//		var wg sync.WaitGroup
+//		for j := 0; j < RunTimes; j++ {
+//			wg.Add(1)
+//			ants.Push(func() {
+//				demoFunc()
+//				wg.Done()
+//			})
+//		}
+//		wg.Wait()
+//	}
+//}
+
+func BenchmarkAntsPoolWithFunc(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		var wg sync.WaitGroup
+		p, _ := ants.NewPoolWithFunc(100000, func(i interface{}) error {
+			demoPoolFunc(i)
+			wg.Done()
+			return nil
+		})
+		b.ResetTimer()
 		for j := 0; j < RunTimes; j++ {
 			wg.Add(1)
-			ants.Push(func() {
-				forSleep()
-				wg.Done()
-			})
+			p.Serve(loop)
 		}
 		wg.Wait()
 	}
