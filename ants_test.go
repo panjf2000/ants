@@ -30,7 +30,7 @@ import (
 	"github.com/panjf2000/ants"
 )
 
-var n = 100000
+var n = 10000000
 
 //func demoFunc() {
 //	var n int
@@ -110,7 +110,7 @@ func TestAntsPoolWithFunc(t *testing.T) {
 	t.Logf("running workers number:%d", p.Running())
 	mem := runtime.MemStats{}
 	runtime.ReadMemStats(&mem)
-	t.Logf("memory usage:%d", mem.TotalAlloc/1024)
+	t.Logf("memory usage:%d", mem.TotalAlloc/GiB)
 }
 
 func TestNoPool(t *testing.T) {
@@ -126,7 +126,7 @@ func TestNoPool(t *testing.T) {
 	wg.Wait()
 	mem := runtime.MemStats{}
 	runtime.ReadMemStats(&mem)
-	t.Logf("memory usage:%d", mem.TotalAlloc/1024)
+	t.Logf("memory usage:%d", mem.TotalAlloc/GiB)
 }
 
 //func TestCustomPool(t *testing.T) {
