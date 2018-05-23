@@ -33,14 +33,14 @@ import (
 
 const (
 	_   = 1 << (10 * iota)
-	KiB  // 1024
-	MiB  // 1048576
-	GiB  // 1073741824
-	TiB  // 1099511627776             (超过了int32的范围)
-	PiB  // 1125899906842624
-	EiB  // 1152921504606846976
-	ZiB  // 1180591620717411303424    (超过了int64的范围)
-	YiB  // 1208925819614629174706176
+	KiB // 1024
+	MiB // 1048576
+	GiB // 1073741824
+	TiB // 1099511627776             (超过了int32的范围)
+	PiB // 1125899906842624
+	EiB // 1152921504606846976
+	ZiB // 1180591620717411303424    (超过了int64的范围)
+	YiB // 1208925819614629174706176
 )
 const RunTimes = 10000000
 const loop = 5
@@ -60,6 +60,40 @@ func demoPoolFunc(args interface{}) error {
 func BenchmarkGoroutine(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		var wg sync.WaitGroup
+		for j := 0; j < RunTimes; j++ {
+			wg.Add(1)
+			go func() {
+				demoFunc()
+				wg.Done()
+			}()
+		}
+		wg.Wait()
+	}
+	mem := runtime.MemStats{}
+	runtime.ReadMemStats(&mem)
+	b.Logf("total memory usage:%dG", mem.TotalAlloc/GiB)
+}
+
+func BenchmarkAntsPool(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		var wg sync.WaitGroup
+		for j := 0; j < RunTimes; j++ {
+			wg.Add(1)
+			ants.Push(func() {
+				demoFunc()
+				wg.Done()
+			})
+		}
+		wg.Wait()
+	}
+	mem := runtime.MemStats{}
+	runtime.ReadMemStats(&mem)
+	b.Logf("total memory usage:%dG", mem.TotalAlloc/GiB)
+}
+
+func BenchmarkGoroutineWithFunc(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		var wg sync.WaitGroup
 		b.ResetTimer()
 		for j := 0; j < RunTimes; j++ {
 			wg.Add(1)
@@ -69,25 +103,11 @@ func BenchmarkGoroutine(b *testing.B) {
 			}()
 		}
 		wg.Wait()
-		mem := runtime.MemStats{}
-		runtime.ReadMemStats(&mem)
-		b.Logf("total memory usage:%dG", mem.TotalAlloc/GiB)
 	}
+	mem := runtime.MemStats{}
+	runtime.ReadMemStats(&mem)
+	b.Logf("total memory usage:%dG", mem.TotalAlloc/GiB)
 }
-
-//func BenchmarkAntsPool(b *testing.B) {
-//	for i := 0; i < b.N; i++ {
-//		var wg sync.WaitGroup
-//		for j := 0; j < RunTimes; j++ {
-//			wg.Add(1)
-//			ants.Push(func() {
-//				demoFunc()
-//				wg.Done()
-//			})
-//		}
-//		wg.Wait()
-//	}
-//}
 
 func BenchmarkAntsPoolWithFunc(b *testing.B) {
 	for i := 0; i < b.N; i++ {
@@ -103,9 +123,8 @@ func BenchmarkAntsPoolWithFunc(b *testing.B) {
 			p.Serve(loop)
 		}
 		wg.Wait()
-		mem := runtime.MemStats{}
-		runtime.ReadMemStats(&mem)
-		b.Logf("GB:%d", GiB)
-		b.Logf("total memory usage:%dG", mem.TotalAlloc/GiB)
 	}
+	mem := runtime.MemStats{}
+	runtime.ReadMemStats(&mem)
+	b.Logf("total memory usage:%dG", mem.TotalAlloc/GiB)
 }
