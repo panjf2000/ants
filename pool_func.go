@@ -40,7 +40,7 @@ type PoolWithFunc struct {
 	// running is the number of the currently running goroutines.
 	running int32
 
-	// signal is used to notice pool there are available
+	// freeSignal is used to notice pool there are available
 	// workers which can be sent to work.
 	freeSignal chan sig
 

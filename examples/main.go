@@ -24,44 +24,50 @@ package main
 
 import (
 	"fmt"
-	"github.com/panjf2000/ants"
 	"sync"
+
+	"github.com/panjf2000/ants"
 )
 
-func myFunc() {
-	fmt.Println("Hello World!")
+var str = "Hello World!"
+
+func myFunc(i interface{}) error {
+	s := i.(string)
+	fmt.Println(s)
+	return nil
 }
 
+// func main() {
+// 	runTimes := 10000
+// 	var wg sync.WaitGroup
+// 	// submit all your tasks to ants pool
+// 	for i := 0; i < runTimes; i++ {
+// 		wg.Add(1)
+// 		ants.Push(func() {
+// 			myFunc()
+// 			wg.Done()
+// 		})
+// 	}
+// 	wg.Wait()
+// 	fmt.Println("finish all tasks!")
+// }
+
 func main() {
-	runTimes := 10000
+	runTimes := 1000
+
+	// set 100 the size of goroutine pool
+
 	var wg sync.WaitGroup
-	// submit all your tasks to ants pool
+	p, _ := ants.NewPoolWithFunc(100, func(i interface{}) error {
+		myFunc(i)
+		wg.Done()
+		return nil
+	})
+	// submit
 	for i := 0; i < runTimes; i++ {
 		wg.Add(1)
-		ants.Push(func() {
-			myFunc()
-			wg.Done()
-		})
+		p.Serve(str)
 	}
 	wg.Wait()
 	fmt.Println("finish all tasks!")
 }
-
-//func main() {
-//	runTimes := 10000
-//
-//	// set 100 the size of goroutine pool
-//	p, _ := ants.NewPool(100)
-//
-//	var wg sync.WaitGroup
-//	// submit
-//	for i := 0; i < runTimes; i++ {
-//		wg.Add(1)
-//		p.Push(func() {
-//			myFunc()
-//			wg.Done()
-//		})
-//	}
-//	wg.Wait()
-//	fmt.Println("finish all tasks!")
-//}
