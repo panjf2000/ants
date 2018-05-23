@@ -71,7 +71,7 @@ func BenchmarkGoroutine(b *testing.B) {
 	}
 	mem := runtime.MemStats{}
 	runtime.ReadMemStats(&mem)
-	b.Logf("total memory usage:%dG", mem.TotalAlloc/GiB)
+	b.Logf("total memory usage:%d MB", mem.TotalAlloc/MiB)
 }
 
 func BenchmarkAntsPool(b *testing.B) {
@@ -88,7 +88,7 @@ func BenchmarkAntsPool(b *testing.B) {
 	}
 	mem := runtime.MemStats{}
 	runtime.ReadMemStats(&mem)
-	b.Logf("total memory usage:%dG", mem.TotalAlloc/GiB)
+	b.Logf("total memory usage:%d MB", mem.TotalAlloc/MiB)
 }
 
 func BenchmarkGoroutineWithFunc(b *testing.B) {
@@ -106,7 +106,7 @@ func BenchmarkGoroutineWithFunc(b *testing.B) {
 	}
 	mem := runtime.MemStats{}
 	runtime.ReadMemStats(&mem)
-	b.Logf("total memory usage:%dG", mem.TotalAlloc/GiB)
+	b.Logf("total memory usage:%d MB", mem.TotalAlloc/MiB)
 }
 
 func BenchmarkAntsPoolWithFunc(b *testing.B) {
@@ -126,5 +126,5 @@ func BenchmarkAntsPoolWithFunc(b *testing.B) {
 	}
 	mem := runtime.MemStats{}
 	runtime.ReadMemStats(&mem)
-	b.Logf("total memory usage:%dG", mem.TotalAlloc/GiB)
+	b.Logf("total memory usage:%d MB", mem.TotalAlloc/MiB)
 }
