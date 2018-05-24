@@ -26,9 +26,9 @@ import (
 	"sync/atomic"
 )
 
-// Worker is the actual executor who run the tasks,
-// it will start a goroutine that accept tasks and
-// perform function calls.
+// WorkerWithFunc is the actual executor who runs the tasks,
+// it starts a goroutine that accepts tasks and
+// performs function calls.
 type WorkerWithFunc struct {
 	// pool who owns this worker.
 	pool *PoolWithFunc
@@ -37,8 +37,8 @@ type WorkerWithFunc struct {
 	args chan interface{}
 }
 
-// run will start a goroutine to repeat the process
-// that perform the function calls.
+// run starts a goroutine to repeat the process
+// that performs the function calls.
 func (w *WorkerWithFunc) run() {
 	//atomic.AddInt32(&w.pool.running, 1)
 	go func() {
@@ -58,7 +58,7 @@ func (w *WorkerWithFunc) stop() {
 	w.args <- nil
 }
 
-// sendTask send a task to this worker.
+// sendTask sends a task to this worker.
 func (w *WorkerWithFunc) sendTask(args interface{}) {
 	w.args <- args
 }
