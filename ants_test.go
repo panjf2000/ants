@@ -24,7 +24,6 @@ package ants_test
 
 import (
 	"runtime"
-	"time"
 	"sync"
 	"testing"
 
@@ -32,29 +31,6 @@ import (
 )
 
 var n = 10000000
-
-//func demoFunc() {
-//	var n int
-//	for i := 0; i < 1000000; i++ {
-//		n += i
-//	}
-//}
-
-//func demoFunc() {
-//	var n int
-//	for i := 0; i < 10000; i++ {
-//		n += i
-//	}
-//	fmt.Printf("finish task with result:%d\n", n)
-//}
-
-func demoFunc() {
-	time.Sleep(10 * time.Millisecond)
-	// var n int
-	// for i := 0; i < 1000000; i++ {
-	// 	n += i
-	// }
-}
 
 func TestDefaultPool(t *testing.T) {
 	var wg sync.WaitGroup
@@ -73,7 +49,7 @@ func TestDefaultPool(t *testing.T) {
 	t.Logf("running workers number:%d", ants.Running())
 	mem := runtime.MemStats{}
 	runtime.ReadMemStats(&mem)
-	t.Logf("memory usage:%d", mem.TotalAlloc/MiB)
+	t.Logf("memory usage:%d MB", mem.TotalAlloc/MiB)
 }
 
 func TestNoPool(t *testing.T) {
@@ -89,30 +65,30 @@ func TestNoPool(t *testing.T) {
 	wg.Wait()
 	mem := runtime.MemStats{}
 	runtime.ReadMemStats(&mem)
-	t.Logf("memory usage:%d", mem.TotalAlloc/MiB)
+	t.Logf("memory usage:%d MB", mem.TotalAlloc/MiB)
 }
 
-func TestAntsPoolWithFunc(t *testing.T) {
-	var wg sync.WaitGroup
-	p, _ := ants.NewPoolWithFunc(50000, func(i interface{}) error {
-		demoPoolFunc(i)
-		wg.Done()
-		return nil
-	})
-	for i := 0; i < n; i++ {
-		wg.Add(1)
-		p.Serve(n)
-	}
-	wg.Wait()
+// func TestAntsPoolWithFunc(t *testing.T) {
+// 	var wg sync.WaitGroup
+// 	p, _ := ants.NewPoolWithFunc(50000, func(i interface{}) error {
+// 		demoPoolFunc(i)
+// 		wg.Done()
+// 		return nil
+// 	})
+// 	for i := 0; i < n; i++ {
+// 		wg.Add(1)
+// 		p.Serve(n)
+// 	}
+// 	wg.Wait()
 
-	//t.Logf("pool capacity:%d", ants.Cap())
-	//t.Logf("free workers number:%d", ants.Free())
+// 	//t.Logf("pool capacity:%d", ants.Cap())
+// 	//t.Logf("free workers number:%d", ants.Free())
 
-	t.Logf("running workers number:%d", p.Running())
-	mem := runtime.MemStats{}
-	runtime.ReadMemStats(&mem)
-	t.Logf("memory usage:%d", mem.TotalAlloc/GiB)
-}
+// 	t.Logf("running workers number:%d", p.Running())
+// 	mem := runtime.MemStats{}
+// 	runtime.ReadMemStats(&mem)
+// 	t.Logf("memory usage:%d", mem.TotalAlloc/GiB)
+// }
 
 // func TestNoPool(t *testing.T) {
 // 	var wg sync.WaitGroup

@@ -58,7 +58,7 @@ func main() {
 	// set 100 the size of goroutine pool
 
 	var wg sync.WaitGroup
-	p, _ := ants.NewPoolWithFunc(100, func(i interface{}) error {
+	p, _ := ants.NewPoolWithFunc(10, func(i interface{}) error {
 		myFunc(i)
 		wg.Done()
 		return nil
