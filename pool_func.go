@@ -30,7 +30,7 @@ import (
 
 type pf func(interface{}) error
 
-// PoolWithFunc accept the tasks from client,it will limit the total
+// PoolWithFunc accept the tasks from client,it limits the total
 // of goroutines to a given number by recycling goroutines.
 type PoolWithFunc struct {
 	// capacity of the pool.
@@ -46,14 +46,13 @@ type PoolWithFunc struct {
 	// workers is a slice that store the available workers.
 	workers []*WorkerWithFunc
 
-	// workerPool is a pool that saves a set of temporary objects.
-	//workerPool sync.Pool
-
 	// release is used to notice the pool to closed itself.
 	release chan sig
 
+	// lock for synchronous operation
 	lock sync.Mutex
 
+	// pf is the function for processing tasks
 	poolFunc pf
 
 	once sync.Once

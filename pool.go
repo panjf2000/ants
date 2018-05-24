@@ -30,9 +30,9 @@ import (
 
 type sig struct{}
 
-type f func()
+type f func() error
 
-// Pool accept the tasks from client,it will limit the total
+// Pool accept the tasks from client,it limits the total
 // of goroutines to a given number by recycling goroutines.
 type Pool struct {
 	// capacity of the pool.
@@ -48,12 +48,10 @@ type Pool struct {
 	// workers is a slice that store the available workers.
 	workers []*Worker
 
-	// workerPool is a pool that saves a set of temporary objects.
-	workerPool sync.Pool
-
 	// release is used to notice the pool to closed itself.
 	release chan sig
 
+	// lock for synchronous operation
 	lock sync.Mutex
 
 	once sync.Once
@@ -75,8 +73,8 @@ func NewPool(size int) (*Pool, error) {
 
 //-------------------------------------------------------------------------
 
-// Push submit a task to pool
-func (p *Pool) Push(task f) error {
+// Submit submit a task to pool
+func (p *Pool) Submit(task f) error {
 	if len(p.release) > 0 {
 		return ErrPoolClosed
 	}

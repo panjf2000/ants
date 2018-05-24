@@ -44,8 +44,9 @@ const (
 const RunTimes = 10000000
 const loop = 10
 
-func demoFunc() {
+func demoFunc() error {
 	time.Sleep(loop * time.Millisecond)
+	return nil
 }
 
 func demoPoolFunc(args interface{}) error {
@@ -101,10 +102,9 @@ func BenchmarkGoroutine(b *testing.B) {
 }
 
 func BenchmarkAntsPool(b *testing.B) {
-	b.N = 3
 	for i := 0; i < b.N; i++ {
 		for j := 0; j < RunTimes; j++ {
-			ants.Push(demoFunc)
+			ants.Submit(demoFunc)
 		}
 		b.Logf("running goroutines: %d", ants.Running())
 	}

@@ -39,9 +39,9 @@ const (
 // Init a instance pool when importing ants
 var defaultPool, _ = NewPool(DefaultPoolSize)
 
-// Push submit a task to pool
-func Push(task f) error {
-	return defaultPool.Push(task)
+// Submit submit a task to pool
+func Submit(task f) error {
+	return defaultPool.Submit(task)
 }
 
 // Running returns the number of the currently running goroutines

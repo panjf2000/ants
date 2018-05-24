@@ -36,9 +36,10 @@ func TestDefaultPool(t *testing.T) {
 	var wg sync.WaitGroup
 	for i := 0; i < n; i++ {
 		wg.Add(1)
-		ants.Push(func() {
+		ants.Submit(func() error {
 			demoFunc()
 			wg.Done()
+			return nil
 		})
 	}
 	wg.Wait()
@@ -111,7 +112,7 @@ func TestNoPool(t *testing.T) {
 //	var wg sync.WaitGroup
 //	for i := 0; i < n; i++ {
 //		wg.Add(1)
-//		p.Push(func() {
+//		p.Submit(func() {
 //			demoFunc()
 //			//demoFunc()
 //			wg.Done()

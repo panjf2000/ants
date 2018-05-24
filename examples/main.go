@@ -45,7 +45,7 @@ func myFunc(i interface{}) error {
 // 	// submit all your tasks to ants pool
 // 	for i := 0; i < runTimes; i++ {
 // 		wg.Add(1)
-// 		ants.Push(func() {
+// 		ants.Submit(func() {
 // 			myFunc()
 // 			wg.Done()
 // 		})
