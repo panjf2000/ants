@@ -151,17 +151,21 @@ func (p *Pool) getWorker() *Worker {
 			break
 		}
 	} else if w == nil {
-		wp := p.workerPool.Get()
-		if wp == nil {
-			w = &Worker{
-				pool: p,
-				task: make(chan f, workerArgsCap),
-			}
-		} else {
-			w = wp.(*Worker)
+		//wp := p.workerPool.Get()
+		//if wp == nil {
+		//	w = &Worker{
+		//		pool: p,
+		//		task: make(chan f, workerArgsCap),
+		//	}
+		//} else {
+		//	w = wp.(*Worker)
+		//}
+		w = &Worker{
+			pool: p,
+			task: make(chan f, workerArgsCap),
 		}
 		w.run()
-		p.workerPool.Put(w)
+		//p.workerPool.Put(w)
 	}
 	return w
 }

@@ -47,7 +47,7 @@ type PoolWithFunc struct {
 	workers []*WorkerWithFunc
 
 	// workerPool is a pool that saves a set of temporary objects.
-	workerPool sync.Pool
+	//workerPool sync.Pool
 
 	// release is used to notice the pool to closed itself.
 	release chan sig
@@ -57,7 +57,6 @@ type PoolWithFunc struct {
 	poolFunc pf
 
 	once sync.Once
-
 }
 
 // NewPoolWithFunc generates a instance of ants pool with a specific function.
@@ -108,7 +107,7 @@ func (p *PoolWithFunc) Cap() int {
 // Release Closed this pool
 func (p *PoolWithFunc) Release() error {
 	p.once.Do(func() {
-		p.release<- sig{}
+		p.release <- sig{}
 	})
 	return nil
 }
@@ -131,6 +130,8 @@ func (p *PoolWithFunc) getWorker() *WorkerWithFunc {
 	if n < 0 {
 		if p.running >= p.capacity {
 			waiting = true
+		} else {
+			p.running++
 		}
 	} else {
 		w = workers[n]
@@ -156,23 +157,28 @@ func (p *PoolWithFunc) getWorker() *WorkerWithFunc {
 			break
 		}
 	} else if w == nil {
-		wp := p.workerPool.Get()
-		if wp == nil {
-			w = &WorkerWithFunc{
-				pool: p,
-				args: make(chan interface{}, workerArgsCap),
-			}
-		} else {
-			w = wp.(*WorkerWithFunc)
+		//wp := p.workerPool.Get()
+		//if wp == nil {
+		//	w = &WorkerWithFunc{
+		//		pool: p,
+		//		args: make(chan interface{}, workerArgsCap),
+		//	}
+		//} else {
+		//	w = wp.(*WorkerWithFunc)
+		//}
+		w = &WorkerWithFunc{
+			pool: p,
+			args: make(chan interface{}),
 		}
 		w.run()
-		p.workerPool.Put(w)
+		//p.workerPool.Put(w)
 	}
 	return w
 }
 
 // putWorker puts a worker back into free pool, recycling the goroutines.
 func (p *PoolWithFunc) putWorker(worker *WorkerWithFunc) {
+	//p.workerPool.Put(worker)
 	p.lock.Lock()
 	p.workers = append(p.workers, worker)
 	p.lock.Unlock()
