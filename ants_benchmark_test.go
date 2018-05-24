@@ -72,7 +72,6 @@ func BenchmarkGoroutineWithFunc(b *testing.B) {
 		}
 		wg.Wait()
 	}
-	//b.Logf("total memory usage:%d MB", mem.TotalAlloc/MiB)
 }
 
 func BenchmarkAntsPoolWithFunc(b *testing.B) {
@@ -88,9 +87,8 @@ func BenchmarkAntsPoolWithFunc(b *testing.B) {
 			p.Serve(loop)
 		}
 		wg.Wait()
-		//b.Logf("running goroutines: %d", p.Running())
+		b.Logf("running goroutines: %d", p.Running())
 	}
-	//b.Logf("total memory usage:%d MB", mem.TotalAlloc/MiB)
 }
 
 func BenchmarkGoroutine(b *testing.B) {
@@ -100,15 +98,14 @@ func BenchmarkGoroutine(b *testing.B) {
 		}
 	}
 
-	//b.Logf("total memory usage:%d MB", mem.TotalAlloc/MiB)
 }
 
 func BenchmarkAntsPool(b *testing.B) {
+	b.N = 3
 	for i := 0; i < b.N; i++ {
 		for j := 0; j < RunTimes; j++ {
 			ants.Push(demoFunc)
 		}
 		b.Logf("running goroutines: %d", ants.Running())
 	}
-	//b.Logf("total memory usage:%d MB", mem.TotalAlloc/MiB)
 }

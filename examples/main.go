@@ -69,5 +69,6 @@ func main() {
 		p.Serve(str)
 	}
 	wg.Wait()
+	fmt.Printf("running goroutines: %d\n", p.Running())
 	fmt.Println("finish all tasks!")
 }
