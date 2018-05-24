@@ -26,12 +26,11 @@ import (
 	"math"
 	"sync"
 	"sync/atomic"
-	"time"
 )
 
 type pf func(interface{}) error
 
-// PoolWithFunc accept the tasks from client,it will limit the total
+// PoolWithFunc accept the tasks from client,it limits the total
 // of goroutines to a given number by recycling goroutines.
 type PoolWithFunc struct {
 	// capacity of the pool.
@@ -47,18 +46,16 @@ type PoolWithFunc struct {
 	// workers is a slice that store the available workers.
 	workers []*WorkerWithFunc
 
-	// workerPool is a pool that saves a set of temporary objects.
-	workerPool sync.Pool
-
 	// release is used to notice the pool to closed itself.
 	release chan sig
 
+	// lock for synchronous operation
 	lock sync.Mutex
 
-	// closed is used to confirm whether this pool has been closed.
-	closed int32
-
+	// pf is the function for processing tasks
 	poolFunc pf
+
+	once sync.Once
 }
 
 // NewPoolWithFunc generates a instance of ants pool with a specific function.
@@ -69,8 +66,7 @@ func NewPoolWithFunc(size int, f pf) (*PoolWithFunc, error) {
 	p := &PoolWithFunc{
 		capacity:   int32(size),
 		freeSignal: make(chan sig, math.MaxInt32),
-		release:    make(chan sig),
-		closed:     0,
+		release:    make(chan sig, 1),
 		poolFunc:   f,
 	}
 
@@ -79,27 +75,12 @@ func NewPoolWithFunc(size int, f pf) (*PoolWithFunc, error) {
 
 //-------------------------------------------------------------------------
 
-// scanAndClean is a goroutine who will periodically clean up
-// after it is noticed that this pool is closed.
-func (p *PoolWithFunc) scanAndClean() {
-	ticker := time.NewTicker(DefaultCleanIntervalTime * time.Second)
-	go func() {
-		ticker.Stop()
-		for range ticker.C {
-			if atomic.LoadInt32(&p.closed) == 1 {
-				p.lock.Lock()
-				for _, w := range p.workers {
-					w.stop()
-				}
-				p.lock.Unlock()
-			}
-		}
-	}()
-}
-
 // Serve submit a task to pool
 func (p *PoolWithFunc) Serve(args interface{}) error {
-	if atomic.LoadInt32(&p.closed) == 1 {
+	//if atomic.LoadInt32(&p.closed) == 1 {
+	//	return ErrPoolClosed
+	//}
+	if len(p.release) > 0 {
 		return ErrPoolClosed
 	}
 	w := p.getWorker()
@@ -124,10 +105,9 @@ func (p *PoolWithFunc) Cap() int {
 
 // Release Closed this pool
 func (p *PoolWithFunc) Release() error {
-	p.lock.Lock()
-	atomic.StoreInt32(&p.closed, 1)
-	close(p.release)
-	p.lock.Unlock()
+	p.once.Do(func() {
+		p.release <- sig{}
+	})
 	return nil
 }
 
@@ -149,6 +129,8 @@ func (p *PoolWithFunc) getWorker() *WorkerWithFunc {
 	if n < 0 {
 		if p.running >= p.capacity {
 			waiting = true
+		} else {
+			p.running++
 		}
 	} else {
 		w = workers[n]
@@ -174,23 +156,28 @@ func (p *PoolWithFunc) getWorker() *WorkerWithFunc {
 			break
 		}
 	} else if w == nil {
-		wp := p.workerPool.Get()
-		if wp == nil {
-			w = &WorkerWithFunc{
-				pool: p,
-				args: make(chan interface{}, workerArgsCap),
-			}
-		} else {
-			w = wp.(*WorkerWithFunc)
+		//wp := p.workerPool.Get()
+		//if wp == nil {
+		//	w = &WorkerWithFunc{
+		//		pool: p,
+		//		args: make(chan interface{}, workerArgsCap),
+		//	}
+		//} else {
+		//	w = wp.(*WorkerWithFunc)
+		//}
+		w = &WorkerWithFunc{
+			pool: p,
+			args: make(chan interface{}),
 		}
 		w.run()
-		p.workerPool.Put(w)
+		//p.workerPool.Put(w)
 	}
 	return w
 }
 
 // putWorker puts a worker back into free pool, recycling the goroutines.
 func (p *PoolWithFunc) putWorker(worker *WorkerWithFunc) {
+	//p.workerPool.Put(worker)
 	p.lock.Lock()
 	p.workers = append(p.workers, worker)
 	p.lock.Unlock()

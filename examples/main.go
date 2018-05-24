@@ -25,15 +25,17 @@ package main
 import (
 	"fmt"
 	"sync"
+	"sync/atomic"
 
 	"github.com/panjf2000/ants"
 )
 
-var str = "Hello World!"
+var sum int32
 
 func myFunc(i interface{}) error {
-	s := i.(string)
-	fmt.Println(s)
+	n := i.(int)
+	atomic.AddInt32(&sum, int32(n))
+	fmt.Printf("run with %d\n", n)
 	return nil
 }
 
@@ -43,7 +45,7 @@ func myFunc(i interface{}) error {
 // 	// submit all your tasks to ants pool
 // 	for i := 0; i < runTimes; i++ {
 // 		wg.Add(1)
-// 		ants.Push(func() {
+// 		ants.Submit(func() {
 // 			myFunc()
 // 			wg.Done()
 // 		})
@@ -58,7 +60,7 @@ func main() {
 	// set 100 the size of goroutine pool
 
 	var wg sync.WaitGroup
-	p, _ := ants.NewPoolWithFunc(100, func(i interface{}) error {
+	p, _ := ants.NewPoolWithFunc(10, func(i interface{}) error {
 		myFunc(i)
 		wg.Done()
 		return nil
@@ -66,8 +68,14 @@ func main() {
 	// submit
 	for i := 0; i < runTimes; i++ {
 		wg.Add(1)
-		p.Serve(str)
+		p.Serve(i)
 	}
 	wg.Wait()
-	fmt.Println("finish all tasks!")
+	//var m int
+	//var i int
+	//for n := range sum {
+	//	m += n
+	//}
+	fmt.Printf("running goroutines: %d\n", p.Running())
+	fmt.Printf("finish all tasks, result is %d\n", sum)
 }
