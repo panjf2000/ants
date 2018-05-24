@@ -164,7 +164,7 @@ func (p *Pool) getWorker() *Worker {
 		//}
 		w = &Worker{
 			pool: p,
-			task: make(chan f, workerArgsCap),
+			task: make(chan f),
 		}
 		w.run()
 		//p.workerPool.Put(w)
