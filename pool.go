@@ -126,6 +126,8 @@ func (p *Pool) getWorker() *Worker {
 	if n < 0 {
 		if p.running >= p.capacity {
 			waiting = true
+		} else {
+			p.running++
 		}
 	} else {
 		w = workers[n]

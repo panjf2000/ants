@@ -53,26 +53,6 @@ func (w *WorkerWithFunc) run() {
 	}()
 }
 
-//func (w *WorkerWithFunc) run() {
-//	atomic.AddInt32(&w.pool.running, 1)
-//	go func() {
-//		for {
-//			select {
-//			case args := <-w.args:
-//				if args == nil {
-//					atomic.AddInt32(&w.pool.running, -1)
-//					return
-//				}
-//				w.pool.poolFunc(args)
-//				w.pool.putWorker(w)
-//			case <-w.pool.release:
-//				atomic.AddInt32(&w.pool.running, -1)
-//				return
-//			}
-//		}
-//	}()
-//}
-
 // stop this worker.
 func (w *WorkerWithFunc) stop() {
 	w.args <- nil
