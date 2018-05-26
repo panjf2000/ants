@@ -98,9 +98,9 @@ func main() {
 ```
 
 ## Submit tasks
-Tasks can be submitted by calling `ants.Push(func())`
+Tasks can be submitted by calling `ants.Submit(func())`
 ```go
-ants.Push(func() {})
+ants.Submit(func() {})
 ```
 
 ## Custom limited pool
@@ -110,7 +110,7 @@ Ants also supports custom limited pool. You can use the `NewPool` method to crea
 // set 10000 the size of goroutine pool
 p, _ := ants.NewPool(10000)
 // submit a task
-p.Push(func() {})
+p.Submit(func() {})
 ```
 
 ## Readjusting pool capacity
