@@ -35,39 +35,72 @@ glide get github.com/panjf2000/ants
 If your program will generate a massive number of goroutines and you don't want them to consume a vast amount of memory, with ants, all you need to do is to import ants package and submit all your tasks to the default limited pool created when ants was imported:
 
 ``` go
+
 package main
 
 import (
 	"fmt"
-	"github.com/panjf2000/ants"
 	"sync"
+	"sync/atomic"
+
+	"github.com/panjf2000/ants"
+	"time"
 )
 
-func myFunc() {
+var sum int32
+
+func myFunc(i interface{}) error {
+	n := i.(int)
+	atomic.AddInt32(&sum, int32(n))
+	fmt.Printf("run with %d\n", n)
+	return nil
+}
+
+func demoFunc() error {
+	time.Sleep(10 * time.Millisecond)
 	fmt.Println("Hello World!")
+	return nil
 }
 
 func main() {
-	runTimes := 10000
+	runTimes := 1000
+
+	// use the common pool
 	var wg sync.WaitGroup
-	// submit all your tasks to ants pool
 	for i := 0; i < runTimes; i++ {
 		wg.Add(1)
-		ants.Push(func() {
-			myFunc()
+		ants.Submit(func() error {
+			demoFunc()
 			wg.Done()
+			return nil
 		})
 	}
 	wg.Wait()
-	fmt.Println("finish all tasks!")
-}
+	fmt.Printf("running goroutines: %d\n", ants.Running())
+	fmt.Printf("finish all tasks.\n")
 
+	// use the pool with a function
+	// set 10 the size of goroutine pool
+	p, _ := ants.NewPoolWithFunc(10, func(i interface{}) error {
+		myFunc(i)
+		wg.Done()
+		return nil
+	})
+	// submit tasks
+	for i := 0; i < runTimes; i++ {
+		wg.Add(1)
+		p.Serve(i)
+	}
+	wg.Wait()
+	fmt.Printf("running goroutines: %d\n", p.Running())
+	fmt.Printf("finish all tasks, result is %d\n", sum)
+}
 ```
 
 ## Submit tasks
-Tasks can be submitted by calling `ants.Push(func())`
+Tasks can be submitted by calling `ants.Submit(func())`
 ```go
-ants.Push(func() {})
+ants.Submit(func() {})
 ```
 
 ## Custom limited pool
@@ -77,7 +110,7 @@ Ants also supports custom limited pool. You can use the `NewPool` method to crea
 // set 10000 the size of goroutine pool
 p, _ := ants.NewPool(10000)
 // submit a task
-p.Push(func() {})
+p.Submit(func() {})
 ```
 
 ## Readjusting pool capacity
