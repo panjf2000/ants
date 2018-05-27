@@ -32,20 +32,21 @@ import (
 
 const (
 	_   = 1 << (10 * iota)
-	KiB  // 1024
-	MiB  // 1048576
-	GiB  // 1073741824
-	TiB  // 1099511627776             (超过了int32的范围)
-	PiB  // 1125899906842624
-	EiB  // 1152921504606846976
-	ZiB  // 1180591620717411303424    (超过了int64的范围)
-	YiB  // 1208925819614629174706176
+	KiB // 1024
+	MiB // 1048576
+	GiB // 1073741824
+	TiB // 1099511627776             (超过了int32的范围)
+	PiB // 1125899906842624
+	EiB // 1152921504606846976
+	ZiB // 1180591620717411303424    (超过了int64的范围)
+	YiB // 1208925819614629174706176
 )
 const RunTimes = 10000000
 const loop = 10
 
 func demoFunc() error {
-	time.Sleep(loop * time.Millisecond)
+	n := 10
+	time.Sleep(time.Duration(n) * time.Millisecond)
 	return nil
 }
 
@@ -95,17 +96,18 @@ func BenchmarkAntsPoolWithFunc(b *testing.B) {
 func BenchmarkGoroutine(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		for j := 0; j < RunTimes; j++ {
-			go demoFunc()
+			go demoPoolFunc(loop)
 		}
 	}
-
 }
 
 func BenchmarkAntsPool(b *testing.B) {
+	p, _ := ants.NewPoolWithFunc(50000, demoPoolFunc)
+	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		for j := 0; j < RunTimes; j++ {
-			ants.Submit(demoFunc)
+			p.Serve(loop)
 		}
-		b.Logf("running goroutines: %d", ants.Running())
+		// b.Logf("running goroutines: %d", p.Running())
 	}
 }
