@@ -137,6 +137,32 @@ All the tasks submitted to ants pool will not be guaranteed to be processed in o
 
 The test data above is a basic benchmark and the more detailed benchmarks will be uploaded later.
 
+### Benchmarks with Pool 
+
+![](https://github.com/panjf2000/ants/blob/master/benchmark_pool.png)
+
+
+
+### Benchmarks with PoolWithFunc
+
+![](https://github.com/panjf2000/ants/blob/master/ants_bench_poolwithfunc.png)
+
+### Throughput
+
+#### 10w tasks
+
+![](https://github.com/panjf2000/ants/blob/master/ants_bench_10w.png)
+
+#### 100w tasks
+
+![](https://github.com/panjf2000/ants/blob/master/ants_bench_100w.png)
+
+#### 1000W tasks
+
+![](https://github.com/panjf2000/ants/blob/master/ants_bench_1000w.png)
+
+There was only the test of `ants` Pool because my computer was crash when it reached 1000w goroutines. ba
+
 [1]: https://godoc.org/github.com/panjf2000/ants?status.svg
 [2]: https://godoc.org/github.com/panjf2000/ants
 [3]: https://goreportcard.com/badge/github.com/panjf2000/ants
