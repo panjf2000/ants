@@ -139,29 +139,29 @@ The test data above is a basic benchmark and the more detailed benchmarks will 
 
 ### Benchmarks with Pool 
 
-![](http://blog.taohuawu.club/upload/2018/05/pilgrnjs18jntol1795hobq5v6.png)
+![](https://github.com/panjf2000/ants/blob/master/benchmark_pool.png)
 
 
 
 ### Benchmarks with PoolWithFunc
 
-![](http://blog.taohuawu.club/upload/2018/05/46a679eagsj97qd7ntnigp2ejs.png)
+![](https://github.com/panjf2000/ants/blob/master/ants_bench_poolwithfunc.png)
 
 ### Throughput
 
 #### 10w tasks
 
-![](http://blog.taohuawu.club/upload/2018/05/0s3q9cdj5ajr7rvvodr763c2s8.png)
+![](https://github.com/panjf2000/ants/blob/master/ants_bench_10w.png)
 
 #### 100w tasks
 
-![](http://blog.taohuawu.club/upload/2018/05/7rshjcd256hoao39j54isum235.png)
+![](https://github.com/panjf2000/ants/blob/master/ants_bench_100w.png)
 
 #### 1000W tasks
 
-![](http://blog.taohuawu.club/upload/2018/05/tv70o6bkgoi90r26gnl1k68bi2.png)
+![](https://github.com/panjf2000/ants/blob/master/ants_bench_1000w.png)
 
-There was only the test of `ants` Pool because my computer was crash when it reached 1000w goroutines. 
+There was only the test of `ants` Pool because my computer was crash when it reached 1000w goroutines. ba
 
 [1]: https://godoc.org/github.com/panjf2000/ants?status.svg
 [2]: https://godoc.org/github.com/panjf2000/ants
