@@ -161,7 +161,7 @@ The test data above is a basic benchmark and the more detailed benchmarks will 
 
 ![](https://github.com/panjf2000/ants/blob/master/ants_bench_1000w.png)
 
-There was only the test of `ants` Pool because my computer was crash when it reached 1000w goroutines. ba
+There was only the test of `ants` Pool because my computer was crash when it reached 1000w goroutines. 
 
 [1]: https://godoc.org/github.com/panjf2000/ants?status.svg
 [2]: https://godoc.org/github.com/panjf2000/ants
