@@ -55,7 +55,7 @@ func (w *WorkerWithFunc) run() {
 
 // stop this worker.
 func (w *WorkerWithFunc) stop() {
-	w.args <- nil
+	w.sendTask(nil)
 }
 
 // sendTask sends a task to this worker.
