@@ -43,7 +43,7 @@ func (w *WorkerWithFunc) run() {
 	//atomic.AddInt32(&w.pool.running, 1)
 	go func() {
 		for args := range w.args {
-			if args == nil || len(w.pool.release) > 0 {
+			if args == nil {
 				atomic.AddInt32(&w.pool.running, -1)
 				return
 			}
@@ -55,7 +55,7 @@ func (w *WorkerWithFunc) run() {
 
 // stop this worker.
 func (w *WorkerWithFunc) stop() {
-	w.args <- nil
+	w.sendTask(nil)
 }
 
 // sendTask sends a task to this worker.
