@@ -122,6 +122,8 @@ func (p *PoolWithFunc) ReSize(size int) {
 		for i := 0; i < diff; i++ {
 			p.getWorker().stop()
 		}
+	} else if size == p.Cap(){
+		return
 	}
 	atomic.StoreInt32(&p.capacity, int32(size))
 }
