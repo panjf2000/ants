@@ -107,12 +107,22 @@ func (p *PoolWithFunc) Cap() int {
 func (p *PoolWithFunc) Release() error {
 	p.once.Do(func() {
 		p.release <- sig{}
+		running := p.Running()
+		for i := 0; i < running; i++ {
+			p.getWorker().stop()
+		}
 	})
 	return nil
 }
 
 // ReSize change the capacity of this pool
 func (p *PoolWithFunc) ReSize(size int) {
+	if size < p.Cap() {
+		diff := p.Cap() - size
+		for i := 0; i < diff; i++ {
+			p.getWorker().stop()
+		}
+	}
 	atomic.StoreInt32(&p.capacity, int32(size))
 }
 
@@ -156,28 +166,17 @@ func (p *PoolWithFunc) getWorker() *WorkerWithFunc {
 			break
 		}
 	} else if w == nil {
-		//wp := p.workerPool.Get()
-		//if wp == nil {
-		//	w = &WorkerWithFunc{
-		//		pool: p,
-		//		args: make(chan interface{}, workerArgsCap),
-		//	}
-		//} else {
-		//	w = wp.(*WorkerWithFunc)
-		//}
 		w = &WorkerWithFunc{
 			pool: p,
 			args: make(chan interface{}),
 		}
 		w.run()
-		//p.workerPool.Put(w)
 	}
 	return w
 }
 
 // putWorker puts a worker back into free pool, recycling the goroutines.
 func (p *PoolWithFunc) putWorker(worker *WorkerWithFunc) {
-	//p.workerPool.Put(worker)
 	p.lock.Lock()
 	p.workers = append(p.workers, worker)
 	p.lock.Unlock()

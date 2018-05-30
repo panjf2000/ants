@@ -43,7 +43,7 @@ func (w *WorkerWithFunc) run() {
 	//atomic.AddInt32(&w.pool.running, 1)
 	go func() {
 		for args := range w.args {
-			if args == nil || len(w.pool.release) > 0 {
+			if args == nil {
 				atomic.AddInt32(&w.pool.running, -1)
 				return
 			}

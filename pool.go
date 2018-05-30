@@ -102,12 +102,22 @@ func (p *Pool) Cap() int {
 func (p *Pool) Release() error {
 	p.once.Do(func() {
 		p.release <- sig{}
+		running := p.Running()
+		for i := 0; i < running; i++ {
+			p.getWorker().stop()
+		}
 	})
 	return nil
 }
 
 // ReSize change the capacity of this pool
 func (p *Pool) ReSize(size int) {
+	if size < p.Cap() {
+		diff := p.Cap() - size
+		for i := 0; i < diff; i++ {
+			p.getWorker().stop()
+		}
+	}
 	atomic.StoreInt32(&p.capacity, int32(size))
 }
 
@@ -151,21 +161,11 @@ func (p *Pool) getWorker() *Worker {
 			break
 		}
 	} else if w == nil {
-		//wp := p.workerPool.Get()
-		//if wp == nil {
-		//	w = &Worker{
-		//		pool: p,
-		//		task: make(chan f, workerArgsCap),
-		//	}
-		//} else {
-		//	w = wp.(*Worker)
-		//}
 		w = &Worker{
 			pool: p,
 			task: make(chan f),
 		}
 		w.run()
-		//p.workerPool.Put(w)
 	}
 	return w
 }
