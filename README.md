@@ -1,6 +1,6 @@
 # ants
 
-<div align="center"><img src="https://github.com/panjf2000/ants/blob/master/ants_logo.png"/></div>
+<div align="center"><img src="ants_logo.png"/></div>
 
 <p align="center">A goroutine pool for Go</p>
 
@@ -129,7 +129,7 @@ Don't worry about the synchronous problems in this case, this method is thread-s
 All the tasks submitted to ants pool will not be guaranteed to be processed in order, because those tasks distribute among a series of concurrent workers, thus those tasks are processed concurrently.
 
 ## Benchmarks
-<div align="center"><img src="https://github.com/panjf2000/ants/blob/master/ants_benchmarks.png"/></div>
+<div align="center"><img src="ants_benchmarks.png"/></div>
 
  In that benchmark-picture, the first and second benchmarks performed test with 100w tasks and the rest of benchmarks performed test with 1000w tasks, both unlimited goroutines and ants pool, and the capacity of this ants goroutine-pool was limited to 5w.
 
@@ -141,27 +141,27 @@ The test data above is a basic benchmark and the more detailed benchmarks will 
 
 ### Benchmarks with Pool 
 
-![](https://github.com/panjf2000/ants/blob/master/benchmark_pool.png)
+![](benchmark_pool.png)
 
 
 
 ### Benchmarks with PoolWithFunc
 
-![](https://github.com/panjf2000/ants/blob/master/ants_bench_poolwithfunc.png)
+![](ants_bench_poolwithfunc.png)
 
 ### Throughput
 
 #### 10w tasks
 
-![](https://github.com/panjf2000/ants/blob/master/ants_bench_10w.png)
+![](ants_bench_10w.png)
 
 #### 100w tasks
 
-![](https://github.com/panjf2000/ants/blob/master/ants_bench_100w.png)
+![](ants_bench_100w.png)
 
 #### 1000W tasks
 
-![](https://github.com/panjf2000/ants/blob/master/ants_bench_1000w.png)
+![](ants_bench_1000w.png)
 
 There was only the test of `ants` Pool because my computer was crash when it reached 1000w goroutines. 
 
