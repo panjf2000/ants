@@ -140,6 +140,7 @@ func (p *Pool) getWorker() *Worker {
 			p.running++
 		}
 	} else {
+		<-p.freeSignal
 		w = workers[n]
 		workers[n] = nil
 		p.workers = workers[:n]
@@ -148,20 +149,13 @@ func (p *Pool) getWorker() *Worker {
 
 	if waiting {
 		<-p.freeSignal
-		for {
-			p.lock.Lock()
-			workers = p.workers
-			l := len(workers) - 1
-			if l < 0 {
-				p.lock.Unlock()
-				continue
-			}
-			w = workers[l]
-			workers[l] = nil
-			p.workers = workers[:l]
-			p.lock.Unlock()
-			break
-		}
+		p.lock.Lock()
+		workers = p.workers
+		l := len(workers) - 1
+		w = workers[l]
+		workers[l] = nil
+		p.workers = workers[:l]
+		p.lock.Unlock()
 	} else if w == nil {
 		w = &Worker{
 			pool: p,
