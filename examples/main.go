@@ -34,8 +34,8 @@ import (
 var sum int32
 
 func myFunc(i interface{}) error {
-	n := i.(int)
-	atomic.AddInt32(&sum, int32(n))
+	n := i.(int32)
+	atomic.AddInt32(&sum, n)
 	fmt.Printf("run with %d\n", n)
 	return nil
 }
@@ -73,7 +73,7 @@ func main() {
 	// submit tasks
 	for i := 0; i < runTimes; i++ {
 		wg.Add(1)
-		p.Serve(i)
+		p.Serve(int32(i))
 	}
 	wg.Wait()
 	fmt.Printf("running goroutines: %d\n", p.Running())
