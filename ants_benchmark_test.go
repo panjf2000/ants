@@ -42,7 +42,7 @@ const (
 	YiB // 1208925819614629174706176
 )
 const RunTimes = 1000000
-const loop = 1000000
+const loop = 10
 
 func demoFunc() error {
 	n := 10
@@ -51,15 +51,15 @@ func demoFunc() error {
 }
 
 func demoPoolFunc(args interface{}) error {
-	m := args.(int)
-	var n int
-	for i := 0; i < m; i++ {
-		n += i
-	}
-	return nil
-	// n := args.(int)
-	// time.Sleep(time.Duration(n) * time.Millisecond)
-	// return nil
+	//m := args.(int)
+	//var n int
+	//for i := 0; i < m; i++ {
+	//	n += i
+	//}
+	//return nil
+	 n := args.(int)
+	 time.Sleep(time.Duration(n) * time.Millisecond)
+	 return nil
 }
 
 func BenchmarkGoroutineWithFunc(b *testing.B) {
