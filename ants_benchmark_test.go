@@ -63,8 +63,8 @@ func demoPoolFunc(args interface{}) error {
 }
 
 func BenchmarkGoroutineWithFunc(b *testing.B) {
+	var wg sync.WaitGroup
 	for i := 0; i < b.N; i++ {
-		var wg sync.WaitGroup
 		for j := 0; j < RunTimes; j++ {
 			wg.Add(1)
 			go func() {
@@ -77,13 +77,13 @@ func BenchmarkGoroutineWithFunc(b *testing.B) {
 }
 
 func BenchmarkAntsPoolWithFunc(b *testing.B) {
+	var wg sync.WaitGroup
+	p, _ := ants.NewPoolWithFunc(50000, func(i interface{}) error {
+		demoPoolFunc(i)
+		wg.Done()
+		return nil
+	})
 	for i := 0; i < b.N; i++ {
-		var wg sync.WaitGroup
-		p, _ := ants.NewPoolWithFunc(50000, func(i interface{}) error {
-			demoPoolFunc(i)
-			wg.Done()
-			return nil
-		})
 		for j := 0; j < RunTimes; j++ {
 			wg.Add(1)
 			p.Serve(loop)
