@@ -122,7 +122,7 @@ func (p *PoolWithFunc) ReSize(size int) {
 		for i := 0; i < diff; i++ {
 			p.getWorker().stop()
 		}
-	} else if size == p.Cap(){
+	} else if size == p.Cap() {
 		return
 	}
 	atomic.StoreInt32(&p.capacity, int32(size))
@@ -145,6 +145,7 @@ func (p *PoolWithFunc) getWorker() *WorkerWithFunc {
 			p.running++
 		}
 	} else {
+		<-p.freeSignal
 		w = workers[n]
 		workers[n] = nil
 		p.workers = workers[:n]
@@ -153,20 +154,13 @@ func (p *PoolWithFunc) getWorker() *WorkerWithFunc {
 
 	if waiting {
 		<-p.freeSignal
-		for {
-			p.lock.Lock()
-			workers = p.workers
-			l := len(workers) - 1
-			if l < 0 {
-				p.lock.Unlock()
-				continue
-			}
-			w = workers[l]
-			workers[l] = nil
-			p.workers = workers[:l]
-			p.lock.Unlock()
-			break
-		}
+		p.lock.Lock()
+		workers = p.workers
+		l := len(workers) - 1
+		w = workers[l]
+		workers[l] = nil
+		p.workers = workers[:l]
+		p.lock.Unlock()
 	} else if w == nil {
 		w = &WorkerWithFunc{
 			pool: p,
