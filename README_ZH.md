@@ -6,7 +6,7 @@
 
 
 
-[![godoc for panjf2000/ants][1]][2] [![goreportcard for panjf2000/ants][3]][4] ![License](https://img.shields.io/dub/l/vibe-d.svg)
+[![godoc for panjf2000/ants][1]][2] [![goreportcard for panjf2000/ants][3]][4] [![MIT Licence](https://badges.frapsoft.com/os/mit/mit.svg?v=103)](https://opensource.org/licenses/mit-license.php)
 
 [英文说明页](README.md) | [项目介绍文章传送门](http://blog.taohuawu.club/article/42)
 

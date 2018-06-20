@@ -8,7 +8,7 @@
 
 [![godoc for panjf2000/ants][1]][2]
 [![goreportcard for panjf2000/ants][3]][4]
-![License](https://img.shields.io/dub/l/vibe-d.svg)
+[![MIT Licence](https://badges.frapsoft.com/os/mit/mit.svg?v=103)](https://opensource.org/licenses/mit-license.php)
 
 [中文项目说明](README_ZH.md) | [Project Tutorial](http://blog.taohuawu.club/article/42)
 
