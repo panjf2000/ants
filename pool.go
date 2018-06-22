@@ -106,6 +106,9 @@ func (p *Pool) Release() error {
 		for i := 0; i < running; i++ {
 			p.getWorker().stop()
 		}
+		for i := range p.workers{
+			p.workers[i] = nil
+		}
 	})
 	return nil
 }
