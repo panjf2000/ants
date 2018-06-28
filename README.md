@@ -143,13 +143,17 @@ The test data above is a basic benchmark and the more detailed benchmarks will 
 
 ![](benchmark_pool.png)
 
+ In that benchmark-picture, the first and second benchmarks performed test with 100w tasks and the rest of benchmarks performed test with 1000w tasks, both unlimited goroutines and ants pool, and the capacity of this ants goroutine-pool was limited to 5w.
 
+**As you can see, `ants` can up to 2x faster than goroutines without pool (1000w tasks) and it only consumes half memory comparing with goroutines without pool. (both 100w and 1000w tasks)**
 
 ### Benchmarks with PoolWithFunc
 
 ![](ants_bench_poolwithfunc.png)
 
-### Throughput
+
+
+### Throughput ( situation for  only submitting tasks and  need not waiting  for all the tasks to be completed) 
 
 #### 10w tasks
 
@@ -164,6 +168,8 @@ The test data above is a basic benchmark and the more detailed benchmarks will 
 ![](ants_bench_1000w.png)
 
 There was only the test of `ants` Pool because my computer was crash when it reached 1000w goroutines. 
+
+**As you can see, `ants` can up to 2x~6x faster than goroutines without pool and the memory consumption is reduced by 10 to 20 times.**
 
 [1]: https://godoc.org/github.com/panjf2000/ants?status.svg
 [2]: https://godoc.org/github.com/panjf2000/ants
