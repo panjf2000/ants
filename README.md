@@ -143,7 +143,7 @@ The test data above is a basic benchmark and the more detailed benchmarks will 
 
 ![](benchmark_pool.png)
 
- In that benchmark-picture, the first and second benchmarks performed test with 100w tasks and the rest of benchmarks performed test with 1000w tasks, both unlimited goroutines and ants pool, and the capacity of this ants goroutine-pool was limited to 5w.
+In that benchmark-picture, the first and second benchmarks performed test with 100w tasks and the rest of benchmarks performed test with 1000w tasks, both unlimited goroutines and ants pool, and the capacity of this ants goroutine-pool was limited to 5w.
 
 **As you can see, `ants` can up to 2x faster than goroutines without pool (1000w tasks) and it only consumes half memory comparing with goroutines without pool. (both 100w and 1000w tasks)**
 
