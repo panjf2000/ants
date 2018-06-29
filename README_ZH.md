@@ -6,7 +6,10 @@
 
 
 
-[![godoc for panjf2000/ants][1]][2] [![goreportcard for panjf2000/ants][3]][4] [![MIT Licence](https://badges.frapsoft.com/os/mit/mit.svg?v=103)](https://opensource.org/licenses/mit-license.php)
+[![Build Status][1]][2]
+[![godoc for panjf2000/ants][3]][4]
+[![goreportcard for panjf2000/ants][5]][6]
+[![MIT Licence][7]][8]
 
 [英文说明页](README.md) | [项目介绍文章传送门](http://blog.taohuawu.club/article/42)
 
@@ -173,7 +176,11 @@ Memory : 8 GB 1867 MHz DDR3
 
 **从该demo测试吞吐性能对比可以看出，使用ants的吞吐性能相较于原生goroutine可以保持在2-6倍的性能压制，而内存消耗则可以达到10-20倍的节省优势。** 
 
-[1]: https://godoc.org/github.com/panjf2000/ants?status.svg
-[2]: https://godoc.org/github.com/panjf2000/ants
-[3]: https://goreportcard.com/badge/github.com/panjf2000/ants
-[4]: https://goreportcard.com/report/github.com/panjf2000/ants
+[1]: https://travis-ci.com/panjf2000/ants.svg?branch=master
+[2]: https://travis-ci.com/panjf2000/ants
+[3]: https://godoc.org/github.com/panjf2000/ants?status.svg
+[4]: https://godoc.org/github.com/panjf2000/ants
+[5]: https://goreportcard.com/badge/github.com/panjf2000/ants
+[6]: https://goreportcard.com/report/github.com/panjf2000/ants
+[7]: https://badges.frapsoft.com/os/mit/mit.svg?v=103
+[8]: https://opensource.org/licenses/mit-license.php
