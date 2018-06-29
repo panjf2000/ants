@@ -5,10 +5,10 @@
 <p align="center">A goroutine pool for Go</p>
 
 
-
-[![godoc for panjf2000/ants][1]][2]
-[![goreportcard for panjf2000/ants][3]][4]
-[![MIT Licence](https://badges.frapsoft.com/os/mit/mit.svg?v=103)](https://opensource.org/licenses/mit-license.php)
+[![Build Status][1]][2]
+[![godoc for panjf2000/ants][3]][4]
+[![goreportcard for panjf2000/ants][5]][6]
+[![MIT Licence][7]][8]
 
 [中文项目说明](README_ZH.md) | [Project Tutorial](http://blog.taohuawu.club/article/42)
 
@@ -171,7 +171,11 @@ There was only the test of `ants` Pool because my computer was crash when it rea
 
 **As you can see, `ants` can up to 2x~6x faster than goroutines without pool and the memory consumption is reduced by 10 to 20 times.**
 
-[1]: https://godoc.org/github.com/panjf2000/ants?status.svg
-[2]: https://godoc.org/github.com/panjf2000/ants
-[3]: https://goreportcard.com/badge/github.com/panjf2000/ants
-[4]: https://goreportcard.com/report/github.com/panjf2000/ants
+[1]: https://travis-ci.com/panjf2000/ants.svg?branch=develop
+[2]: https://travis-ci.com/panjf2000/ants
+[3]: https://godoc.org/github.com/panjf2000/ants?status.svg
+[4]: https://godoc.org/github.com/panjf2000/ants
+[5]: https://goreportcard.com/badge/github.com/panjf2000/ants
+[6]: https://goreportcard.com/report/github.com/panjf2000/ants
+[7]: https://badges.frapsoft.com/os/mit/mit.svg?v=103
+[8]: https://opensource.org/licenses/mit-license.php
