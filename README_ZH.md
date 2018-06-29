@@ -6,7 +6,10 @@
 
 
 
-[![godoc for panjf2000/ants][1]][2] [![goreportcard for panjf2000/ants][3]][4] [![MIT Licence](https://badges.frapsoft.com/os/mit/mit.svg?v=103)](https://opensource.org/licenses/mit-license.php)
+[![Build Status][1]][2]
+[![godoc for panjf2000/ants][3]][4]
+[![goreportcard for panjf2000/ants][5]][6]
+[![MIT Licence][7]][8]
 
 [英文说明页](README.md) | [项目介绍文章传送门](http://blog.taohuawu.club/article/42)
 
@@ -147,13 +150,13 @@ Memory : 8 GB 1867 MHz DDR3
 
 ![](benchmark_pool.png)
 
-**这里为了模拟大规模goroutine的场景，两次测试的并发次数分别是100w和1000w，前两个测试分别是执行100w个并发任务不使用Pool和使用了`ants`的Goroutine Pool的性能，后两个则是1000w个任务下的表现，可以直观的看出在执行速度和内存使用上，`ants`的Pool都占有明显的优势。100w的任务量，使用`ants`，执行速度与原生goroutine相当甚至略快，但只实际使用了不到5w个goroutine完成了全部任务，且内存消耗仅为原生并发的40%；而当任务量达到1000w，优势则更加明显了：用了70w左右的goroutine完成全部任务，执行速度比原生goroutine提高了100%，且内存消耗依旧保持在不使用Pool的40%左右。 **
+**这里为了模拟大规模goroutine的场景，两次测试的并发次数分别是100w和1000w，前两个测试分别是执行100w个并发任务不使用Pool和使用了`ants`的Goroutine Pool的性能，后两个则是1000w个任务下的表现，可以直观的看出在执行速度和内存使用上，`ants`的Pool都占有明显的优势。100w的任务量，使用`ants`，执行速度与原生goroutine相当甚至略快，但只实际使用了不到5w个goroutine完成了全部任务，且内存消耗仅为原生并发的40%；而当任务量达到1000w，优势则更加明显了：用了70w左右的goroutine完成全部任务，执行速度比原生goroutine提高了100%，且内存消耗依旧保持在不使用Pool的40%左右。**
 
 ### Benchmarks with PoolWithFunc
 
 ![](ants_bench_poolwithfunc.png)
 
-**因为`PoolWithFunc`这个Pool只绑定一个任务函数，也即所有任务都是运行同一个函数，所以相较于`Pool`对原生goroutine在执行速度和内存消耗的优势更大，上面的结果可以看出，执行速度可以达到原生goroutine的300%，而内存消耗的优势已经达到了两位数的差距，原生goroutine的内存消耗达到了`ants`的35倍且原生goroutine的每次执行的内存分配次数也达到了`ants`45倍，1000w的任务量，`ants`的初始分配容量是5w，因此它完成了所有的任务依旧只使用了5w个goroutine！事实上，`ants`的Goroutine Pool的容量是可以自定义的，也就是说使用者可以根据不同场景对这个参数进行调优直至达到最高性能。 **
+**因为`PoolWithFunc`这个Pool只绑定一个任务函数，也即所有任务都是运行同一个函数，所以相较于`Pool`对原生goroutine在执行速度和内存消耗的优势更大，上面的结果可以看出，执行速度可以达到原生goroutine的300%，而内存消耗的优势已经达到了两位数的差距，原生goroutine的内存消耗达到了`ants`的35倍且原生goroutine的每次执行的内存分配次数也达到了`ants`45倍，1000w的任务量，`ants`的初始分配容量是5w，因此它完成了所有的任务依旧只使用了5w个goroutine！事实上，`ants`的Goroutine Pool的容量是可以自定义的，也就是说使用者可以根据不同场景对这个参数进行调优直至达到最高性能。**
 
 ### 吞吐量测试（使用于那种只管提交异步任务而无须关心结果的场景）
 
@@ -173,7 +176,11 @@ Memory : 8 GB 1867 MHz DDR3
 
 **从该demo测试吞吐性能对比可以看出，使用ants的吞吐性能相较于原生goroutine可以保持在2-6倍的性能压制，而内存消耗则可以达到10-20倍的节省优势。** 
 
-[1]: https://godoc.org/github.com/panjf2000/ants?status.svg
-[2]: https://godoc.org/github.com/panjf2000/ants
-[3]: https://goreportcard.com/badge/github.com/panjf2000/ants
-[4]: https://goreportcard.com/report/github.com/panjf2000/ants
+[1]: https://travis-ci.com/panjf2000/ants.svg?branch=master
+[2]: https://travis-ci.com/panjf2000/ants
+[3]: https://godoc.org/github.com/panjf2000/ants?status.svg
+[4]: https://godoc.org/github.com/panjf2000/ants
+[5]: https://goreportcard.com/badge/github.com/panjf2000/ants
+[6]: https://goreportcard.com/report/github.com/panjf2000/ants
+[7]: https://badges.frapsoft.com/os/mit/mit.svg?v=103
+[8]: https://opensource.org/licenses/mit-license.php
