@@ -54,6 +54,7 @@ func TestDefaultPool(t *testing.T) {
 }
 
 func TestNoPool(t *testing.T) {
+	defer ants.Release()
 	var wg sync.WaitGroup
 	for i := 0; i < n; i++ {
 		wg.Add(1)
