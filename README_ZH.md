@@ -176,7 +176,7 @@ Memory : 8 GB 1867 MHz DDR3
 
 **从该demo测试吞吐性能对比可以看出，使用ants的吞吐性能相较于原生goroutine可以保持在2-6倍的性能压制，而内存消耗则可以达到10-20倍的节省优势。** 
 
-[1]: https://travis-ci.com/panjf2000/ants.svg?branch=develop
+[1]: https://travis-ci.com/panjf2000/ants.svg?branch=master
 [2]: https://travis-ci.com/panjf2000/ants
 [3]: https://godoc.org/github.com/panjf2000/ants?status.svg
 [4]: https://godoc.org/github.com/panjf2000/ants
