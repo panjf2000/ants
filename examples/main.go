@@ -26,9 +26,9 @@ import (
 	"fmt"
 	"sync"
 	"sync/atomic"
+	"time"
 
 	"github.com/panjf2000/ants"
-	"time"
 )
 
 var sum int32
