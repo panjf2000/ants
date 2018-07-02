@@ -83,7 +83,7 @@ func BenchmarkAntsPoolWithFunc(b *testing.B) {
 		wg.Done()
 		return nil
 	})
-	p.Release()
+	defer p.Release()
 
 	for i := 0; i < b.N; i++ {
 		for j := 0; j < RunTimes; j++ {
@@ -105,7 +105,7 @@ func BenchmarkGoroutine(b *testing.B) {
 
 func BenchmarkAntsPool(b *testing.B) {
 	p, _ := ants.NewPoolWithFunc(50000, demoPoolFunc)
-	p.Release()
+	defer p.Release()
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
