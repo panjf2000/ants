@@ -47,6 +47,8 @@ func demoFunc() error {
 }
 
 func main() {
+	defer ants.Release()
+
 	runTimes := 1000
 
 	// use the common pool 
@@ -70,6 +72,7 @@ func main() {
 		wg.Done()
 		return nil
 	})
+	defer p.Release()
 	// submit tasks
 	for i := 0; i < runTimes; i++ {
 		wg.Add(1)
