@@ -76,9 +76,10 @@ func (p *Pool) monitorAndClear() {
 				n = i
 				w.stop()
 				idleWorkers[i] = nil
+				p.running--
 			}
 			if n > 0 {
-				n += 1
+				n++
 				p.workers = idleWorkers[n:]
 			}
 			p.lock.Unlock()

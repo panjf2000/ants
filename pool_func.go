@@ -77,6 +77,7 @@ func (p *PoolWithFunc) MonitorAndClear() {
 				n = i
 				w.stop()
 				idleWorkers[i] = nil
+				p.running--
 			}
 			if n > 0 {
 				n += 1
