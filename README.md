@@ -37,7 +37,6 @@ glide get github.com/panjf2000/ants
 If your program will generate a massive number of goroutines and you don't want them to consume a vast amount of memory, with ants, all you need to do is to import ants package and submit all your tasks to the default limited pool created when ants was imported:
 
 ``` go
-
 package main
 
 import (
@@ -84,8 +83,8 @@ func main() {
 	fmt.Printf("finish all tasks.\n")
 
 	// use the pool with a function
-	// set 10 the size of goroutine pool
-	p, _ := ants.NewPoolWithFunc(10, func(i interface{}) error {
+	// set 10 the size of goroutine pool and 1 second for expired duration
+	p, _ := ants.NewPoolWithFunc(10, 1, func(i interface{}) error {
 		myFunc(i)
 		wg.Done()
 		return nil
@@ -132,6 +131,15 @@ Don't worry about the synchronous problems in this case, this method is thread-s
 All the tasks submitted to ants pool will not be guaranteed to be processed in order, because those tasks distribute among a series of concurrent workers, thus those tasks are processed concurrently.
 
 ## Benchmarks
+
+```
+OS : macOS High Sierra
+Processor : 2.7 GHz Intel Core i5
+Memory : 8 GB 1867 MHz DDR3
+
+Go1.9
+```
+
 <div align="center"><img src="ants_benchmarks.png"/></div>
 
  In that benchmark-picture, the first and second benchmarks performed test with 100w tasks and the rest of benchmarks performed test with 1000w tasks, both unlimited goroutines and ants pool, and the capacity of this ants goroutine-pool was limited to 5w.
