@@ -68,4 +68,3 @@ var (
 	ErrPoolSizeInvalid = errors.New("invalid size for pool")
 	ErrPoolClosed      = errors.New("this pool has been closed")
 )
-

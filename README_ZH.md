@@ -38,7 +38,6 @@ glide get github.com/panjf2000/ants
 写 go 并发程序的时候如果程序会启动大量的 goroutine ，势必会消耗大量的系统资源（内存，CPU），通过使用 `ants`，可以实例化一个协程池，复用 goroutine ，节省资源，提升性能：
 
 ``` go
-
 package main
 
 import (
@@ -85,8 +84,8 @@ func main() {
 	fmt.Printf("finish all tasks.\n")
 
 	// use the pool with a function
-	// set 10 the size of goroutine pool
-	p, _ := ants.NewPoolWithFunc(10, func(i interface{}) error {
+	// set 10 the size of goroutine pool and 1 second for expired duration
+	p, _ := ants.NewPoolWithFunc(10, 1, func(i interface{}) error {
 		myFunc(i)
 		wg.Done()
 		return nil
@@ -137,6 +136,8 @@ pool.ReSize(100000) // Readjust its capacity to 100000
 OS : macOS High Sierra
 Processor : 2.7 GHz Intel Core i5
 Memory : 8 GB 1867 MHz DDR3
+
+Go1.9
 ```
 
 
