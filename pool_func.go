@@ -100,7 +100,7 @@ func NewPoolWithFunc(size, expiry int, f pf) (*PoolWithFunc, error) {
 		expiryDuration: time.Duration(expiry) * time.Second,
 		poolFunc:       f,
 	}
-	p.MonitorAndClear()
+	p.monitorAndClear()
 	return p, nil
 }
 
