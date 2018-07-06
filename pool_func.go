@@ -96,7 +96,7 @@ func NewPoolWithFunc(size, expiry int, f pf) (*PoolWithFunc, error) {
 		capacity:   int32(size),
 		freeSignal: make(chan sig, math.MaxInt32),
 		release:    make(chan sig, 1),
-		expiryDuration: time.Duration(expiry)*time.Second,
+		expiryDuration: time.Duration(expiry) * time.Second,
 		poolFunc:   f,
 	}
 	p.MonitorAndClear()
