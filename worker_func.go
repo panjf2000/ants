@@ -24,6 +24,7 @@ package ants
 
 import (
 	"sync/atomic"
+	"time"
 )
 
 // WorkerWithFunc is the actual executor who runs the tasks,
@@ -35,6 +36,9 @@ type WorkerWithFunc struct {
 
 	// args is a job should be done.
 	args chan interface{}
+
+	// recycleTime will be update when putting a worker back into queue.
+	recycleTime time.Time
 }
 
 // run starts a goroutine to repeat the process

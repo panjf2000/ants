@@ -26,6 +26,7 @@ import (
 	"math"
 	"sync"
 	"sync/atomic"
+	"time"
 )
 
 type sig struct{}
@@ -40,6 +41,9 @@ type Pool struct {
 
 	// running is the number of the currently running goroutines.
 	running int32
+
+	// expiryDuration set the expired time (second) of every worker.
+	expiryDuration time.Duration
 
 	// freeSignal is used to notice pool there are available
 	// workers which can be sent to work.
@@ -57,8 +61,34 @@ type Pool struct {
 	once sync.Once
 }
 
+func (p *Pool) monitorAndClear() {
+	go func() {
+		for {
+			time.Sleep(p.expiryDuration)
+			currentTime := time.Now()
+			p.lock.Lock()
+			idleWorkers := p.workers
+			n := 0
+			for i, w := range idleWorkers {
+				if currentTime.Sub(w.recycleTime) <= p.expiryDuration {
+					break
+				}
+				n = i
+				w.stop()
+				idleWorkers[i] = nil
+			}
+			if n > 0 {
+				n += 1
+				p.workers = idleWorkers[n:]
+			}
+			p.lock.Unlock()
+		}
+	}()
+}
+
+
 // NewPool generates a instance of ants pool
-func NewPool(size int) (*Pool, error) {
+func NewPool(size, expiry int) (*Pool, error) {
 	if size <= 0 {
 		return nil, ErrPoolSizeInvalid
 	}
@@ -66,8 +96,9 @@ func NewPool(size int) (*Pool, error) {
 		capacity:   int32(size),
 		freeSignal: make(chan sig, math.MaxInt32),
 		release:    make(chan sig, 1),
+		expiryDuration: time.Duration(expiry) * time.Second,
 	}
-
+	p.monitorAndClear()
 	return p, nil
 }
 
@@ -171,6 +202,7 @@ func (p *Pool) getWorker() *Worker {
 
 // putWorker puts a worker back into free pool, recycling the goroutines.
 func (p *Pool) putWorker(worker *Worker) {
+	worker.recycleTime = time.Now()
 	p.lock.Lock()
 	p.workers = append(p.workers, worker)
 	p.lock.Unlock()

@@ -67,7 +67,7 @@ func main() {
 
 	// use the pool with a function
 	// set 10 the size of goroutine pool
-	p, _ := ants.NewPoolWithFunc(10, func(i interface{}) error {
+	p, _ := ants.NewPoolWithFunc(10, 1, func(i interface{}) error {
 		myFunc(i)
 		wg.Done()
 		return nil
