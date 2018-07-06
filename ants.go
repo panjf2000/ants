@@ -25,7 +25,6 @@ package ants
 import (
 	"errors"
 	"math"
-	"runtime"
 )
 
 const (
@@ -33,11 +32,11 @@ const (
 	DefaultPoolSize = math.MaxInt32
 
 	// DefaultCleanIntervalTime is the interval time to clean up goroutines
-	DefaultCleanIntervalTime = 30
+	DefaultCleanIntervalTime = 10
 )
 
 // Init a instance pool when importing ants
-var defaultPool, _ = NewPool(DefaultPoolSize, 10)
+var defaultPool, _ = NewPool(DefaultPoolSize, DefaultCleanIntervalTime)
 
 // Submit submit a task to pool
 func Submit(task f) error {
