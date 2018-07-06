@@ -94,11 +94,11 @@ func NewPoolWithFunc(size, expiry int, f pf) (*PoolWithFunc, error) {
 		return nil, ErrPoolSizeInvalid
 	}
 	p := &PoolWithFunc{
-		capacity:   int32(size),
-		freeSignal: make(chan sig, math.MaxInt32),
-		release:    make(chan sig, 1),
+		capacity:       int32(size),
+		freeSignal:     make(chan sig, math.MaxInt32),
+		release:        make(chan sig, 1),
 		expiryDuration: time.Duration(expiry) * time.Second,
-		poolFunc:   f,
+		poolFunc:       f,
 	}
 	p.MonitorAndClear()
 	return p, nil
@@ -142,7 +142,7 @@ func (p *PoolWithFunc) Release() error {
 		for i := 0; i < running; i++ {
 			p.getWorker().stop()
 		}
-		for i := range p.workers{
+		for i := range p.workers {
 			p.workers[i] = nil
 		}
 	})

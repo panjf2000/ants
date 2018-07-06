@@ -51,7 +51,7 @@ func main() {
 
 	runTimes := 1000
 
-	// use the common pool 
+	// use the common pool
 	var wg sync.WaitGroup
 	for i := 0; i < runTimes; i++ {
 		wg.Add(1)
