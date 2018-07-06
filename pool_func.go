@@ -78,8 +78,10 @@ func (p *PoolWithFunc) MonitorAndClear() {
 				w.stop()
 				idleWorkers[i] = nil
 			}
-			n += 1
-			p.workers = idleWorkers[n:]
+			if n > 0 {
+				n += 1
+				p.workers = idleWorkers[n:]
+			}
 			p.lock.Unlock()
 		}
 	}()
