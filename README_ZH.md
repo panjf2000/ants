@@ -113,7 +113,7 @@ ants.Submit(func() {})
 
 ``` go
 // set 10000 the size of goroutine pool and 1 second for expired duration
-p, _ := ants.NewPool(10000)
+p, _ := ants.NewPool(10000, 1)
 // submit a task
 p.Submit(func() {})
 ```
