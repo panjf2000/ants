@@ -96,7 +96,7 @@ func NewPool(size, expiry int) (*Pool, error) {
 		release:    make(chan sig, 1),
 		expiryDuration: time.Duration(expiry)*time.Second,
 	}
-
+	p.monitorAndClear()
 	return p, nil
 }
 
