@@ -70,9 +70,3 @@ var (
 	ErrPoolClosed      = errors.New("this pool has been closed")
 )
 
-var workerArgsCap = func() int {
-	if runtime.GOMAXPROCS(0) == 1 {
-		return 0
-	}
-	return 1
-}()
