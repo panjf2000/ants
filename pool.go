@@ -61,7 +61,7 @@ type Pool struct {
 	once sync.Once
 }
 
-func (p *Pool) MonitorAndClear() {
+func (p *Pool) monitorAndClear() {
 	go func() {
 		for {
 			time.Sleep(p.expiryDuration)
