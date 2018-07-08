@@ -88,8 +88,13 @@ func (p *PoolWithFunc) monitorAndClear() {
 	}()
 }
 
-// NewPoolWithFunc generates a instance of ants pool with a specific function.
-func NewPoolWithFunc(size, expiry int, f pf) (*PoolWithFunc, error) {
+// NewTimingPoolWithFunc generates a instance of ants pool with a specific function and a custom timed task
+func NewPoolWithFunc(size int, f pf) (*PoolWithFunc, error) {
+	return NewTimingPoolWithFunc(size, DefaultCleanIntervalTime, f)
+}
+
+// NewPoolWithFunc generates a instance of ants pool with a specific function
+func NewTimingPoolWithFunc(size, expiry int, f pf) (*PoolWithFunc, error) {
 	if size <= 0 {
 		return nil, ErrPoolSizeInvalid
 	}

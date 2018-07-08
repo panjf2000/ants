@@ -36,7 +36,7 @@ const (
 )
 
 // Init a instance pool when importing ants
-var defaultPool, _ = NewPool(DefaultPoolSize, DefaultCleanIntervalTime)
+var defaultPool, _ = NewPool(DefaultPoolSize)
 
 // Submit submit a task to pool
 func Submit(task f) error {

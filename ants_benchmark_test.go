@@ -78,7 +78,7 @@ func BenchmarkGoroutineWithFunc(b *testing.B) {
 
 func BenchmarkAntsPoolWithFunc(b *testing.B) {
 	var wg sync.WaitGroup
-	p, _ := ants.NewPoolWithFunc(50000, 1, func(i interface{}) error {
+	p, _ := ants.NewPoolWithFunc(50000, func(i interface{}) error {
 		demoPoolFunc(i)
 		wg.Done()
 		return nil
@@ -104,7 +104,7 @@ func BenchmarkGoroutine(b *testing.B) {
 }
 
 func BenchmarkAntsPool(b *testing.B) {
-	p, _ := ants.NewPoolWithFunc(50000, 1, demoPoolFunc)
+	p, _ := ants.NewPoolWithFunc(50000, demoPoolFunc)
 	defer p.Release()
 
 	b.ResetTimer()
