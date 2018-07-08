@@ -64,7 +64,7 @@ type Pool struct {
 func (p *Pool) monitorAndClear() {
 	heartbeat := time.NewTicker(p.expiryDuration)
 	go func() {
-		for range heartbeat.C{
+		for range heartbeat.C {
 			currentTime := time.Now()
 			p.lock.Lock()
 			idleWorkers := p.workers

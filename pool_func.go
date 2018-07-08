@@ -63,8 +63,9 @@ type PoolWithFunc struct {
 }
 
 func (p *PoolWithFunc) monitorAndClear() {
+	heartbeat := time.NewTicker(p.expiryDuration)
 	go func() {
-		for {
+		for range heartbeat.C {
 			time.Sleep(p.expiryDuration)
 			currentTime := time.Now()
 			p.lock.Lock()
@@ -88,12 +89,12 @@ func (p *PoolWithFunc) monitorAndClear() {
 	}()
 }
 
-// NewTimingPoolWithFunc generates a instance of ants pool with a specific function and a custom timed task
+// NewPoolWithFunc generates a instance of ants pool with a specific function
 func NewPoolWithFunc(size int, f pf) (*PoolWithFunc, error) {
 	return NewTimingPoolWithFunc(size, DefaultCleanIntervalTime, f)
 }
 
-// NewPoolWithFunc generates a instance of ants pool with a specific function
+// NewTimingPoolWithFunc generates a instance of ants pool with a specific function and a custom timed task
 func NewTimingPoolWithFunc(size, expiry int, f pf) (*PoolWithFunc, error) {
 	if size <= 0 {
 		return nil, ErrPoolSizeInvalid
