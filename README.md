@@ -17,7 +17,7 @@ Package ants implements a fixed goroutine pool for managing and recycling a mass
 ## Features:
 
 - Automatically managing and recycling a massive number of goroutines.
-- Periodically clearing the overdue goroutines.
+- Periodically clearing overdue goroutines.
 - Friendly interfaces: submitting tasks, getting the number of running goroutines, readjusting capacity of pool dynamically, closing pool.
 - Efficient in memory usage and it even achieves higher performance than unlimited goroutines in golang.
 
