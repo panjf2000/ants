@@ -95,7 +95,10 @@ func NewPool(size int) (*Pool, error) {
 // NewTimingPool generates a instance of ants pool with a custom timed task
 func NewTimingPool(size, expiry int) (*Pool, error) {
 	if size <= 0 {
-		return nil, ErrPoolSizeInvalid
+		return nil, ErrInvalidPoolSize
+	}
+	if expiry <= 0 {
+		return nil, ErrInvalidPoolExpiry
 	}
 	p := &Pool{
 		capacity:       int32(size),

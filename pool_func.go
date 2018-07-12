@@ -66,7 +66,6 @@ func (p *PoolWithFunc) monitorAndClear() {
 	heartbeat := time.NewTicker(p.expiryDuration)
 	go func() {
 		for range heartbeat.C {
-			time.Sleep(p.expiryDuration)
 			currentTime := time.Now()
 			p.lock.Lock()
 			idleWorkers := p.workers
@@ -81,7 +80,7 @@ func (p *PoolWithFunc) monitorAndClear() {
 				p.running--
 			}
 			if n > 0 {
-				n += 1
+				n++
 				p.workers = idleWorkers[n:]
 			}
 			p.lock.Unlock()
@@ -97,7 +96,10 @@ func NewPoolWithFunc(size int, f pf) (*PoolWithFunc, error) {
 // NewTimingPoolWithFunc generates a instance of ants pool with a specific function and a custom timed task
 func NewTimingPoolWithFunc(size, expiry int, f pf) (*PoolWithFunc, error) {
 	if size <= 0 {
-		return nil, ErrPoolSizeInvalid
+		return nil, ErrInvalidPoolSize
+	}
+	if expiry <= 0 {
+		return nil, ErrInvalidPoolExpiry
 	}
 	p := &PoolWithFunc{
 		capacity:       int32(size),

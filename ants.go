@@ -65,6 +65,7 @@ func Release() {
 
 // Errors for the Ants API
 var (
-	ErrPoolSizeInvalid = errors.New("invalid size for pool")
-	ErrPoolClosed      = errors.New("this pool has been closed")
+	ErrInvalidPoolSize   = errors.New("invalid size for pool")
+	ErrInvalidPoolExpiry = errors.New("invalid expiry for pool")
+	ErrPoolClosed        = errors.New("this pool has been closed")
 )

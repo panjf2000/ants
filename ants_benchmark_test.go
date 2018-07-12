@@ -41,8 +41,11 @@ const (
 	ZiB // 1180591620717411303424    (超过了int64的范围)
 	YiB // 1208925819614629174706176
 )
-const RunTimes = 1000000
-const loop = 10
+const (
+	RunTimes = 1000000
+	Param    = 10
+	AntsSize = 100000
+)
 
 func demoFunc() error {
 	n := 10
@@ -68,7 +71,7 @@ func BenchmarkGoroutineWithFunc(b *testing.B) {
 		for j := 0; j < RunTimes; j++ {
 			wg.Add(1)
 			go func() {
-				demoPoolFunc(loop)
+				demoPoolFunc(Param)
 				wg.Done()
 			}()
 		}
@@ -78,7 +81,7 @@ func BenchmarkGoroutineWithFunc(b *testing.B) {
 
 func BenchmarkAntsPoolWithFunc(b *testing.B) {
 	var wg sync.WaitGroup
-	p, _ := ants.NewPoolWithFunc(50000, func(i interface{}) error {
+	p, _ := ants.NewPoolWithFunc(AntsSize, func(i interface{}) error {
 		demoPoolFunc(i)
 		wg.Done()
 		return nil
@@ -88,7 +91,7 @@ func BenchmarkAntsPoolWithFunc(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		for j := 0; j < RunTimes; j++ {
 			wg.Add(1)
-			p.Serve(loop)
+			p.Serve(Param)
 		}
 		wg.Wait()
 		b.Logf("running goroutines: %d", p.Running())
@@ -98,19 +101,19 @@ func BenchmarkAntsPoolWithFunc(b *testing.B) {
 func BenchmarkGoroutine(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		for j := 0; j < RunTimes; j++ {
-			go demoPoolFunc(loop)
+			go demoPoolFunc(Param)
 		}
 	}
 }
 
 func BenchmarkAntsPool(b *testing.B) {
-	p, _ := ants.NewPoolWithFunc(50000, demoPoolFunc)
+	p, _ := ants.NewPoolWithFunc(AntsSize, demoPoolFunc)
 	defer p.Release()
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		for j := 0; j < RunTimes; j++ {
-			p.Serve(loop)
+			p.Serve(Param)
 		}
 		// b.Logf("running goroutines: %d", p.Running())
 	}
