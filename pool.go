@@ -74,7 +74,7 @@ func (p *Pool) monitorAndClear() {
 					break
 				}
 				n = i
-				w.stop()
+				w.task <- nil
 				idleWorkers[i] = nil
 				p.running--
 			}
@@ -118,7 +118,7 @@ func (p *Pool) Submit(task f) error {
 		return ErrPoolClosed
 	}
 	w := p.getWorker()
-	w.sendTask(task)
+	w.task <- task
 	return nil
 }
 
@@ -143,11 +143,12 @@ func (p *Pool) Release() error {
 		p.release <- sig{}
 		running := p.Running()
 		for i := 0; i < running; i++ {
-			p.getWorker().stop()
+			p.getWorker().task <- nil
 		}
 		for i := range p.workers {
 			p.workers[i] = nil
 		}
+		p.workers = nil
 	})
 	return nil
 }
@@ -157,7 +158,7 @@ func (p *Pool) ReSize(size int) {
 	if size < p.Cap() {
 		diff := p.Cap() - size
 		for i := 0; i < diff; i++ {
-			p.getWorker().stop()
+			p.getWorker().task <- nil
 		}
 	} else if size == p.Cap() {
 		return

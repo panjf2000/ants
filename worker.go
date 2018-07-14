@@ -56,13 +56,3 @@ func (w *Worker) run() {
 		}
 	}()
 }
-
-// stop this worker.
-func (w *Worker) stop() {
-	w.sendTask(nil)
-}
-
-// sendTask sends a task to this worker.
-func (w *Worker) sendTask(task f) {
-	w.task <- task
-}
