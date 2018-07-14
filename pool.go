@@ -148,6 +148,7 @@ func (p *Pool) Release() error {
 		for i := range p.workers {
 			p.workers[i] = nil
 		}
+		p.workers = nil
 	})
 	return nil
 }
