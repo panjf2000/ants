@@ -69,7 +69,8 @@ func (p *PoolWithFunc) monitorAndClear() {
 			currentTime := time.Now()
 			p.lock.Lock()
 			idleWorkers := p.workers
-			if len(idleWorkers) == 0 && len(p.release) > 0 {
+			if len(idleWorkers) == 0 && p.Running() == 0 && len(p.release) > 0 {
+				p.lock.Unlock()
 				return
 			}
 			n := 0
@@ -147,21 +148,17 @@ func (p *PoolWithFunc) Cap() int {
 
 // ReSize change the capacity of this pool
 func (p *PoolWithFunc) ReSize(size int) {
-	if size < p.Cap() {
-		diff := p.Cap() - size
-		p.lock.Lock()
-		idleWorkers := p.workers
-		for i := 0; i < diff; i++ {
-			<-p.freeSignal
-			idleWorkers[i].args <- nil
-			idleWorkers[i] = nil
-		}
-		p.workers = idleWorkers[diff:]
-		p.lock.Unlock()
-	} else if size == p.Cap() {
+	if size == p.Cap() {
 		return
+	} else if size < p.Cap() {
+		diff := p.Cap() - size
+		atomic.StoreInt32(&p.capacity, int32(size))
+		for i := 0; i < diff; i++ {
+			p.getWorker().args <- nil
+		}
+	} else {
+		atomic.StoreInt32(&p.capacity, int32(size))
 	}
-	atomic.StoreInt32(&p.capacity, int32(size))
 }
 
 // Release Closed this pool
