@@ -112,7 +112,7 @@ func TestCodeCov(t *testing.T) {
 	t.Logf("pool, free workers number:%d", p0.Free())
 	p0.ReSize(AntsSize)
 	p0.ReSize(AntsSize / 2)
-	t.Logf("pool, after resize, capacity:%d", p0.Cap())
+	t.Logf("pool, after resize, capacity:%d, running:%d", p0.Cap(), p0.Running())
 
 	p, _ := ants.NewPoolWithFunc(AntsSize, demoPoolFunc)
 	defer p.Serve(Param)
@@ -125,7 +125,7 @@ func TestCodeCov(t *testing.T) {
 	t.Logf("pool with func, free workers number:%d", p.Free())
 	p.ReSize(AntsSize)
 	p.ReSize(AntsSize / 2)
-	t.Logf("pool with func, after resize, capacity:%d", p.Cap())
+	t.Logf("pool with func, after resize, capacity:%d, running:%d", p.Cap(), p.Running())
 }
 
 // func TestNoPool(t *testing.T) {
