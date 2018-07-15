@@ -6,9 +6,10 @@
 
 
 [![Build Status][1]][2]
-[![godoc for panjf2000/ants][3]][4]
+[![codecov][3]][4]
 [![goreportcard for panjf2000/ants][5]][6]
-[![MIT Licence][7]][8]
+[![godoc for panjf2000/ants][7]][8]
+[![MIT Licence][9]][10]
 
 [中文项目说明](README_ZH.md) | [Project Tutorial](http://blog.taohuawu.club/article/42)
 
@@ -185,9 +186,11 @@ There was only the test of `ants` Pool because my computer was crash when it rea
 
 [1]: https://travis-ci.com/panjf2000/ants.svg?branch=master
 [2]: https://travis-ci.com/panjf2000/ants
-[3]: https://godoc.org/github.com/panjf2000/ants?status.svg
-[4]: https://godoc.org/github.com/panjf2000/ants
+[3]: https://codecov.io/gh/panjf2000/ants/branch/develop/graph/badge.svg
+[4]: https://codecov.io/gh/panjf2000/ants
 [5]: https://goreportcard.com/badge/github.com/panjf2000/ants
 [6]: https://goreportcard.com/report/github.com/panjf2000/ants
-[7]: https://badges.frapsoft.com/os/mit/mit.svg?v=103
-[8]: https://opensource.org/licenses/mit-license.php
+[7]: https://godoc.org/github.com/panjf2000/ants?status.svg
+[8]: https://godoc.org/github.com/panjf2000/ants
+[9]: https://badges.frapsoft.com/os/mit/mit.svg?v=103
+[10]: https://opensource.org/licenses/mit-license.php

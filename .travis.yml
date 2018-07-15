@@ -6,6 +6,12 @@ go:
   - "1.10.x"
   - master
 
+before_install:
+  - go get -t -v ./...
+
 script:
-  - go test -v ./...
-  - go test -bench=. -benchmem=true -run=none ./...
+  - go test -race -coverprofile=coverage.txt -covermode=atomic
+#  - go test -bench=. -benchmem=true -run=none ./...
+
+after_success:
+  - bash <(curl -s https://codecov.io/bash)

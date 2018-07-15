@@ -42,9 +42,9 @@ const (
 	YiB // 1208925819614629174706176
 )
 const (
-	RunTimes = 1000000
+	RunTimes = 10000000
 	Param    = 10
-	AntsSize = 100000
+	AntsSize = 50000
 )
 
 func demoFunc() error {
