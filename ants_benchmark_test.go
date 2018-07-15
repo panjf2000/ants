@@ -43,8 +43,8 @@ const (
 )
 const (
 	RunTimes = 10000000
-	Param    = 10
-	AntsSize = 50000
+	Param    = 100
+	AntsSize = 10000
 )
 
 func demoFunc() error {
