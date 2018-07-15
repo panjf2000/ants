@@ -186,8 +186,8 @@ There was only the test of `ants` Pool because my computer was crash when it rea
 
 [1]: https://travis-ci.com/panjf2000/ants.svg?branch=develop
 [2]: https://travis-ci.com/panjf2000/ants
-[3]: https://codecov.io/gh/panjf2000/ants
-[4]: https://codecov.io/gh/panjf2000/ants/branch/develop/graph/badge.svg
+[3]: https://codecov.io/gh/panjf2000/ants/branch/develop/graph/badge.svg
+[4]: https://codecov.io/gh/panjf2000/ants
 [5]: https://goreportcard.com/badge/github.com/panjf2000/ants
 [6]: https://goreportcard.com/report/github.com/panjf2000/ants
 [7]: https://godoc.org/github.com/panjf2000/ants?status.svg
