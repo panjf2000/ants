@@ -150,10 +150,12 @@ func (p *PoolWithFunc) Release() error {
 		for i := 0; i < running; i++ {
 			p.getWorker().args <- nil
 		}
+		p.lock.Lock()
 		for i := range p.workers {
 			p.workers[i] = nil
 		}
 		p.workers = nil
+		p.lock.Unlock()
 	})
 	return nil
 }

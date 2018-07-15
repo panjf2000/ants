@@ -145,10 +145,12 @@ func (p *Pool) Release() error {
 		for i := 0; i < running; i++ {
 			p.getWorker().task <- nil
 		}
+		p.lock.Lock()
 		for i := range p.workers {
 			p.workers[i] = nil
 		}
 		p.workers = nil
+		p.lock.Unlock()
 	})
 	return nil
 }

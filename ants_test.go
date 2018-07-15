@@ -105,7 +105,6 @@ func TestCodeCov(t *testing.T) {
 	t.Logf("pool with func, free workers number:%d", p.Free())
 	p.ReSize(AntsSize / 2)
 	t.Logf("pool with func, after resize, capacity:%d", p.Cap())
-
 }
 
 // func TestNoPool(t *testing.T) {
