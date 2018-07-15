@@ -77,7 +77,7 @@ func (p *PoolWithFunc) monitorAndClear() {
 				n = i
 				w.args <- nil
 				idleWorkers[i] = nil
-				p.running--
+				atomic.AddInt32(&p.running, 1)
 			}
 			if n > 0 {
 				n++
@@ -182,10 +182,10 @@ func (p *PoolWithFunc) getWorker() *WorkerWithFunc {
 	workers := p.workers
 	n := len(workers) - 1
 	if n < 0 {
-		if p.running >= p.capacity {
+		if p.Running() >= p.Cap() {
 			waiting = true
 		} else {
-			p.running++
+			atomic.AddInt32(&p.running, 1)
 		}
 	} else {
 		<-p.freeSignal
