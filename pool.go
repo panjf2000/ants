@@ -145,14 +145,13 @@ func (p *Pool) Cap() int {
 func (p *Pool) ReSize(size int) {
 	if size == p.Cap() {
 		return
-	} else if size < p.Cap() {
-		diff := p.Cap() - size
-		atomic.StoreInt32(&p.capacity, int32(size))
+	}
+	atomic.StoreInt32(&p.capacity, int32(size))
+	diff := p.Running() - size
+	if diff > 0 {
 		for i := 0; i < diff; i++ {
 			p.getWorker().task <- nil
 		}
-	} else {
-		atomic.StoreInt32(&p.capacity, int32(size))
 	}
 }
 
