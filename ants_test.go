@@ -47,6 +47,7 @@ func TestAntsPoolWithFunc(t *testing.T) {
 	}
 	wg.Wait()
 
+	t.Logf("pool with func, running workers number:%d", p.Running())
 	mem := runtime.MemStats{}
 	runtime.ReadMemStats(&mem)
 	t.Logf("memory usage:%d", mem.TotalAlloc/GiB)
