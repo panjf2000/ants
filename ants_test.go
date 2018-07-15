@@ -30,7 +30,7 @@ import (
 	"github.com/panjf2000/ants"
 )
 
-var n = 1000000
+var n = 100000
 
 func TestAntsPoolWithFunc(t *testing.T) {
 	var wg sync.WaitGroup

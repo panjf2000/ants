@@ -44,7 +44,7 @@ const (
 const (
 	RunTimes = 10000000
 	Param    = 100
-	AntsSize = 500
+	AntsSize = 100
 )
 
 func demoFunc() error {
