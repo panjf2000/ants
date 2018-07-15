@@ -65,6 +65,10 @@ func TestAntsPool(t *testing.T) {
 	}
 	wg.Wait()
 
+	t.Logf("pool, capacity:%d", ants.Cap())
+	t.Logf("pool, running workers number:%d", ants.Running())
+	t.Logf("pool, free workers number:%d", ants.Free())
+
 	mem := runtime.MemStats{}
 	runtime.ReadMemStats(&mem)
 	t.Logf("memory usage:%d MB", mem.TotalAlloc/MiB)
@@ -87,7 +91,17 @@ func TestNoPool(t *testing.T) {
 }
 
 func TestCodeCov(t *testing.T) {
+	_, err := ants.NewTimingPool(-1, -1)
+	t.Log(err)
+	_, err = ants.NewTimingPool(1, -1)
+	t.Log(err)
+	_, err = ants.NewTimingPoolWithFunc(-1, -1, demoPoolFunc)
+	t.Log(err)
+	_, err = ants.NewTimingPoolWithFunc(1, -1, demoPoolFunc)
+	t.Log(err)
+
 	p0, _ := ants.NewPool(AntsSize)
+	defer p0.Submit(demoFunc)
 	defer p0.Release()
 	for i := 0; i < n; i++ {
 		p0.Submit(demoFunc)
@@ -95,10 +109,12 @@ func TestCodeCov(t *testing.T) {
 	t.Logf("pool, capacity:%d", p0.Cap())
 	t.Logf("pool, running workers number:%d", p0.Running())
 	t.Logf("pool, free workers number:%d", p0.Free())
+	p0.ReSize(AntsSize)
 	p0.ReSize(AntsSize / 2)
 	t.Logf("pool, after resize, capacity:%d", p0.Cap())
 
 	p, _ := ants.NewPoolWithFunc(AntsSize, demoPoolFunc)
+	defer p.Serve(Param)
 	defer p.Release()
 	for i := 0; i < n; i++ {
 		p.Serve(Param)
@@ -106,6 +122,7 @@ func TestCodeCov(t *testing.T) {
 	t.Logf("pool with func, capacity:%d", p.Cap())
 	t.Logf("pool with func, running workers number:%d", p.Running())
 	t.Logf("pool with func, free workers number:%d", p.Free())
+	p.ReSize(AntsSize)
 	p.ReSize(AntsSize / 2)
 	t.Logf("pool with func, after resize, capacity:%d", p.Cap())
 }

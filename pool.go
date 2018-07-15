@@ -146,9 +146,6 @@ func (p *Pool) Release() error {
 			p.getWorker().task <- nil
 		}
 		p.lock.Lock()
-		for i := range p.workers {
-			p.workers[i] = nil
-		}
 		p.workers = nil
 		p.lock.Unlock()
 	})
