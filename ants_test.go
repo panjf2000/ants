@@ -43,7 +43,7 @@ func TestAntsPoolWithFunc(t *testing.T) {
 
 	for i := 0; i < n; i++ {
 		wg.Add(1)
-		p.Serve(n)
+		p.Serve(Param)
 	}
 	wg.Wait()
 
@@ -98,7 +98,7 @@ func TestCodeCov(t *testing.T) {
 	p, _ := ants.NewPoolWithFunc(AntsSize, demoPoolFunc)
 	defer p.Release()
 	for i := 0; i < n; i++ {
-		p.Serve(n)
+		p.Serve(Param)
 	}
 	t.Logf("pool with func, capacity:%d", p.Cap())
 	t.Logf("pool with func, running workers number:%d", p.Running())
