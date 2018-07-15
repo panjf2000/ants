@@ -87,13 +87,16 @@ func TestNoPool(t *testing.T) {
 }
 
 func TestCodeCov(t *testing.T) {
-	defer ants.Release()
+	p0, _ := ants.NewPool(AntsSize)
+	defer p0.Release()
 	for i := 0; i < n; i++ {
-		ants.Submit(demoFunc)
+		p0.Submit(demoFunc)
 	}
-	t.Logf("pool, capacity:%d", ants.Cap())
-	t.Logf("pool, running workers number:%d", ants.Running())
-	t.Logf("pool, free workers number:%d", ants.Free())
+	t.Logf("pool, capacity:%d", p0.Cap())
+	t.Logf("pool, running workers number:%d", p0.Running())
+	t.Logf("pool, free workers number:%d", p0.Free())
+	p0.ReSize(AntsSize / 2)
+	t.Logf("pool, after resize, capacity:%d", p0.Cap())
 
 	p, _ := ants.NewPoolWithFunc(AntsSize, demoPoolFunc)
 	defer p.Release()
