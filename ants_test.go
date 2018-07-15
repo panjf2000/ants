@@ -30,9 +30,29 @@ import (
 	"github.com/panjf2000/ants"
 )
 
-var n = 1000000
+var n = 1000
 
-func TestDefaultPool(t *testing.T) {
+func TestAntsPoolWithFunc(t *testing.T) {
+	var wg sync.WaitGroup
+	p, _ := ants.NewPoolWithFunc(AntsSize, func(i interface{}) error {
+		demoPoolFunc(i)
+		wg.Done()
+		return nil
+	})
+	defer p.Release()
+
+	for i := 0; i < n; i++ {
+		wg.Add(1)
+		p.Serve(n)
+	}
+	wg.Wait()
+
+	mem := runtime.MemStats{}
+	runtime.ReadMemStats(&mem)
+	t.Logf("memory usage:%d", mem.TotalAlloc/GiB)
+}
+
+func TestAntsPool(t *testing.T) {
 	defer ants.Release()
 	var wg sync.WaitGroup
 	for i := 0; i < n; i++ {
@@ -45,10 +65,6 @@ func TestDefaultPool(t *testing.T) {
 	}
 	wg.Wait()
 
-	//t.Logf("pool capacity:%d", ants.Cap())
-	//t.Logf("free workers number:%d", ants.Free())
-
-	t.Logf("running workers number:%d", ants.Running())
 	mem := runtime.MemStats{}
 	runtime.ReadMemStats(&mem)
 	t.Logf("memory usage:%d MB", mem.TotalAlloc/MiB)
@@ -70,27 +86,27 @@ func TestNoPool(t *testing.T) {
 	t.Logf("memory usage:%d MB", mem.TotalAlloc/MiB)
 }
 
-// func TestAntsPoolWithFunc(t *testing.T) {
-// 	var wg sync.WaitGroup
-// 	p, _ := ants.NewPoolWithFunc(50000, func(i interface{}) error {
-// 		demoPoolFunc(i)
-// 		wg.Done()
-// 		return nil
-// 	})
-// 	for i := 0; i < n; i++ {
-// 		wg.Add(1)
-// 		p.Serve(n)
-// 	}
-// 	wg.Wait()
+func TestCodeCov(t *testing.T) {
+	defer ants.Release()
+	for i := 0; i < n; i++ {
+		ants.Submit(demoFunc)
+	}
+	t.Logf("pool, capacity:%d", ants.Cap())
+	t.Logf("pool, running workers number:%d", ants.Running())
+	t.Logf("pool, free workers number:%d", ants.Free())
 
-// 	//t.Logf("pool capacity:%d", ants.Cap())
-// 	//t.Logf("free workers number:%d", ants.Free())
+	p, _ := ants.NewPoolWithFunc(AntsSize, demoPoolFunc)
+	defer p.Release()
+	for i := 0; i < n; i++ {
+		p.Serve(n)
+	}
+	t.Logf("pool with func, capacity:%d", p.Cap())
+	t.Logf("pool with func, running workers number:%d", p.Running())
+	t.Logf("pool with func, free workers number:%d", p.Free())
+	p.ReSize(AntsSize / 2)
+	t.Logf("pool with func, after resize, capacity:%d", p.Cap())
 
-// 	t.Logf("running workers number:%d", p.Running())
-// 	mem := runtime.MemStats{}
-// 	runtime.ReadMemStats(&mem)
-// 	t.Logf("memory usage:%d", mem.TotalAlloc/GiB)
-// }
+}
 
 // func TestNoPool(t *testing.T) {
 // 	var wg sync.WaitGroup
