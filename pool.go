@@ -61,7 +61,7 @@ type Pool struct {
 	once sync.Once
 }
 
-func (p *Pool) monitorAndClear() {
+func (p *Pool) periodicallyPurge() {
 	heartbeat := time.NewTicker(p.expiryDuration)
 	go func() {
 		for range heartbeat.C {
@@ -110,7 +110,7 @@ func NewTimingPool(size, expiry int) (*Pool, error) {
 		release:        make(chan sig, 1),
 		expiryDuration: time.Duration(expiry) * time.Second,
 	}
-	p.monitorAndClear()
+	p.periodicallyPurge()
 	return p, nil
 }
 
