@@ -28,6 +28,7 @@ import (
 	"testing"
 
 	"github.com/panjf2000/ants"
+	"time"
 )
 
 var n = 100000
@@ -46,7 +47,6 @@ func TestAntsPoolWithFunc(t *testing.T) {
 		p.Serve(Param)
 	}
 	wg.Wait()
-
 	t.Logf("pool with func, running workers number:%d", p.Running())
 	mem := runtime.MemStats{}
 	runtime.ReadMemStats(&mem)
@@ -114,17 +114,18 @@ func TestCodeCov(t *testing.T) {
 	p0.ReSize(AntsSize / 2)
 	t.Logf("pool, after resize, capacity:%d, running:%d", p0.Cap(), p0.Running())
 
-	p, _ := ants.NewPoolWithFunc(AntsSize, demoPoolFunc)
+	p, _ := ants.NewPoolWithFunc(TestSize, demoPoolFunc)
 	defer p.Serve(Param)
 	defer p.Release()
 	for i := 0; i < n; i++ {
 		p.Serve(Param)
 	}
+	time.Sleep(ants.DefaultCleanIntervalTime * time.Second)
 	t.Logf("pool with func, capacity:%d", p.Cap())
 	t.Logf("pool with func, running workers number:%d", p.Running())
 	t.Logf("pool with func, free workers number:%d", p.Free())
+	p.ReSize(TestSize)
 	p.ReSize(AntsSize)
-	p.ReSize(AntsSize / 2)
 	t.Logf("pool with func, after resize, capacity:%d, running:%d", p.Cap(), p.Running())
 }
 
