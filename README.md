@@ -144,7 +144,7 @@ Go1.9
 
 <div align="center"><img src="ants_benchmarks.png"/></div>
 
- In that benchmark-picture, the first and second benchmarks performed test with 100w tasks and the rest of benchmarks performed test with 1000w tasks, both unlimited goroutines and ants pool, and the capacity of this ants goroutine-pool was limited to 5w.
+ In that benchmark-picture, the first and second benchmarks performed test with 1M tasks and the rest of benchmarks performed test with 10M tasks, both unlimited goroutines and ants pool, and the capacity of this ants goroutine-pool was limited to 50K.
 
 - BenchmarkGoroutine-4 represent the benchmarks with unlimited goroutines in golang.
 
@@ -156,31 +156,29 @@ The test data above is a basic benchmark and the more detailed benchmarks will 
 
 ![](benchmark_pool.png)
 
-In that benchmark-picture, the first and second benchmarks performed test with 100w tasks and the rest of benchmarks performed test with 1000w tasks, both unlimited goroutines and ants pool, and the capacity of this ants goroutine-pool was limited to 5w.
+In that benchmark-picture, the first and second benchmarks performed test with 1M tasks and the rest of benchmarks performed test with 10M tasks, both unlimited goroutines and ants pool, and the capacity of this ants goroutine-pool was limited to 50K.
 
-**As you can see, `ants` can up to 2x faster than goroutines without pool (1000w tasks) and it only consumes half memory comparing with goroutines without pool. (both 100w and 1000w tasks)**
+**As you can see, `ants` can up to 2x faster than goroutines without pool (10M tasks) and it only consumes half memory comparing with goroutines without pool. (both 1M and 10M tasks)**
 
 ### Benchmarks with PoolWithFunc
 
 ![](ants_bench_poolwithfunc.png)
 
-
-
 ### Throughput ( situation for  only submitting tasks and  need not waiting  for all the tasks to be completed) 
 
-#### 10w tasks
+#### 100K tasks
 
 ![](ants_bench_10w.png)
 
-#### 100w tasks
+#### 1M tasks
 
 ![](ants_bench_100w.png)
 
-#### 1000W tasks
+#### 10M tasks
 
 ![](ants_bench_1000w.png)
 
-There was only the test of `ants` Pool because my computer was crash when it reached 1000w goroutines. 
+There was only the test of `ants` Pool because my computer was crash when it reached 10M goroutines. 
 
 **As you can see, `ants` can up to 2x~6x faster than goroutines without pool and the memory consumption is reduced by 10 to 20 times.**
 
