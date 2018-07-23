@@ -11,7 +11,7 @@
 [![godoc for panjf2000/ants][7]][8]
 [![MIT Licence][9]][10]
 
-[中文项目说明](README_ZH.md) | [Project Tutorial](http://blog.taohuawu.club/article/42)
+[中文项目说明](README_ZH.md) | [Project Tutorial](http://blog.taohuawu.club/article/goroutine-pool)
 
 Package ants implements a fixed goroutine pool for managing and recycling a massive number of goroutines, allowing developers to limit the number of goroutines that created by your concurrent programs.
 
