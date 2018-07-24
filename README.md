@@ -113,10 +113,10 @@ ants.Submit(func() {})
 Ants also supports custom limited pool. You can use the `NewPool` method to create a pool with the given capacity, as following:
 
 ``` go
-// set 10000 the size of goroutine pool and 1 second for expired duration
-p, _ := ants.NewPool(10000, 1)
+// set 10000 the size of goroutine pool
+p, _ := ants.NewPool(10000)
 // submit a task
-p.Submit(func() {})
+p.Submit(func() error {})
 ```
 
 ## Readjusting pool capacity
