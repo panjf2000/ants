@@ -105,15 +105,15 @@ func main() {
 ## 任务提交
 提交任务通过调用 `ants.Submit(func())`方法：
 ```go
-ants.Submit(func() {})
+ants.Submit(func() error {})
 ```
 
 ## 自定义池
 `ants`支持实例化使用者自己的一个 Pool ，指定具体的池容量；通过调用 `NewPool` 方法可以实例化一个新的带有指定容量的 Pool ，如下：
 
 ``` go
-// set 10000 the size of goroutine pool and 1 second for expired duration
-p, _ := ants.NewPool(10000, 1)
+// set 10000 the size of goroutine pool
+p, _ := ants.NewPool(10000)
 // submit a task
 p.Submit(func() {})
 ```
