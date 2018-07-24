@@ -64,32 +64,30 @@ type PoolWithFunc struct {
 
 func (p *PoolWithFunc) periodicallyPurge() {
 	heartbeat := time.NewTicker(p.expiryDuration)
-	go func() {
-		for range heartbeat.C {
-			currentTime := time.Now()
-			p.lock.Lock()
-			idleWorkers := p.workers
-			if len(idleWorkers) == 0 && p.Running() == 0 && len(p.release) > 0 {
-				p.lock.Unlock()
-				return
-			}
-			n := 0
-			for i, w := range idleWorkers {
-				if currentTime.Sub(w.recycleTime) <= p.expiryDuration {
-					break
-				}
-				n = i
-				<-p.freeSignal
-				w.args <- nil
-				idleWorkers[i] = nil
-			}
-			if n > 0 {
-				n++
-				p.workers = idleWorkers[n:]
-			}
+	for range heartbeat.C {
+		currentTime := time.Now()
+		p.lock.Lock()
+		idleWorkers := p.workers
+		if len(idleWorkers) == 0 && p.Running() == 0 && len(p.release) > 0 {
 			p.lock.Unlock()
+			return
 		}
-	}()
+		n := 0
+		for i, w := range idleWorkers {
+			if currentTime.Sub(w.recycleTime) <= p.expiryDuration {
+				break
+			}
+			n = i
+			<-p.freeSignal
+			w.args <- nil
+			idleWorkers[i] = nil
+		}
+		if n > 0 {
+			n++
+			p.workers = idleWorkers[n:]
+		}
+		p.lock.Unlock()
+	}
 }
 
 // NewPoolWithFunc generates a instance of ants pool with a specific function
@@ -112,7 +110,7 @@ func NewTimingPoolWithFunc(size, expiry int, f pf) (*PoolWithFunc, error) {
 		expiryDuration: time.Duration(expiry) * time.Second,
 		poolFunc:       f,
 	}
-	p.periodicallyPurge()
+	go p.periodicallyPurge()
 	return p, nil
 }
 
@@ -213,7 +211,7 @@ func (p *PoolWithFunc) getWorker() *WorkerWithFunc {
 	} else if w == nil {
 		w = &WorkerWithFunc{
 			pool: p,
-			args: make(chan interface{}),
+			args: make(chan interface{}, 1),
 		}
 		w.run()
 	}
