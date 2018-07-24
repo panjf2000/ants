@@ -115,7 +115,7 @@ ants.Submit(func() error {})
 // set 10000 the size of goroutine pool
 p, _ := ants.NewPool(10000)
 // submit a task
-p.Submit(func() {})
+p.Submit(func() error {})
 ```
 
 ## 动态调整协程池容量

@@ -106,7 +106,7 @@ func main() {
 ## Submit tasks
 Tasks can be submitted by calling `ants.Submit(func())`
 ```go
-ants.Submit(func() {})
+ants.Submit(func() error {})
 ```
 
 ## Custom limited pool
