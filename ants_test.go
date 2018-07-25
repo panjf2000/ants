@@ -26,9 +26,9 @@ import (
 	"runtime"
 	"sync"
 	"testing"
+	"time"
 
 	"github.com/panjf2000/ants"
-	"time"
 )
 
 var n = 100000

@@ -23,7 +23,6 @@
 package ants
 
 import (
-	"sync/atomic"
 	"time"
 )
 
@@ -47,7 +46,7 @@ func (w *Worker) run() {
 	go func() {
 		for f := range w.task {
 			if f == nil {
-				atomic.AddInt32(&w.pool.running, -1)
+				w.pool.DecrRunning()
 				return
 			}
 			f()
