@@ -129,6 +129,16 @@ func (p *Pool) Running() int {
 	return int(atomic.LoadInt32(&p.running))
 }
 
+// IncrRunning increases the number of the currently running goroutines
+func (p *Pool) IncrRunning() {
+	atomic.AddInt32(&p.running, 1)
+}
+
+// DecrRunning decreases the number of the currently running goroutines
+func (p *Pool) DecrRunning() {
+	atomic.AddInt32(&p.running, -1)
+}
+
 // Free returns the available goroutines to work
 func (p *Pool) Free() int {
 	return int(atomic.LoadInt32(&p.capacity) - atomic.LoadInt32(&p.running))
@@ -181,11 +191,7 @@ func (p *Pool) getWorker() *Worker {
 	idleWorkers := p.workers
 	n := len(idleWorkers) - 1
 	if n < 0 {
-		if p.Running() >= p.Cap() {
-			waiting = true
-		} else {
-			atomic.AddInt32(&p.running, 1)
-		}
+		waiting = p.Running() >= p.Cap()
 	} else {
 		<-p.freeSignal
 		w = idleWorkers[n]
@@ -209,6 +215,7 @@ func (p *Pool) getWorker() *Worker {
 			task: make(chan f, 1),
 		}
 		w.run()
+		p.IncrRunning()
 	}
 	return w
 }
