@@ -134,13 +134,13 @@ func (p *PoolWithFunc) Running() int {
 	return int(atomic.LoadInt32(&p.running))
 }
 
-// IncrRunning increases the number of the currently running goroutines
-func (p *PoolWithFunc) IncrRunning() {
+// incrRunning increases the number of the currently running goroutines
+func (p *PoolWithFunc) incrRunning() {
 	atomic.AddInt32(&p.running, 1)
 }
 
-// DecrRunning decreases the number of the currently running goroutines
-func (p *PoolWithFunc) DecrRunning() {
+// decrRunning decreases the number of the currently running goroutines
+func (p *PoolWithFunc) decrRunning() {
 	atomic.AddInt32(&p.running, -1)
 }
 
@@ -220,7 +220,7 @@ func (p *PoolWithFunc) getWorker() *WorkerWithFunc {
 			args: make(chan interface{}, 1),
 		}
 		w.run()
-		p.IncrRunning()
+		p.incrRunning()
 	}
 	return w
 }
