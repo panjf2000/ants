@@ -187,7 +187,6 @@ func (p *PoolWithFunc) decrRunning() {
 	atomic.AddInt32(&p.running, -1)
 }
 
-
 // getWorker returns a available worker to run the tasks.
 func (p *PoolWithFunc) getWorker() *WorkerWithFunc {
 	var w *WorkerWithFunc
