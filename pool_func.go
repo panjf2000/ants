@@ -134,16 +134,6 @@ func (p *PoolWithFunc) Running() int {
 	return int(atomic.LoadInt32(&p.running))
 }
 
-// IncrRunning increases the number of the currently running goroutines
-func (p *PoolWithFunc) IncrRunning() {
-	atomic.AddInt32(&p.running, 1)
-}
-
-// DecrRunning decreases the number of the currently running goroutines
-func (p *PoolWithFunc) DecrRunning() {
-	atomic.AddInt32(&p.running, -1)
-}
-
 // Free returns the available goroutines to work
 func (p *PoolWithFunc) Free() int {
 	return int(atomic.LoadInt32(&p.capacity) - atomic.LoadInt32(&p.running))
@@ -187,6 +177,16 @@ func (p *PoolWithFunc) Release() error {
 
 //-------------------------------------------------------------------------
 
+// incrRunning increases the number of the currently running goroutines
+func (p *PoolWithFunc) incrRunning() {
+	atomic.AddInt32(&p.running, 1)
+}
+
+// decrRunning decreases the number of the currently running goroutines
+func (p *PoolWithFunc) decrRunning() {
+	atomic.AddInt32(&p.running, -1)
+}
+
 // getWorker returns a available worker to run the tasks.
 func (p *PoolWithFunc) getWorker() *WorkerWithFunc {
 	var w *WorkerWithFunc
@@ -220,7 +220,7 @@ func (p *PoolWithFunc) getWorker() *WorkerWithFunc {
 			args: make(chan interface{}, 1),
 		}
 		w.run()
-		p.IncrRunning()
+		p.incrRunning()
 	}
 	return w
 }
