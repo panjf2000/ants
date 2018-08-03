@@ -46,7 +46,7 @@ func (w *WorkerWithFunc) run() {
 	go func() {
 		for args := range w.args {
 			if args == nil {
-				w.pool.decrRunning()
+				w.pool.decRunning()
 				return
 			}
 			w.pool.poolFunc(args)

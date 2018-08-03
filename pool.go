@@ -23,7 +23,6 @@
 package ants
 
 import (
-	"math"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -44,10 +43,6 @@ type Pool struct {
 
 	// expiryDuration set the expired time (second) of every worker.
 	expiryDuration time.Duration
-
-	// freeSignal is used to notice pool there are available
-	// workers which can be sent to work.
-	freeSignal chan sig
 
 	// workers is a slice that store the available workers.
 	workers []*Worker
@@ -77,7 +72,6 @@ func (p *Pool) periodicallyPurge() {
 				break
 			}
 			n = i
-			<-p.freeSignal
 			w.task <- nil
 			idleWorkers[i] = nil
 		}
@@ -104,7 +98,6 @@ func NewTimingPool(size, expiry int) (*Pool, error) {
 	}
 	p := &Pool{
 		capacity:       int32(size),
-		freeSignal:     make(chan sig, math.MaxInt32),
 		release:        make(chan sig, 1),
 		expiryDuration: time.Duration(expiry) * time.Second,
 	}
@@ -119,8 +112,7 @@ func (p *Pool) Submit(task f) error {
 	if len(p.release) > 0 {
 		return ErrPoolClosed
 	}
-	w := p.getWorker()
-	w.task <- task
+	p.getWorker().task <- task
 	return nil
 }
 
@@ -160,7 +152,6 @@ func (p *Pool) Release() error {
 		p.lock.Lock()
 		idleWorkers := p.workers
 		for i, w := range idleWorkers {
-			<-p.freeSignal
 			w.task <- nil
 			idleWorkers[i] = nil
 		}
@@ -172,13 +163,13 @@ func (p *Pool) Release() error {
 
 //-------------------------------------------------------------------------
 
-// incrRunning increases the number of the currently running goroutines
-func (p *Pool) incrRunning() {
+// incRunning increases the number of the currently running goroutines
+func (p *Pool) incRunning() {
 	atomic.AddInt32(&p.running, 1)
 }
 
-// decrRunning decreases the number of the currently running goroutines
-func (p *Pool) decrRunning() {
+// decRunning decreases the number of the currently running goroutines
+func (p *Pool) decRunning() {
 	atomic.AddInt32(&p.running, -1)
 }
 
@@ -193,7 +184,6 @@ func (p *Pool) getWorker() *Worker {
 	if n < 0 {
 		waiting = p.Running() >= p.Cap()
 	} else {
-		<-p.freeSignal
 		w = idleWorkers[n]
 		idleWorkers[n] = nil
 		p.workers = idleWorkers[:n]
@@ -201,21 +191,27 @@ func (p *Pool) getWorker() *Worker {
 	p.lock.Unlock()
 
 	if waiting {
-		<-p.freeSignal
-		p.lock.Lock()
-		idleWorkers = p.workers
-		l := len(idleWorkers) - 1
-		w = idleWorkers[l]
-		idleWorkers[l] = nil
-		p.workers = idleWorkers[:l]
-		p.lock.Unlock()
+		for {
+			p.lock.Lock()
+			idleWorkers = p.workers
+			l := len(idleWorkers) - 1
+			if l < 0 {
+				p.lock.Unlock()
+				continue
+			}
+			w = idleWorkers[l]
+			idleWorkers[l] = nil
+			p.workers = idleWorkers[:l]
+			p.lock.Unlock()
+			break
+		}
 	} else if w == nil {
 		w = &Worker{
 			pool: p,
 			task: make(chan f, 1),
 		}
 		w.run()
-		p.incrRunning()
+		p.incRunning()
 	}
 	return w
 }
@@ -226,5 +222,4 @@ func (p *Pool) putWorker(worker *Worker) {
 	p.lock.Lock()
 	p.workers = append(p.workers, worker)
 	p.lock.Unlock()
-	p.freeSignal <- sig{}
 }
