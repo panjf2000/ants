@@ -177,13 +177,13 @@ func (p *PoolWithFunc) Release() error {
 
 //-------------------------------------------------------------------------
 
-// incrRunning increases the number of the currently running goroutines
-func (p *PoolWithFunc) incrRunning() {
+// incRunning increases the number of the currently running goroutines
+func (p *PoolWithFunc) incRunning() {
 	atomic.AddInt32(&p.running, 1)
 }
 
-// decrRunning decreases the number of the currently running goroutines
-func (p *PoolWithFunc) decrRunning() {
+// decRunning decreases the number of the currently running goroutines
+func (p *PoolWithFunc) decRunning() {
 	atomic.AddInt32(&p.running, -1)
 }
 
@@ -220,7 +220,7 @@ func (p *PoolWithFunc) getWorker() *WorkerWithFunc {
 			args: make(chan interface{}, 1),
 		}
 		w.run()
-		p.incrRunning()
+		p.incRunning()
 	}
 	return w
 }

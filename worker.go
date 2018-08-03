@@ -46,7 +46,7 @@ func (w *Worker) run() {
 	go func() {
 		for f := range w.task {
 			if f == nil {
-				w.pool.decrRunning()
+				w.pool.decRunning()
 				return
 			}
 			f()
