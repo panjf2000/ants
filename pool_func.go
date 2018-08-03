@@ -23,7 +23,6 @@
 package ants
 
 import (
-	"math"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -42,10 +41,6 @@ type PoolWithFunc struct {
 
 	// expiryDuration set the expired time (second) of every worker.
 	expiryDuration time.Duration
-
-	// freeSignal is used to notice pool there are available
-	// workers which can be sent to work.
-	freeSignal chan sig
 
 	// workers is a slice that store the available workers.
 	workers []*WorkerWithFunc
@@ -78,7 +73,6 @@ func (p *PoolWithFunc) periodicallyPurge() {
 				break
 			}
 			n = i
-			<-p.freeSignal
 			w.args <- nil
 			idleWorkers[i] = nil
 		}
@@ -105,7 +99,6 @@ func NewTimingPoolWithFunc(size, expiry int, f pf) (*PoolWithFunc, error) {
 	}
 	p := &PoolWithFunc{
 		capacity:       int32(size),
-		freeSignal:     make(chan sig, math.MaxInt32),
 		release:        make(chan sig, 1),
 		expiryDuration: time.Duration(expiry) * time.Second,
 		poolFunc:       f,
@@ -124,8 +117,7 @@ func (p *PoolWithFunc) Serve(args interface{}) error {
 	if len(p.release) > 0 {
 		return ErrPoolClosed
 	}
-	w := p.getWorker()
-	w.args <- args
+	p.getWorker().args <- args
 	return nil
 }
 
@@ -165,7 +157,6 @@ func (p *PoolWithFunc) Release() error {
 		p.lock.Lock()
 		idleWorkers := p.workers
 		for i, w := range idleWorkers {
-			<-p.freeSignal
 			w.args <- nil
 			idleWorkers[i] = nil
 		}
@@ -198,7 +189,6 @@ func (p *PoolWithFunc) getWorker() *WorkerWithFunc {
 	if n < 0 {
 		waiting = p.Running() >= p.Cap()
 	} else {
-		<-p.freeSignal
 		w = idleWorkers[n]
 		idleWorkers[n] = nil
 		p.workers = idleWorkers[:n]
@@ -206,14 +196,20 @@ func (p *PoolWithFunc) getWorker() *WorkerWithFunc {
 	p.lock.Unlock()
 
 	if waiting {
-		<-p.freeSignal
-		p.lock.Lock()
-		idleWorkers = p.workers
-		l := len(idleWorkers) - 1
-		w = idleWorkers[l]
-		idleWorkers[l] = nil
-		p.workers = idleWorkers[:l]
-		p.lock.Unlock()
+		for {
+			p.lock.Lock()
+			idleWorkers = p.workers
+			l := len(idleWorkers) - 1
+			if l < 0 {
+				p.lock.Unlock()
+				continue
+			}
+			w = idleWorkers[l]
+			idleWorkers[l] = nil
+			p.workers = idleWorkers[:l]
+			p.lock.Unlock()
+			break
+		}
 	} else if w == nil {
 		w = &WorkerWithFunc{
 			pool: p,
@@ -231,5 +227,4 @@ func (p *PoolWithFunc) putWorker(worker *WorkerWithFunc) {
 	p.lock.Lock()
 	p.workers = append(p.workers, worker)
 	p.lock.Unlock()
-	p.freeSignal <- sig{}
 }

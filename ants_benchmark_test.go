@@ -89,6 +89,7 @@ func BenchmarkAntsPoolWithFunc(b *testing.B) {
 	})
 	defer p.Release()
 
+	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		for j := 0; j < RunTimes; j++ {
 			wg.Add(1)
