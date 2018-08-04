@@ -35,18 +35,8 @@ const (
 	DefaultCleanIntervalTime = 10
 )
 
-var (
-	defaultAntsPool *Pool
-	err             error
-)
-
 // Init a instance pool when importing ants
-func init() {
-	defaultAntsPool, err = NewPool(DefaultAntsPoolSize)
-	if err != nil {
-		panic(err)
-	}
-}
+var defaultAntsPool, _ = NewPool(DefaultAntsPoolSize)
 
 // Submit submit a task to pool
 func Submit(task f) error {
