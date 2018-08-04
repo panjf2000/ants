@@ -178,7 +178,7 @@ In that benchmark-picture, the first and second benchmarks performed test with 1
 
 ![](ants_bench_1000w.png)
 
-There was only the test of `ants` Pool because my computer was crash when it reached 10M goroutines. 
+There was only the test of `ants` Pool because my computer was crash when it reached 10M goroutines without pool. 
 
 **As you can see, `ants` can up to 2x~6x faster than goroutines without pool and the memory consumption is reduced by 10 to 20 times.**
 
