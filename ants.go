@@ -36,7 +36,26 @@ const (
 )
 
 // Init a instance pool when importing ants
-var defaultAntsPool, _ = NewPool(DefaultAntsPoolSize)
+var (
+	defaultAntsPool *Pool
+	err             error
+)
+
+func init() {
+	defaultAntsPool, err = NewPool(DefaultAntsPoolSize)
+	if err != nil {
+		panic(err)
+	}
+}
+
+// Release Closed the default pool
+func Release() {
+	defaultAntsPool.Release()
+	defaultAntsPool, err = NewPool(DefaultAntsPoolSize)
+	if err != nil {
+		panic(err)
+	}
+}
 
 // Submit submit a task to pool
 func Submit(task f) error {
@@ -56,12 +75,6 @@ func Cap() int {
 // Free returns the available goroutines to work
 func Free() int {
 	return defaultAntsPool.Free()
-}
-
-// Release Closed the default pool
-func Release() {
-	defaultAntsPool.Release()
-
 }
 
 // Errors for the Ants API
