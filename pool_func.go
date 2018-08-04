@@ -48,15 +48,16 @@ type PoolWithFunc struct {
 	// release is used to notice the pool to closed itself.
 	release chan sig
 
-	// lock for synchronous operation
+	// lock for synchronous operation.
 	lock sync.Mutex
 
-	// pf is the function for processing tasks
+	// pf is the function for processing tasks.
 	poolFunc pf
 
 	once sync.Once
 }
 
+// clear expired workers periodically.
 func (p *PoolWithFunc) periodicallyPurge() {
 	heartbeat := time.NewTicker(p.expiryDuration)
 	for range heartbeat.C {
@@ -84,12 +85,12 @@ func (p *PoolWithFunc) periodicallyPurge() {
 	}
 }
 
-// NewPoolWithFunc generates a instance of ants pool with a specific function
+// NewPoolWithFunc generates an instance of ants pool with a specific function.
 func NewPoolWithFunc(size int, f pf) (*PoolWithFunc, error) {
 	return NewTimingPoolWithFunc(size, DefaultCleanIntervalTime, f)
 }
 
-// NewTimingPoolWithFunc generates a instance of ants pool with a specific function and a custom timed task
+// NewTimingPoolWithFunc generates an instance of ants pool with a specific function and a custom timed task.
 func NewTimingPoolWithFunc(size, expiry int, f pf) (*PoolWithFunc, error) {
 	if size <= 0 {
 		return nil, ErrInvalidPoolSize
@@ -109,11 +110,8 @@ func NewTimingPoolWithFunc(size, expiry int, f pf) (*PoolWithFunc, error) {
 
 //-------------------------------------------------------------------------
 
-// Serve submit a task to pool
+// Serve submits a task to pool.
 func (p *PoolWithFunc) Serve(args interface{}) error {
-	//if atomic.LoadInt32(&p.closed) == 1 {
-	//	return ErrPoolClosed
-	//}
 	if len(p.release) > 0 {
 		return ErrPoolClosed
 	}
@@ -121,22 +119,22 @@ func (p *PoolWithFunc) Serve(args interface{}) error {
 	return nil
 }
 
-// Running returns the number of the currently running goroutines
+// Running returns the number of the currently running goroutines.
 func (p *PoolWithFunc) Running() int {
 	return int(atomic.LoadInt32(&p.running))
 }
 
-// Free returns the available goroutines to work
+// Free returns a available goroutines to work.
 func (p *PoolWithFunc) Free() int {
 	return int(atomic.LoadInt32(&p.capacity) - atomic.LoadInt32(&p.running))
 }
 
-// Cap returns the capacity of this pool
+// Cap returns the capacity of this pool.
 func (p *PoolWithFunc) Cap() int {
 	return int(atomic.LoadInt32(&p.capacity))
 }
 
-// ReSize change the capacity of this pool
+// ReSize change the capacity of this pool.
 func (p *PoolWithFunc) ReSize(size int) {
 	if size == p.Cap() {
 		return
@@ -150,7 +148,7 @@ func (p *PoolWithFunc) ReSize(size int) {
 	}
 }
 
-// Release Closed this pool
+// Release Closed this pool.
 func (p *PoolWithFunc) Release() error {
 	p.once.Do(func() {
 		p.release <- sig{}
@@ -168,12 +166,12 @@ func (p *PoolWithFunc) Release() error {
 
 //-------------------------------------------------------------------------
 
-// incRunning increases the number of the currently running goroutines
+// incRunning increases the number of the currently running goroutines.
 func (p *PoolWithFunc) incRunning() {
 	atomic.AddInt32(&p.running, 1)
 }
 
-// decRunning decreases the number of the currently running goroutines
+// decRunning decreases the number of the currently running goroutines.
 func (p *PoolWithFunc) decRunning() {
 	atomic.AddInt32(&p.running, -1)
 }
