@@ -35,12 +35,12 @@ const (
 	DefaultCleanIntervalTime = 10
 )
 
-// Init a instance pool when importing ants
 var (
 	defaultAntsPool *Pool
 	err             error
 )
 
+// Init a instance pool when importing ants
 func init() {
 	defaultAntsPool, err = NewPool(DefaultAntsPoolSize)
 	if err != nil {
