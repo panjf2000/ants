@@ -28,39 +28,49 @@ import (
 )
 
 const (
-	// DefaultPoolSize is the default capacity for a default goroutine pool
-	DefaultPoolSize = math.MaxInt32
+	// DefaultAntsPoolSize is the default capacity for a default goroutine pool
+	DefaultAntsPoolSize = math.MaxInt32
 
 	// DefaultCleanIntervalTime is the interval time to clean up goroutines
 	DefaultCleanIntervalTime = 10
 )
 
+var (
+	defaultAntsPool *Pool
+	err             error
+)
+
 // Init a instance pool when importing ants
-var defaultPool, _ = NewPool(DefaultPoolSize)
+func init() {
+	defaultAntsPool, err = NewPool(DefaultAntsPoolSize)
+	if err != nil {
+		panic(err)
+	}
+}
 
 // Submit submit a task to pool
 func Submit(task f) error {
-	return defaultPool.Submit(task)
+	return defaultAntsPool.Submit(task)
 }
 
 // Running returns the number of the currently running goroutines
 func Running() int {
-	return defaultPool.Running()
+	return defaultAntsPool.Running()
 }
 
 // Cap returns the capacity of this default pool
 func Cap() int {
-	return defaultPool.Cap()
+	return defaultAntsPool.Cap()
 }
 
 // Free returns the available goroutines to work
 func Free() int {
-	return defaultPool.Free()
+	return defaultAntsPool.Free()
 }
 
 // Release Closed the default pool
 func Release() {
-	defaultPool.Release()
+	defaultAntsPool.Release()
 }
 
 // Errors for the Ants API

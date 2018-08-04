@@ -32,6 +32,7 @@ import (
 )
 
 var n = 100000
+var curMem uint64
 
 func TestAntsPoolWithFunc(t *testing.T) {
 	var wg sync.WaitGroup
@@ -50,7 +51,24 @@ func TestAntsPoolWithFunc(t *testing.T) {
 	t.Logf("pool with func, running workers number:%d", p.Running())
 	mem := runtime.MemStats{}
 	runtime.ReadMemStats(&mem)
-	t.Logf("memory usage:%d", mem.TotalAlloc/GiB)
+	curMem = mem.TotalAlloc / MiB - curMem
+	t.Logf("memory usage:%d", curMem)
+}
+func TestNoPool(t *testing.T) {
+	var wg sync.WaitGroup
+	for i := 0; i < n; i++ {
+		wg.Add(1)
+		go func() {
+			demoFunc()
+			wg.Done()
+		}()
+	}
+
+	wg.Wait()
+	mem := runtime.MemStats{}
+	runtime.ReadMemStats(&mem)
+	curMem = mem.TotalAlloc/MiB - curMem
+	t.Logf("memory usage:%d MB", curMem)
 }
 
 func TestAntsPool(t *testing.T) {
@@ -72,23 +90,8 @@ func TestAntsPool(t *testing.T) {
 
 	mem := runtime.MemStats{}
 	runtime.ReadMemStats(&mem)
-	t.Logf("memory usage:%d MB", mem.TotalAlloc/MiB)
-}
-
-func TestNoPool(t *testing.T) {
-	var wg sync.WaitGroup
-	for i := 0; i < n; i++ {
-		wg.Add(1)
-		go func() {
-			demoFunc()
-			wg.Done()
-		}()
-	}
-
-	wg.Wait()
-	mem := runtime.MemStats{}
-	runtime.ReadMemStats(&mem)
-	t.Logf("memory usage:%d MB", mem.TotalAlloc/MiB)
+	curMem = mem.TotalAlloc/MiB - curMem
+	t.Logf("memory usage:%d MB", curMem)
 }
 
 func TestCodeCov(t *testing.T) {
