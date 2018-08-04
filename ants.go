@@ -48,15 +48,6 @@ func init() {
 	}
 }
 
-// Release Closed the default pool
-func Release() {
-	defaultAntsPool.Release()
-	defaultAntsPool, err = NewPool(DefaultAntsPoolSize)
-	if err != nil {
-		panic(err)
-	}
-}
-
 // Submit submit a task to pool
 func Submit(task f) error {
 	return defaultAntsPool.Submit(task)
@@ -75,6 +66,11 @@ func Cap() int {
 // Free returns the available goroutines to work
 func Free() int {
 	return defaultAntsPool.Free()
+}
+
+// Release Closed the default pool
+func Release() {
+	defaultAntsPool.Release()
 }
 
 // Errors for the Ants API
