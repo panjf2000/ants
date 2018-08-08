@@ -79,7 +79,7 @@ func (p *PoolWithFunc) periodicallyPurge() {
 		}
 		n++
 		if n > 0 {
-			if n >= cap(idleWorkers) {
+			if n >= len(idleWorkers) {
 				p.workers = idleWorkers[:0]
 			} else {
 				p.workers = idleWorkers[n:]
