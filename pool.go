@@ -75,8 +75,8 @@ func (p *Pool) periodicallyPurge() {
 			w.task <- nil
 			idleWorkers[i] = nil
 		}
+		n++
 		if n > 0 {
-			n++
 			p.workers = idleWorkers[n:]
 		}
 		p.lock.Unlock()

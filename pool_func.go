@@ -77,8 +77,8 @@ func (p *PoolWithFunc) periodicallyPurge() {
 			w.args <- nil
 			idleWorkers[i] = nil
 		}
+		n++
 		if n > 0 {
-			n++
 			p.workers = idleWorkers[n:]
 		}
 		p.lock.Unlock()
