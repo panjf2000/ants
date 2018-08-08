@@ -55,6 +55,7 @@ type Pool struct {
 
 	once sync.Once
 }
+
 // clear expired workers periodically.
 func (p *Pool) periodicallyPurge() {
 	heartbeat := time.NewTicker(p.expiryDuration)
@@ -77,7 +78,11 @@ func (p *Pool) periodicallyPurge() {
 		}
 		n++
 		if n > 0 {
-			p.workers = idleWorkers[n:]
+			if n >= cap(idleWorkers) {
+				p.workers = idleWorkers[:0]
+			} else {
+				p.workers = idleWorkers[n:]
+			}
 		}
 		p.lock.Unlock()
 	}
