@@ -78,7 +78,7 @@ func (p *PoolWithFunc) periodicallyPurge() {
 			idleWorkers[i] = nil
 		}
 		if n > -1 {
-			if n >= len(idleWorkers) {
+			if n >= len(idleWorkers)-1 {
 				p.workers = idleWorkers[:0]
 			} else {
 				p.workers = idleWorkers[n+1:]
