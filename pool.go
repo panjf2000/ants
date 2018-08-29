@@ -67,7 +67,7 @@ func (p *Pool) periodicallyPurge() {
 			p.lock.Unlock()
 			return
 		}
-		n := 0
+		n := -1
 		for i, w := range idleWorkers {
 			if currentTime.Sub(w.recycleTime) <= p.expiryDuration {
 				break
@@ -76,12 +76,11 @@ func (p *Pool) periodicallyPurge() {
 			w.task <- nil
 			idleWorkers[i] = nil
 		}
-		n++
-		if n > 0 {
+		if n > -1 {
 			if n >= len(idleWorkers) {
 				p.workers = idleWorkers[:0]
 			} else {
-				p.workers = idleWorkers[n:]
+				p.workers = idleWorkers[n+1:]
 			}
 		}
 		p.lock.Unlock()
