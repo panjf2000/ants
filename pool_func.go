@@ -68,7 +68,7 @@ func (p *PoolWithFunc) periodicallyPurge() {
 			p.lock.Unlock()
 			return
 		}
-		n := 0
+		n := -1
 		for i, w := range idleWorkers {
 			if currentTime.Sub(w.recycleTime) <= p.expiryDuration {
 				break
