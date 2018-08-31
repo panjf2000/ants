@@ -57,7 +57,7 @@ type Pool struct {
 }
 
 // clear expired workers periodically.
-func (p *pool) periodicallyPurge() {
+func (p *Pool) periodicallyPurge() {
 	heartbeat := time.NewTicker(p.expiryDuration)
 	for range heartbeat.C {
 		p.lock.Lock()
