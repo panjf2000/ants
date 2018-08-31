@@ -32,7 +32,7 @@ const (
 	DefaultAntsPoolSize = math.MaxInt32
 
 	// DefaultCleanIntervalTime is the interval time to clean up goroutines.
-	DefaultCleanIntervalTime = 10
+	DefaultCleanIntervalTime = 5
 )
 
 // Init a instance pool when importing ants.
