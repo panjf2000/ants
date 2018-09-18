@@ -59,32 +59,41 @@ type Pool struct {
 // clear expired workers periodically.
 func (p *Pool) periodicallyPurge() {
 	heartbeat := time.NewTicker(p.expiryDuration)
-	for range heartbeat.C {
-		currentTime := time.Now()
-		p.lock.Lock()
-		idleWorkers := p.workers
-		if len(idleWorkers) == 0 && p.Running() == 0 && len(p.release) > 0 {
+
+	for {
+		select {
+		case <-p.release:
+			goto exit
+		case <-heartbeat.C:
+			currentTime := time.Now()
+			p.lock.Lock()
+			idleWorkers := p.workers
+			if len(idleWorkers) == 0 && p.Running() == 0 && len(p.release) > 0 {
+				p.lock.Unlock()
+				return
+			}
+			n := -1
+			for i, w := range idleWorkers {
+				if currentTime.Sub(w.recycleTime) <= p.expiryDuration {
+					break
+				}
+				n = i
+				w.task <- nil
+				idleWorkers[i] = nil
+			}
+			if n > -1 {
+				if n >= len(idleWorkers)-1 {
+					p.workers = idleWorkers[:0]
+				} else {
+					p.workers = idleWorkers[n+1:]
+				}
+			}
 			p.lock.Unlock()
-			return
 		}
-		n := -1
-		for i, w := range idleWorkers {
-			if currentTime.Sub(w.recycleTime) <= p.expiryDuration {
-				break
-			}
-			n = i
-			w.task <- nil
-			idleWorkers[i] = nil
-		}
-		if n > -1 {
-			if n >= len(idleWorkers)-1 {
-				p.workers = idleWorkers[:0]
-			} else {
-				p.workers = idleWorkers[n+1:]
-			}
-		}
-		p.lock.Unlock()
 	}
+
+exit:
+	heartbeat.Stop()
 }
 
 // NewPool generates an instance of ants pool.
