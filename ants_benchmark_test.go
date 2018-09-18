@@ -117,6 +117,5 @@ func BenchmarkAntsPool(b *testing.B) {
 		for j := 0; j < RunTimes; j++ {
 			p.Serve(Param)
 		}
-		// b.Logf("running goroutines: %d", p.Running())
 	}
 }
