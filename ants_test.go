@@ -52,7 +52,7 @@ func TestAntsPoolWithFunc(t *testing.T) {
 	mem := runtime.MemStats{}
 	runtime.ReadMemStats(&mem)
 	curMem = mem.TotalAlloc / MiB - curMem
-	t.Logf("memory usage:%d", curMem)
+	t.Logf("memory usage:%d MB", curMem)
 }
 func TestNoPool(t *testing.T) {
 	var wg sync.WaitGroup
