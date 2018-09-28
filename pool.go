@@ -52,7 +52,7 @@ type Pool struct {
 
 	// lock for synchronous operation.
 	lock sync.Mutex
-
+	cond *sync.Cond
 	once sync.Once
 }
 
@@ -105,6 +105,7 @@ func NewTimingPool(size, expiry int) (*Pool, error) {
 		release:        make(chan sig, 1),
 		expiryDuration: time.Duration(expiry) * time.Second,
 	}
+	p.cond = sync.NewCond(&p.lock)
 	go p.periodicallyPurge()
 	return p, nil
 }
@@ -195,20 +196,11 @@ func (p *Pool) getWorker() *Worker {
 	p.lock.Unlock()
 
 	if waiting {
-		for {
-			p.lock.Lock()
-			idleWorkers = p.workers
-			l := len(idleWorkers) - 1
-			if l < 0 {
-				p.lock.Unlock()
-				continue
-			}
-			w = idleWorkers[l]
-			idleWorkers[l] = nil
-			p.workers = idleWorkers[:l]
-			p.lock.Unlock()
-			break
-		}
+		p.lock.Lock()
+		p.cond.Wait()
+		l := len(p.workers) - 1
+		w = p.workers[l]
+		p.lock.Unlock()
 	} else if w == nil {
 		w = &Worker{
 			pool: p,
@@ -226,4 +218,6 @@ func (p *Pool) putWorker(worker *Worker) {
 	p.lock.Lock()
 	p.workers = append(p.workers, worker)
 	p.lock.Unlock()
+	//通知有一个空闲的worker
+	p.cond.Signal()
 }
