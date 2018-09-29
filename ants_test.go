@@ -28,7 +28,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/panjf2000/ants"
+	"github.com/liyonglion/ants"
 )
 
 var n = 100000

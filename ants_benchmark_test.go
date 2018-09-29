@@ -27,7 +27,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/panjf2000/ants"
+	"github.com/liyonglion/ants"
 )
 
 const (
@@ -42,9 +42,9 @@ const (
 	YiB // 1208925819614629174706176
 )
 const (
-	RunTimes = 10000000
+	RunTimes = 1000000
 	Param    = 100
-	AntsSize = 1000
+	AntsSize = 50000
 	TestSize = 10000
 )
 
@@ -68,6 +68,7 @@ func demoPoolFunc(args interface{}) error {
 
 func BenchmarkGoroutineWithFunc(b *testing.B) {
 	var wg sync.WaitGroup
+
 	for i := 0; i < b.N; i++ {
 		for j := 0; j < RunTimes; j++ {
 			wg.Add(1)
@@ -96,7 +97,7 @@ func BenchmarkAntsPoolWithFunc(b *testing.B) {
 			p.Serve(Param)
 		}
 		wg.Wait()
-		b.Logf("running goroutines: %d", p.Running())
+		//b.Logf("running goroutines: %d", p.Running())
 	}
 }
 
@@ -111,7 +112,6 @@ func BenchmarkGoroutine(b *testing.B) {
 func BenchmarkAntsPool(b *testing.B) {
 	p, _ := ants.NewPoolWithFunc(AntsSize, demoPoolFunc)
 	defer p.Release()
-
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		for j := 0; j < RunTimes; j++ {
