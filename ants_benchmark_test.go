@@ -27,7 +27,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/liyonglion/ants"
+	"github.com/panjf2000/ants"
 )
 
 const (
