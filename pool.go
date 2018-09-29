@@ -196,9 +196,17 @@ func (p *Pool) getWorker() *Worker {
 	}
 
 	if waiting {
-		p.cond.Wait()
-		l := len(p.workers) - 1
-		w = p.workers[l]
+		for{
+			p.cond.Wait()
+			l := len(p.workers) - 1
+			if l < 0{
+				continue
+			}
+			w = p.workers[l]
+			p.workers[l] = nil
+			p.workers = p.workers[:l]
+			break
+		}
 	} else if w == nil {
 		w = &Worker{
 			pool: p,
