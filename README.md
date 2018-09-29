@@ -182,9 +182,9 @@ There was only the test of `ants` Pool because my computer was crash when it rea
 
 **As you can see, `ants` can up to 2x~6x faster than goroutines without pool and the memory consumption is reduced by 10 to 20 times.**
 
-[1]: https://travis-ci.com/panjf2000/ants.svg?branch=develop
+[1]: https://travis-ci.com/panjf2000/ants.svg?branch=master
 [2]: https://travis-ci.com/panjf2000/ants
-[3]: https://codecov.io/gh/panjf2000/ants/branch/develop/graph/badge.svg
+[3]: https://codecov.io/gh/panjf2000/ants/branch/master/graph/badge.svg
 [4]: https://codecov.io/gh/panjf2000/ants
 [5]: https://goreportcard.com/badge/github.com/panjf2000/ants
 [6]: https://goreportcard.com/report/github.com/panjf2000/ants
