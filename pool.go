@@ -184,6 +184,7 @@ func (p *Pool) getWorker() *Worker {
 	waiting := false
 
 	p.lock.Lock()
+	defer p.lock.Unlock()
 	idleWorkers := p.workers
 	n := len(idleWorkers) - 1
 	if n < 0 {
@@ -193,14 +194,11 @@ func (p *Pool) getWorker() *Worker {
 		idleWorkers[n] = nil
 		p.workers = idleWorkers[:n]
 	}
-	p.lock.Unlock()
 
 	if waiting {
-		p.lock.Lock()
 		p.cond.Wait()
 		l := len(p.workers) - 1
 		w = p.workers[l]
-		p.lock.Unlock()
 	} else if w == nil {
 		w = &Worker{
 			pool: p,
@@ -217,7 +215,7 @@ func (p *Pool) putWorker(worker *Worker) {
 	worker.recycleTime = time.Now()
 	p.lock.Lock()
 	p.workers = append(p.workers, worker)
-	p.lock.Unlock()
 	//通知有一个空闲的worker
 	p.cond.Signal()
+	p.lock.Unlock()
 }
