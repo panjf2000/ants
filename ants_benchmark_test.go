@@ -42,9 +42,9 @@ const (
 	YiB // 1208925819614629174706176
 )
 const (
-	RunTimes = 1000000
+	RunTimes = 10000000
 	Param    = 100
-	AntsSize = 50000
+	AntsSize = 1000
 	TestSize = 10000
 )
 
