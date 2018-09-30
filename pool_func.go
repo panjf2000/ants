@@ -50,7 +50,10 @@ type PoolWithFunc struct {
 
 	// lock for synchronous operation.
 	lock sync.Mutex
+
+	// cond for waiting idle worker
 	cond *sync.Cond
+
 	// pf is the function for processing tasks.
 	poolFunc pf
 
@@ -198,10 +201,10 @@ func (p *PoolWithFunc) getWorker() *WorkerWithFunc {
 	}
 
 	if waiting {
-		for{
+		for {
 			p.cond.Wait()
 			l := len(p.workers) - 1
-			if l < 0{
+			if l < 0 {
 				continue
 			}
 			w = p.workers[l]
