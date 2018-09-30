@@ -198,10 +198,10 @@ func (p *PoolWithFunc) getWorker() *WorkerWithFunc {
 	}
 
 	if waiting {
-		for{
+		for {
 			p.cond.Wait()
 			l := len(p.workers) - 1
-			if l < 0{
+			if l < 0 {
 				continue
 			}
 			w = p.workers[l]
