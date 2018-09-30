@@ -52,7 +52,10 @@ type Pool struct {
 
 	// lock for synchronous operation.
 	lock sync.Mutex
+
+	// cond for waiting idle worker
 	cond *sync.Cond
+
 	once sync.Once
 }
 

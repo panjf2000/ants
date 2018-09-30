@@ -50,7 +50,10 @@ type PoolWithFunc struct {
 
 	// lock for synchronous operation.
 	lock sync.Mutex
+
+	// cond for waiting idle worker
 	cond *sync.Cond
+
 	// pf is the function for processing tasks.
 	poolFunc pf
 
