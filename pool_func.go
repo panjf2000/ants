@@ -148,10 +148,8 @@ func (p *PoolWithFunc) ReSize(size int) {
 	}
 	atomic.StoreInt32(&p.capacity, int32(size))
 	diff := p.Running() - size
-	if diff > 0 {
-		for i := 0; i < diff; i++ {
-			p.getWorker().args <- nil
-		}
+	for i := 0; i < diff; i++ {
+		p.getWorker().args <- nil
 	}
 }
 
