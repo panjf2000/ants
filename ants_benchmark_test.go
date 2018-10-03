@@ -43,7 +43,7 @@ const (
 )
 const (
 	RunTimes = 10000000
-	Param    = 0
+	Param    = 100
 	AntsSize = 1000
 	TestSize = 10000
 )
