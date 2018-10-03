@@ -43,7 +43,7 @@ const (
 )
 const (
 	RunTimes = 10000000
-	Param    = 100
+	Param    = 0
 	AntsSize = 1000
 	TestSize = 10000
 )
@@ -68,12 +68,29 @@ func demoPoolFunc(args interface{}) error {
 
 func BenchmarkGoroutineWithFunc(b *testing.B) {
 	var wg sync.WaitGroup
-
 	for i := 0; i < b.N; i++ {
 		for j := 0; j < RunTimes; j++ {
 			wg.Add(1)
 			go func() {
 				demoPoolFunc(Param)
+				wg.Done()
+			}()
+		}
+		wg.Wait()
+	}
+}
+
+func BenchmarkSemaphoreWithFunc(b *testing.B) {
+	var wg sync.WaitGroup
+	sema := make(chan struct{}, AntsSize)
+
+	for i := 0; i < b.N; i++ {
+		wg.Add(RunTimes)
+		for j := 0; j < RunTimes; j++ {
+			sema <- struct{}{}
+			go func() {
+				demoPoolFunc(Param)
+				<-sema
 				wg.Done()
 			}()
 		}
@@ -102,11 +119,35 @@ func BenchmarkAntsPoolWithFunc(b *testing.B) {
 }
 
 func BenchmarkGoroutine(b *testing.B) {
+	var wg sync.WaitGroup
+	wg.Add(b.N * RunTimes)
 	for i := 0; i < b.N; i++ {
 		for j := 0; j < RunTimes; j++ {
-			go demoPoolFunc(Param)
+			go func() {
+				demoPoolFunc(Param)
+				wg.Done()
+			}()
 		}
 	}
+	wg.Wait()
+}
+
+func BenchmarkSemaphore(b *testing.B) {
+	var wg sync.WaitGroup
+	sema := make(chan struct{}, AntsSize)
+
+	wg.Add(RunTimes * b.N)
+	for i := 0; i < b.N; i++ {
+		for j := 0; j < RunTimes; j++ {
+			sema <- struct{}{}
+			go func() {
+				demoPoolFunc(Param)
+				<-sema
+				wg.Done()
+			}()
+		}
+	}
+	wg.Wait()
 }
 
 func BenchmarkAntsPool(b *testing.B) {
