@@ -31,21 +31,9 @@ import (
 )
 
 const (
-	_   = 1 << (10 * iota)
-	KiB // 1024
-	MiB // 1048576
-	GiB // 1073741824
-	TiB // 1099511627776             (超过了int32的范围)
-	PiB // 1125899906842624
-	EiB // 1152921504606846976
-	ZiB // 1180591620717411303424    (超过了int64的范围)
-	YiB // 1208925819614629174706176
-)
-const (
-	RunTimes = 10000000
-	Param    = 100
-	AntsSize = 1000
-	TestSize = 10000
+	RunTimes      = 10000000
+	benchParam    = 10
+	benchAntsSize = 100000
 )
 
 func demoFunc() error {
@@ -69,10 +57,10 @@ func demoPoolFunc(args interface{}) error {
 func BenchmarkGoroutineWithFunc(b *testing.B) {
 	var wg sync.WaitGroup
 	for i := 0; i < b.N; i++ {
+		wg.Add(RunTimes)
 		for j := 0; j < RunTimes; j++ {
-			wg.Add(1)
 			go func() {
-				demoPoolFunc(Param)
+				demoPoolFunc(benchParam)
 				wg.Done()
 			}()
 		}
@@ -82,14 +70,14 @@ func BenchmarkGoroutineWithFunc(b *testing.B) {
 
 func BenchmarkSemaphoreWithFunc(b *testing.B) {
 	var wg sync.WaitGroup
-	sema := make(chan struct{}, AntsSize)
+	sema := make(chan struct{}, benchAntsSize)
 
 	for i := 0; i < b.N; i++ {
 		wg.Add(RunTimes)
 		for j := 0; j < RunTimes; j++ {
 			sema <- struct{}{}
 			go func() {
-				demoPoolFunc(Param)
+				demoPoolFunc(benchParam)
 				<-sema
 				wg.Done()
 			}()
@@ -100,63 +88,54 @@ func BenchmarkSemaphoreWithFunc(b *testing.B) {
 
 func BenchmarkAntsPoolWithFunc(b *testing.B) {
 	var wg sync.WaitGroup
-	p, _ := ants.NewPoolWithFunc(AntsSize, func(i interface{}) error {
+	p, _ := ants.NewPoolWithFunc(benchAntsSize, func(i interface{}) error {
 		demoPoolFunc(i)
 		wg.Done()
 		return nil
 	})
 	defer p.Release()
 
-	b.ResetTimer()
+	b.StartTimer()
 	for i := 0; i < b.N; i++ {
+		wg.Add(RunTimes)
 		for j := 0; j < RunTimes; j++ {
-			wg.Add(1)
-			p.Serve(Param)
+			p.Serve(benchParam)
 		}
 		wg.Wait()
 		//b.Logf("running goroutines: %d", p.Running())
 	}
+	b.StopTimer()
 }
 
 func BenchmarkGoroutine(b *testing.B) {
-	var wg sync.WaitGroup
-	wg.Add(b.N * RunTimes)
 	for i := 0; i < b.N; i++ {
 		for j := 0; j < RunTimes; j++ {
-			go func() {
-				demoPoolFunc(Param)
-				wg.Done()
-			}()
+			go demoPoolFunc(benchParam)
 		}
 	}
-	wg.Wait()
 }
 
 func BenchmarkSemaphore(b *testing.B) {
-	var wg sync.WaitGroup
-	sema := make(chan struct{}, AntsSize)
-
-	wg.Add(RunTimes * b.N)
+	sema := make(chan struct{}, benchAntsSize)
 	for i := 0; i < b.N; i++ {
 		for j := 0; j < RunTimes; j++ {
 			sema <- struct{}{}
 			go func() {
-				demoPoolFunc(Param)
+				demoPoolFunc(benchParam)
 				<-sema
-				wg.Done()
 			}()
 		}
 	}
-	wg.Wait()
 }
 
 func BenchmarkAntsPool(b *testing.B) {
-	p, _ := ants.NewPoolWithFunc(AntsSize, demoPoolFunc)
+	p, _ := ants.NewPoolWithFunc(benchAntsSize, demoPoolFunc)
 	defer p.Release()
-	b.ResetTimer()
+	b.StartTimer()
 	for i := 0; i < b.N; i++ {
 		for j := 0; j < RunTimes; j++ {
-			p.Serve(Param)
+			p.Serve(benchParam)
 		}
 	}
+	b.StopTimer()
 }
