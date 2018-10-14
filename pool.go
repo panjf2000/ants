@@ -26,6 +26,7 @@ import (
 	"sync"
 	"sync/atomic"
 	"time"
+	"math"
 )
 
 type sig struct{}
@@ -144,6 +145,11 @@ func (p *Pool) ReSize(size int) {
 	if size == p.Cap() {
 		return
 	}
+
+	if size > math.MaxInt32 {
+		return
+	}
+
 	atomic.StoreInt32(&p.capacity, int32(size))
 	diff := p.Running() - size
 	for i := 0; i < diff; i++ {
