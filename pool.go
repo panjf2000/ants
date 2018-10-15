@@ -147,7 +147,8 @@ func (p *Pool) ReSize(size int) {
 	}
 
 	if size > math.MaxInt32 {
-		return
+		// return
+		size = math.MaxInt32
 	}
 
 	atomic.StoreInt32(&p.capacity, int32(size))
