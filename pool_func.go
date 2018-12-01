@@ -227,7 +227,7 @@ func (p *PoolWithFunc) putWorker(worker *WorkerWithFunc) {
 	worker.recycleTime = time.Now()
 	p.lock.Lock()
 	p.workers = append(p.workers, worker)
-	//通知有一个空闲的worker
+	// notify there is available worker
 	p.cond.Signal()
 	p.lock.Unlock()
 }
