@@ -31,9 +31,9 @@ import (
 )
 
 const (
-	RunTimes      = 10000000
+	RunTimes      = 1000000
 	benchParam    = 10
-	benchAntsSize = 100000
+	benchAntsSize = 200000
 )
 
 func demoFunc() error {
