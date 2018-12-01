@@ -63,6 +63,8 @@ type PoolWithFunc struct {
 // clear expired workers periodically.
 func (p *PoolWithFunc) periodicallyPurge() {
 	heartbeat := time.NewTicker(p.expiryDuration)
+	defer heartbeat.Stop()
+
 	for range heartbeat.C {
 		currentTime := time.Now()
 		p.lock.Lock()
