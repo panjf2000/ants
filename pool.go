@@ -30,7 +30,7 @@ import (
 
 type sig struct{}
 
-type f func() error
+type f func()
 
 // Pool accept the tasks from client,it limits the total
 // of goroutines to a given number by recycling goroutines.

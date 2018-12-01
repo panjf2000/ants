@@ -28,7 +28,7 @@ import (
 	"time"
 )
 
-type pf func(interface{}) error
+type pf func(interface{})
 
 // PoolWithFunc accept the tasks from client,it limits the total
 // of goroutines to a given number by recycling goroutines.
