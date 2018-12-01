@@ -74,10 +74,9 @@ func main() {
 	var wg sync.WaitGroup
 	for i := 0; i < runTimes; i++ {
 		wg.Add(1)
-		ants.Submit(func() error {
+		ants.Submit(func() {
 			demoFunc()
 			wg.Done()
-			return nil
 		})
 	}
 	wg.Wait()
@@ -86,10 +85,9 @@ func main() {
 
 	// use the pool with a function
 	// set 10 the size of goroutine pool and 1 second for expired duration
-	p, _ := ants.NewPoolWithFunc(10, func(i interface{}) error {
+	p, _ := ants.NewPoolWithFunc(10, func(i interface{}) {
 		myFunc(i)
 		wg.Done()
-		return nil
 	})
 	defer p.Release()
 	// submit tasks
