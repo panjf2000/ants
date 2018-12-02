@@ -98,12 +98,62 @@ func main() {
 	fmt.Printf("running goroutines: %d\n", p.Running())
 	fmt.Printf("finish all tasks, result is %d\n", sum)
 }
+``` 
+
+## 与http server集成
+```go
+package main
+
+import (
+	"io/ioutil"
+	"net/http"
+
+	"github.com/panjf2000/ants"
+)
+
+func main() {
+	result := make(chan []byte)
+	pool, _ := ants.NewPoolWithFunc(100, func(payload interface{}) {
+		param, ok := payload.([]byte)
+		if !ok {
+			param = []byte("")
+		}
+
+		reverseParam := func(s []byte) []byte {
+			for i, j := 0, len(s)-1; i < j; i, j = i+1, j-1 {
+				s[i], s[j] = s[j], s[i]
+			}
+			return s
+		}(param)
+
+		result <- reverseParam
+	})
+	defer pool.Release()
+
+	http.HandleFunc("/reverse", func(w http.ResponseWriter, r *http.Request) {
+		req, err := ioutil.ReadAll(r.Body)
+		if err != nil {
+			http.Error(w, "request error", http.StatusInternalServerError)
+		}
+		defer r.Body.Close()
+
+		// Throttle the requests with ants pool. This process is asynchronous and
+		// you can receive a result from the channel defined outside.
+		if err := pool.Serve(req); err != nil {
+			http.Error(w, "throttle limit error", http.StatusInternalServerError)
+		}
+
+		w.Write(<-result)
+	})
+
+	http.ListenAndServe(":8080", nil)
+}
 ```
 
 ## 任务提交
 提交任务通过调用 `ants.Submit(func())`方法：
 ```go
-ants.Submit(func() error {})
+ants.Submit(func(){})
 ```
 
 ## 自定义池
@@ -113,7 +163,7 @@ ants.Submit(func() error {})
 // set 10000 the size of goroutine pool
 p, _ := ants.NewPool(10000)
 // submit a task
-p.Submit(func() error {})
+p.Submit(func(){})
 ```
 
 ## 动态调整协程池容量
