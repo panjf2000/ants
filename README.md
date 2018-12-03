@@ -119,7 +119,7 @@ type Request struct {
 
 func main() {
 	pool, _ := ants.NewPoolWithFunc(100, func(payload interface{}) {
-		request, ok := payload.(Request)
+		request, ok := payload.(*Request)
 		if !ok {
 			request = Request{Param:[]byte(""), Result: make(chan []byte)}
 		}
@@ -141,7 +141,7 @@ func main() {
 		}
 		defer r.Body.Close()
 
-		request := Request{Param: param, Result: make(chan []byte)}
+		request := &Request{Param: param, Result: make(chan []byte)}
 
 		// Throttle the requests with ants pool. This process is asynchronous and
 		// you can receive a result from the channel defined outside.
