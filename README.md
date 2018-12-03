@@ -56,13 +56,11 @@ func myFunc(i interface{}) {
 	n := i.(int32)
 	atomic.AddInt32(&sum, n)
 	fmt.Printf("run with %d\n", n)
-	return nil
 }
 
 func demoFunc() {
 	time.Sleep(10 * time.Millisecond)
 	fmt.Println("Hello World!")
-	return nil
 }
 
 func main() {
