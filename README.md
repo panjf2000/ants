@@ -119,7 +119,7 @@ func main() {
 	pool, _ := ants.NewPoolWithFunc(100, func(payload interface{}) {
 		request, ok := payload.(*Request)
 		if !ok {
-			request = Request{Param:[]byte(""), Result: make(chan []byte)}
+			return
 		}
 		reverseParam := func(s []byte) []byte {
 			for i, j := 0, len(s)-1; i < j; i, j = i+1, j-1 {
