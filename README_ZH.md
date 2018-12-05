@@ -96,7 +96,7 @@ func main() {
 	fmt.Printf("running goroutines: %d\n", p.Running())
 	fmt.Printf("finish all tasks, result is %d\n", sum)
 }
-``` 
+```
 
 ## 与http server集成
 ```go
@@ -229,7 +229,7 @@ Go1.9
 
 1000w任务量的场景下，我的电脑已经无法支撑 golang 的原生 goroutine 并发，所以只测出了使用`ants`池的测试结果。
 
-**从该demo测试吞吐性能对比可以看出，使用ants的吞吐性能相较于原生goroutine可以保持在2-6倍的性能压制，而内存消耗则可以达到10-20倍的节省优势。** 
+**从该demo测试吞吐性能对比可以看出，使用`ants`的吞吐性能相较于原生goroutine可以保持在2-6倍的性能压制，而内存消耗则可以达到10-20倍的节省优势。** 
 
 [1]: https://travis-ci.com/panjf2000/ants.svg?branch=develop
 [2]: https://travis-ci.com/panjf2000/ants

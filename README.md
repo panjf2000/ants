@@ -13,7 +13,7 @@
 
 [中文项目说明](README_ZH.md) | [Project Tutorial](http://blog.taohuawu.club/article/goroutine-pool)
 
-Package ants implements a fixed goroutine pool for managing and recycling a massive number of goroutines, allowing developers to limit the number of goroutines that created by your concurrent programs.
+Package `ants` implements a fixed goroutine pool for managing and recycling a massive number of goroutines, allowing developers to limit the number of goroutines that created in your concurrent programs.
 
 ## Features:
 
@@ -36,7 +36,7 @@ glide get github.com/panjf2000/ants
 ```
 
 ## How to use
-If your program will generate a massive number of goroutines and you don't want them to consume a vast amount of memory, with ants, all you need to do is to import ants package and submit all your tasks to the default limited pool created when ants was imported:
+If your program will generate a massive number of goroutines and you don't want them to consume a vast amount of memory, with `ants`, all you need to do is to import `ants` package and submit all your tasks to the default limited pool created when `ants` was imported:
 
 ``` go
 package main
@@ -154,14 +154,14 @@ func main() {
 }
 ```
 
-## Submit tasks
+## Submits tasks
 Tasks can be submitted by calling `ants.Submit(func())`
 ```go
 ants.Submit(func(){})
 ```
 
-## Custom limited pool
-Ants also supports custom limited pool. You can use the `NewPool` method to create a pool with the given capacity, as following:
+## Customizes limited pool
+`ants` also supports customizing limited pool. You can use the `NewPool` method to create a pool with the given capacity, as following:
 
 ``` go
 // Sets 10000 the size of goroutine pool
@@ -171,7 +171,7 @@ p.Submit(func(){})
 ```
 
 ## Tuning pool capacity
-You can change ants pool capacity at any time with `ReSize(int)`:
+You can change `ants` pool capacity at any time with `ReSize(int)`:
 
 ``` go
 pool.ReSize(1000) // Tunes its capacity to 1000
@@ -181,7 +181,7 @@ pool.ReSize(100000) // Tunes its capacity to 100000
 Don't worry about the synchronous problems in this case, this method is thread-safe.
 
 ## About sequence
-All the tasks submitted to ants pool will not be guaranteed to be processed in order, because those tasks distribute among a series of concurrent workers, thus those tasks are processed concurrently.
+All the tasks submitted to `ants` pool will not be guaranteed to be processed in order, because those tasks distribute among a series of concurrent workers, thus those tasks are processed concurrently.
 
 ## Benchmarks
 
@@ -195,11 +195,11 @@ Go1.9
 
 <div align="center"><img src="ants_benchmarks.png"/></div>
 
- In that benchmark-picture, the first and second benchmarks performed test with 1M tasks and the rest of benchmarks performed test with 10M tasks, both unlimited goroutines and ants pool, and the capacity of this ants goroutine-pool was limited to 50K.
+ In that benchmark-picture, the first and second benchmarks performed test with 1M tasks and the rest of benchmarks performed test with 10M tasks, both unlimited goroutines and `ants` pool, and the capacity of this `ants` goroutine-pool was limited to 50K.
 
 - BenchmarkGoroutine-4 represents the benchmarks with unlimited goroutines in golang.
 
-- BenchmarkPoolGroutine-4 represents the benchmarks with a ants pool.
+- BenchmarkPoolGroutine-4 represents the benchmarks with a `ants` pool.
 
 The test data above is a basic benchmark and the more detailed benchmarks will be uploaded later.
 
@@ -207,7 +207,7 @@ The test data above is a basic benchmark and the more detailed benchmarks will 
 
 ![](benchmark_pool.png)
 
-In that benchmark-picture, the first and second benchmarks performed test with 1M tasks and the rest of benchmarks performed test with 10M tasks, both unlimited goroutines and ants pool, and the capacity of this ants goroutine-pool was limited to 50K.
+In that benchmark-picture, the first and second benchmarks performed test with 1M tasks and the rest of benchmarks performed test with 10M tasks, both unlimited goroutines and `ants` pool, and the capacity of this `ants` goroutine-pool was limited to 50K.
 
 **As you can see, `ants` can up to 2x faster than goroutines without pool (10M tasks) and it only consumes half memory comparing with goroutines without pool. (both 1M and 10M tasks)**
 
@@ -231,7 +231,7 @@ In that benchmark-picture, the first and second benchmarks performed test with 1
 
 There was only the test of `ants` Pool because my computer was crash when it reached 10M goroutines without pool. 
 
-**As you can see, `ants` can up to 2x~6x faster than goroutines without pool and the memory consumption is reduced by 10 to 20 times.**
+**In conclusion, `ants` can up to 2x~6x faster than goroutines without pool and the memory consumption is reduced by 10 to 20 times.**
 
 [1]: https://travis-ci.com/panjf2000/ants.svg?branch=develop
 [2]: https://travis-ci.com/panjf2000/ants
