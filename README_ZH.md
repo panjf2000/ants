@@ -67,7 +67,7 @@ func main() {
 
 	runTimes := 1000
 
-	// use the common pool
+	// Uses the common pool
 	var wg sync.WaitGroup
 	for i := 0; i < runTimes; i++ {
 		wg.Add(1)
@@ -80,14 +80,14 @@ func main() {
 	fmt.Printf("running goroutines: %d\n", ants.Running())
 	fmt.Printf("finish all tasks.\n")
 
-	// use the pool with a function
-	// set 10 the size of goroutine pool and 1 second for expired duration
+	// Uses the pool with a function,
+	// Sets 10 the size of goroutine pool and 1 second for expired duration
 	p, _ := ants.NewPoolWithFunc(10, func(i interface{}) {
 		myFunc(i)
 		wg.Done()
 	})
 	defer p.Release()
-	// submit tasks
+	// Submits tasks
 	for i := 0; i < runTimes; i++ {
 		wg.Add(1)
 		p.Serve(int32(i))
@@ -140,7 +140,7 @@ func main() {
 
 		request := &Request{Param: param, Result: make(chan []byte)}
 
-		// Throttle the requests with ants pool. This process is asynchronous and
+		// Throttles the requests with ants pool. This process is asynchronous and
 		// you can receive a result from the channel defined outside.
 		if err := pool.Serve(request); err != nil {
 			http.Error(w, "throttle limit error", http.StatusInternalServerError)
@@ -163,9 +163,9 @@ ants.Submit(func(){})
 `ants`支持实例化使用者自己的一个 Pool ，指定具体的池容量；通过调用 `NewPool` 方法可以实例化一个新的带有指定容量的 Pool ，如下：
 
 ``` go
-// set 10000 the size of goroutine pool
+// Sets 10000 the size of goroutine pool
 p, _ := ants.NewPool(10000)
-// submit a task
+// Submits a task
 p.Submit(func(){})
 ```
 
@@ -173,8 +173,8 @@ p.Submit(func(){})
 需要动态调整协程池容量可以通过调用`ReSize(int)`：
 
 ``` go
-pool.ReSize(1000) // Readjust its capacity to 1000
-pool.ReSize(100000) // Readjust its capacity to 100000
+pool.ReSize(1000) // Tuning its capacity to 1000
+pool.ReSize(100000) // Tuning its capacity to 100000
 ```
 
 该方法是线程安全的。
@@ -213,7 +213,7 @@ Go1.9
 
 **因为`PoolWithFunc`这个Pool只绑定一个任务函数，也即所有任务都是运行同一个函数，所以相较于`Pool`对原生goroutine在执行速度和内存消耗的优势更大，上面的结果可以看出，执行速度可以达到原生goroutine的300%，而内存消耗的优势已经达到了两位数的差距，原生goroutine的内存消耗达到了`ants`的35倍且原生goroutine的每次执行的内存分配次数也达到了`ants`45倍，1000w的任务量，`ants`的初始分配容量是5w，因此它完成了所有的任务依旧只使用了5w个goroutine！事实上，`ants`的Goroutine Pool的容量是可以自定义的，也就是说使用者可以根据不同场景对这个参数进行调优直至达到最高性能。**
 
-### 吞吐量测试（使用于那种只管提交异步任务而无须关心结果的场景）
+### 吞吐量测试（适用于那种只管提交异步任务而无须关心结果的场景）
 
 #### 10w 任务量
 

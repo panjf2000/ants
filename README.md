@@ -68,7 +68,7 @@ func main() {
 
 	runTimes := 1000
 
-	// use the common pool
+	// Uses the common pool
 	var wg sync.WaitGroup
 	for i := 0; i < runTimes; i++ {
 		wg.Add(1)
@@ -81,14 +81,14 @@ func main() {
 	fmt.Printf("running goroutines: %d\n", ants.Running())
 	fmt.Printf("finish all tasks.\n")
 
-	// use the pool with a function
-	// set 10 the size of goroutine pool and 1 second for expired duration
+	// Uses the pool with a function,
+	// sets 10 the size of goroutine pool and 1 second for expired duration
 	p, _ := ants.NewPoolWithFunc(10, func(i interface{}) {
 		myFunc(i)
 		wg.Done()
 	})
 	defer p.Release()
-	// submit tasks
+	// Submits tasks
 	for i := 0; i < runTimes; i++ {
 		wg.Add(1)
 		p.Serve(int32(i))
@@ -141,7 +141,7 @@ func main() {
 
 		request := &Request{Param: param, Result: make(chan []byte)}
 
-		// Throttle the requests with ants pool. This process is asynchronous and
+		// Throttles the requests with ants pool. This process is asynchronous and
 		// you can receive a result from the channel defined outside.
 		if err := pool.Serve(request); err != nil {
 			http.Error(w, "throttle limit error", http.StatusInternalServerError)
@@ -164,18 +164,18 @@ ants.Submit(func(){})
 Ants also supports custom limited pool. You can use the `NewPool` method to create a pool with the given capacity, as following:
 
 ``` go
-// set 10000 the size of goroutine pool
+// Sets 10000 the size of goroutine pool
 p, _ := ants.NewPool(10000)
-// submit a task
+// Submits a task
 p.Submit(func(){})
 ```
 
-## Readjusting pool capacity
+## Tuning pool capacity
 You can change ants pool capacity at any time with `ReSize(int)`:
 
 ``` go
-pool.ReSize(1000) // Readjust its capacity to 1000
-pool.ReSize(100000) // Readjust its capacity to 100000
+pool.ReSize(1000) // Tunes its capacity to 1000
+pool.ReSize(100000) // Tunes its capacity to 100000
 ```
 
 Don't worry about the synchronous problems in this case, this method is thread-safe.
@@ -197,9 +197,9 @@ Go1.9
 
  In that benchmark-picture, the first and second benchmarks performed test with 1M tasks and the rest of benchmarks performed test with 10M tasks, both unlimited goroutines and ants pool, and the capacity of this ants goroutine-pool was limited to 50K.
 
-- BenchmarkGoroutine-4 represent the benchmarks with unlimited goroutines in golang.
+- BenchmarkGoroutine-4 represents the benchmarks with unlimited goroutines in golang.
 
-- BenchmarkPoolGroutine-4 represent the benchmarks with a ants pool.
+- BenchmarkPoolGroutine-4 represents the benchmarks with a ants pool.
 
 The test data above is a basic benchmark and the more detailed benchmarks will be uploaded later.
 
@@ -215,7 +215,7 @@ In that benchmark-picture, the first and second benchmarks performed test with 1
 
 ![](ants_bench_poolwithfunc.png)
 
-### Throughput ( situation for  only submitting tasks and  need not waiting  for all the tasks to be completed) 
+### Throughput (situation for only submitting tasks and need not waiting for all the tasks to be completed) 
 
 #### 100K tasks
 
