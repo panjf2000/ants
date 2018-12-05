@@ -49,7 +49,7 @@ func main() {
 
 	runTimes := 1000
 
-	// use the common pool
+	// Uses the common pool
 	var wg sync.WaitGroup
 	for i := 0; i < runTimes; i++ {
 		wg.Add(1)
@@ -62,14 +62,14 @@ func main() {
 	fmt.Printf("running goroutines: %d\n", ants.Running())
 	fmt.Printf("finish all tasks.\n")
 
-	// use the pool with a function
-	// set 10 the size of goroutine pool and 1 second for expired duration
+	// Uses the pool with a function,
+	// sets 10 to the size of goroutine pool and 1 second for expired duration
 	p, _ := ants.NewPoolWithFunc(10, func(i interface{}) {
 		myFunc(i)
 		wg.Done()
 	})
 	defer p.Release()
-	// submit tasks
+	// Submits tasks
 	for i := 0; i < runTimes; i++ {
 		wg.Add(1)
 		p.Serve(int32(i))

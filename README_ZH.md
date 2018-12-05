@@ -81,7 +81,7 @@ func main() {
 	fmt.Printf("finish all tasks.\n")
 
 	// Uses the pool with a function,
-	// Sets 10 the size of goroutine pool and 1 second for expired duration
+	// sets 10 to the size of goroutine pool and 1 second for expired duration
 	p, _ := ants.NewPoolWithFunc(10, func(i interface{}) {
 		myFunc(i)
 		wg.Done()

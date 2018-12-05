@@ -82,7 +82,7 @@ func main() {
 	fmt.Printf("finish all tasks.\n")
 
 	// Uses the pool with a function,
-	// sets 10 the size of goroutine pool and 1 second for expired duration
+	// sets 10 to the size of goroutine pool and 1 second for expired duration
 	p, _ := ants.NewPoolWithFunc(10, func(i interface{}) {
 		myFunc(i)
 		wg.Done()
@@ -215,7 +215,7 @@ In that benchmark-picture, the first and second benchmarks performed test with 1
 
 ![](ants_bench_poolwithfunc.png)
 
-### Throughput (situation for only submitting tasks and need not waiting for all the tasks to be completed) 
+### Throughput (it is suitable for scenarios where asynchronous tasks are submitted without concern for results) 
 
 #### 100K tasks
 
