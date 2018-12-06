@@ -99,7 +99,7 @@ func main() {
 }
 ```
 
-## Integrate with http server
+## Integrates with http server
 ```go
 package main
 
@@ -170,7 +170,7 @@ p, _ := ants.NewPool(10000)
 p.Submit(func(){})
 ```
 
-## Tuning pool capacity
+## Tunes pool capacity
 You can change `ants` pool capacity at any time with `ReSize(int)`:
 
 ``` go
