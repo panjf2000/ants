@@ -68,7 +68,7 @@ func main() {
 
 	runTimes := 1000
 
-	// Uses the common pool
+	// Use the common pool
 	var wg sync.WaitGroup
 	for i := 0; i < runTimes; i++ {
 		wg.Add(1)
@@ -81,14 +81,14 @@ func main() {
 	fmt.Printf("running goroutines: %d\n", ants.Running())
 	fmt.Printf("finish all tasks.\n")
 
-	// Uses the pool with a function,
-	// sets 10 to the size of goroutine pool and 1 second for expired duration
+	// Use the pool with a function,
+	// set 10 to the size of goroutine pool and 1 second for expired duration
 	p, _ := ants.NewPoolWithFunc(10, func(i interface{}) {
 		myFunc(i)
 		wg.Done()
 	})
 	defer p.Release()
-	// Submits tasks
+	// Submit tasks
 	for i := 0; i < runTimes; i++ {
 		wg.Add(1)
 		p.Serve(int32(i))
@@ -141,7 +141,7 @@ func main() {
 
 		request := &Request{Param: param, Result: make(chan []byte)}
 
-		// Throttles the requests with ants pool. This process is asynchronous and
+		// Throttle the requests traffic with ants pool. This process is asynchronous and
 		// you can receive a result from the channel defined outside.
 		if err := pool.Serve(request); err != nil {
 			http.Error(w, "throttle limit error", http.StatusInternalServerError)
@@ -154,28 +154,28 @@ func main() {
 }
 ```
 
-## Submits tasks
+## Submit tasks
 Tasks can be submitted by calling `ants.Submit(func())`
 ```go
 ants.Submit(func(){})
 ```
 
-## Customizes limited pool
+## Customize limited pool
 `ants` also supports customizing limited pool. You can use the `NewPool` method to create a pool with the given capacity, as following:
 
 ``` go
-// Sets 10000 the size of goroutine pool
+// Set 10000 the size of goroutine pool
 p, _ := ants.NewPool(10000)
-// Submits a task
+// Submit a task
 p.Submit(func(){})
 ```
 
-## Tunes pool capacity
+## Tune pool capacity
 You can change `ants` pool capacity at any time with `ReSize(int)`:
 
 ``` go
-pool.ReSize(1000) // Tunes its capacity to 1000
-pool.ReSize(100000) // Tunes its capacity to 100000
+pool.ReSize(1000) // Tune its capacity to 1000
+pool.ReSize(100000) // Tune its capacity to 100000
 ```
 
 Don't worry about the synchronous problems in this case, this method is thread-safe.
