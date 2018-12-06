@@ -67,7 +67,7 @@ func main() {
 
 	runTimes := 1000
 
-	// Uses the common pool
+	// Use the common pool
 	var wg sync.WaitGroup
 	for i := 0; i < runTimes; i++ {
 		wg.Add(1)
@@ -80,14 +80,14 @@ func main() {
 	fmt.Printf("running goroutines: %d\n", ants.Running())
 	fmt.Printf("finish all tasks.\n")
 
-	// Uses the pool with a function,
-	// sets 10 to the size of goroutine pool and 1 second for expired duration
+	// Use the pool with a function,
+	// set 10 to the size of goroutine pool and 1 second for expired duration
 	p, _ := ants.NewPoolWithFunc(10, func(i interface{}) {
 		myFunc(i)
 		wg.Done()
 	})
 	defer p.Release()
-	// Submits tasks
+	// Submit tasks
 	for i := 0; i < runTimes; i++ {
 		wg.Add(1)
 		p.Serve(int32(i))
@@ -140,7 +140,7 @@ func main() {
 
 		request := &Request{Param: param, Result: make(chan []byte)}
 
-		// Throttles the requests with ants pool. This process is asynchronous and
+		// Throttle the requests traffic with ants pool. This process is asynchronous and
 		// you can receive a result from the channel defined outside.
 		if err := pool.Serve(request); err != nil {
 			http.Error(w, "throttle limit error", http.StatusInternalServerError)
@@ -163,9 +163,9 @@ ants.Submit(func(){})
 `ants`支持实例化使用者自己的一个 Pool ，指定具体的池容量；通过调用 `NewPool` 方法可以实例化一个新的带有指定容量的 Pool ，如下：
 
 ``` go
-// Sets 10000 the size of goroutine pool
+// Set 10000 the size of goroutine pool
 p, _ := ants.NewPool(10000)
-// Submits a task
+// Submit a task
 p.Submit(func(){})
 ```
 
@@ -173,8 +173,8 @@ p.Submit(func(){})
 需要动态调整协程池容量可以通过调用`ReSize(int)`：
 
 ``` go
-pool.ReSize(1000) // Tuning its capacity to 1000
-pool.ReSize(100000) // Tuning its capacity to 100000
+pool.ReSize(1000) // Tune its capacity to 1000
+pool.ReSize(100000) // Tune its capacity to 100000
 ```
 
 该方法是线程安全的。
