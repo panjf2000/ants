@@ -226,7 +226,7 @@ func (p *Pool) putWorker(worker *Worker) {
 	worker.recycleTime = time.Now()
 	p.lock.Lock()
 	p.workers = append(p.workers, worker)
-	// notify there is available worker
+	// Notify there is an available worker put back into queue.
 	p.cond.Signal()
 	p.lock.Unlock()
 }
