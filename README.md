@@ -99,7 +99,7 @@ func main() {
 }
 ```
 
-## Integrates with http server
+## Integrate with http server
 ```go
 package main
 
