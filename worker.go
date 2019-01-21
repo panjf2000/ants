@@ -44,6 +44,16 @@ type Worker struct {
 // that performs the function calls.
 func (w *Worker) run() {
 	go func() {
+		defer func() {
+			if p := recover(); p != nil {
+				w.pool.decRunning()
+				if w.pool.PanicHandler != nil {
+					w.pool.PanicHandler(p)
+				} else {
+					panic(p)
+				}
+			}
+		}()
 		for f := range w.task {
 			if f == nil {
 				w.pool.decRunning()

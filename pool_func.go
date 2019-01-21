@@ -58,6 +58,10 @@ type PoolWithFunc struct {
 	poolFunc pf
 
 	once sync.Once
+
+	// PanicHandler is used to handle panics from each worker goroutine.
+	// if nil, panics will be thrown out again from worker goroutines.
+	PanicHandler func(interface{})
 }
 
 // clear expired workers periodically.
