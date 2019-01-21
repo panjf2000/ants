@@ -25,6 +25,7 @@ package ants_test
 import (
 	"runtime"
 	"sync"
+	"sync/atomic"
 	"testing"
 	"time"
 
@@ -111,6 +112,53 @@ func TestAntsPool(t *testing.T) {
 	t.Logf("memory usage:%d MB", curMem)
 }
 
+func TestPanicHandler(t *testing.T) {
+	p0, err := ants.NewPool(10)
+	if err != nil {
+		t.Fatalf("create new pool failed: %s", err.Error())
+	}
+	defer p0.Release()
+	var panicCounter int64
+	var wg sync.WaitGroup
+	p0.PanicHandler = func(p interface{}) {
+		defer wg.Done()
+		atomic.AddInt64(&panicCounter, 1)
+	}
+	wg.Add(1)
+	p0.Submit(func() {
+		panic("test")
+	})
+	wg.Wait()
+	c := atomic.LoadInt64(&panicCounter)
+	if c != 1 {
+		t.Errorf("panic handler didn't work, panicCounter: %d", c)
+	}
+	if p0.Running() != 0 {
+		t.Errorf("pool should be empty after panic")
+	}
+	p1, err := ants.NewPoolWithFunc(10, func (p interface{}) {
+		panic(p)
+	})
+	if err != nil {
+		t.Fatalf("create new pool with func failed: %s", err.Error())
+	}
+	defer p1.Release()
+	p1.PanicHandler = func(p interface{}) {
+		defer wg.Done()
+		atomic.AddInt64(&panicCounter, 1)
+	}
+	wg.Add(1)
+	p1.Serve("test")
+	wg.Wait()
+	c = atomic.LoadInt64(&panicCounter)
+	if c != 2 {
+		t.Errorf("panic handler didn't work, panicCounter: %d", c)
+	}
+	if p1.Running() != 0 {
+		t.Errorf("pool should be empty after panic")
+	}
+}
+
 func TestCodeCov(t *testing.T) {
 	_, err := ants.NewTimingPool(-1, -1)
 	t.Log(err)
@@ -147,4 +195,27 @@ func TestCodeCov(t *testing.T) {
 	p.ReSize(TestSize)
 	p.ReSize(AntsSize)
 	t.Logf("pool with func, after resize, capacity:%d, running:%d", p.Cap(), p.Running())
+}
+
+func TestPurge(t *testing.T) {
+	p, err := ants.NewTimingPool(10, 1)
+	defer p.Release()
+	if err != nil {
+		t.Fatalf("create TimingPool failed: %s", err.Error())
+	}
+	p.Submit(demoFunc)
+	time.Sleep(5 * time.Second)
+	if p.Running() != 0 {
+		t.Error("all p should be purged")
+	}
+	p1, err := ants.NewTimingPoolWithFunc(10, 1, demoPoolFunc)
+	defer p1.Release()
+	if err != nil {
+		t.Fatalf("create TimingPoolWithFunc failed: %s", err.Error())
+	}
+	p1.Serve(1)
+	time.Sleep(5 * time.Second)
+	if p.Running() != 0 {
+		t.Error("all p should be purged")
+	}
 }
