@@ -1,6 +1,6 @@
 # ants
 
-<div align="center"><img src="ants_logo.png"/></div>
+<div align="center"><img src="https://user-images.githubusercontent.com/7496278/51515413-8807b680-1e4e-11e9-8001-9a90655f3006.png"/></div>
 
 <p align="center">A goroutine pool for Go</p>
 
@@ -193,7 +193,7 @@ Go1.9
 
 
 
-<div align="center"><img src="ants_benchmarks.png"/></div>
+<div align="center"><img src="https://user-images.githubusercontent.com/7496278/51515466-c7ce9e00-1e4e-11e9-89c4-bd3785b3c667.png"/></div>
 
 上图中的前两个 benchmark 测试结果是基于100w任务量的条件，剩下的几个是基于1000w任务量的测试结果，`ants`的默认池容量是5w。
 
@@ -203,13 +203,13 @@ Go1.9
 
 ### Benchmarks with Pool 
 
-![](benchmark_pool.png)
+![](https://user-images.githubusercontent.com/7496278/51515499-f187c500-1e4e-11e9-80e5-3df8f94fa70f.png)
 
 **这里为了模拟大规模goroutine的场景，两次测试的并发次数分别是100w和1000w，前两个测试分别是执行100w个并发任务不使用Pool和使用了`ants`的Goroutine Pool的性能，后两个则是1000w个任务下的表现，可以直观的看出在执行速度和内存使用上，`ants`的Pool都占有明显的优势。100w的任务量，使用`ants`，执行速度与原生goroutine相当甚至略快，但只实际使用了不到5w个goroutine完成了全部任务，且内存消耗仅为原生并发的40%；而当任务量达到1000w，优势则更加明显了：用了70w左右的goroutine完成全部任务，执行速度比原生goroutine提高了100%，且内存消耗依旧保持在不使用Pool的40%左右。**
 
 ### Benchmarks with PoolWithFunc
 
-![](ants_bench_poolwithfunc.png)
+![](https://user-images.githubusercontent.com/7496278/51515565-1e3bdc80-1e4f-11e9-8a08-452ab91d117e.png)
 
 **因为`PoolWithFunc`这个Pool只绑定一个任务函数，也即所有任务都是运行同一个函数，所以相较于`Pool`对原生goroutine在执行速度和内存消耗的优势更大，上面的结果可以看出，执行速度可以达到原生goroutine的300%，而内存消耗的优势已经达到了两位数的差距，原生goroutine的内存消耗达到了`ants`的35倍且原生goroutine的每次执行的内存分配次数也达到了`ants`45倍，1000w的任务量，`ants`的初始分配容量是5w，因此它完成了所有的任务依旧只使用了5w个goroutine！事实上，`ants`的Goroutine Pool的容量是可以自定义的，也就是说使用者可以根据不同场景对这个参数进行调优直至达到最高性能。**
 
@@ -217,23 +217,23 @@ Go1.9
 
 #### 10w 任务量
 
-![](ants_bench_10w.png)
+![](https://user-images.githubusercontent.com/7496278/51515590-36abf700-1e4f-11e9-91e4-7bd3dcb5f4a5.png)
 
 #### 100w 任务量
 
-![](ants_bench_100w.png)
+![](https://user-images.githubusercontent.com/7496278/51515596-44617c80-1e4f-11e9-89e3-01e19d2979a1.png)
 
 #### 1000w 任务量
 
-![](ants_bench_1000w.png)
+![](https://user-images.githubusercontent.com/7496278/51515615-5e9b5a80-1e4f-11e9-8816-66a935c32b05.png)
 
 1000w任务量的场景下，我的电脑已经无法支撑 golang 的原生 goroutine 并发，所以只测出了使用`ants`池的测试结果。
 
 **从该demo测试吞吐性能对比可以看出，使用`ants`的吞吐性能相较于原生goroutine可以保持在2-6倍的性能压制，而内存消耗则可以达到10-20倍的节省优势。** 
 
-[1]: https://travis-ci.com/panjf2000/ants.svg?branch=master
+[1]: https://travis-ci.com/panjf2000/ants.svg?branch=develop
 [2]: https://travis-ci.com/panjf2000/ants
-[3]: https://codecov.io/gh/panjf2000/ants/branch/master/graph/badge.svg
+[3]: https://codecov.io/gh/panjf2000/ants/branch/develop/graph/badge.svg
 [4]: https://codecov.io/gh/panjf2000/ants
 [5]: https://goreportcard.com/badge/github.com/panjf2000/ants
 [6]: https://goreportcard.com/report/github.com/panjf2000/ants
