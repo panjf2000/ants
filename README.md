@@ -1,6 +1,6 @@
 # ants
 
-<div align="center"><img src="ants_logo.png"/></div>
+<div align="center"><img src="https://user-images.githubusercontent.com/7496278/51515413-8807b680-1e4e-11e9-8001-9a90655f3006.png"/></div>
 
 <p align="center">A goroutine pool for Go</p>
 
@@ -193,7 +193,7 @@ Memory : 8 GB 1867 MHz DDR3
 Go1.9
 ```
 
-<div align="center"><img src="ants_benchmarks.png"/></div>
+<div align="center"><img src="https://user-images.githubusercontent.com/7496278/51515466-c7ce9e00-1e4e-11e9-89c4-bd3785b3c667.png"/></div>
 
  In that benchmark-picture, the first and second benchmarks performed test with 1M tasks and the rest of benchmarks performed test with 10M tasks, both unlimited goroutines and `ants` pool, and the capacity of this `ants` goroutine-pool was limited to 50K.
 
@@ -205,7 +205,7 @@ The test data above is a basic benchmark and the more detailed benchmarks will 
 
 ### Benchmarks with Pool 
 
-![](benchmark_pool.png)
+![](https://user-images.githubusercontent.com/7496278/51515499-f187c500-1e4e-11e9-80e5-3df8f94fa70f.png)
 
 In that benchmark-picture, the first and second benchmarks performed test with 1M tasks and the rest of benchmarks performed test with 10M tasks, both unlimited goroutines and `ants` pool, and the capacity of this `ants` goroutine-pool was limited to 50K.
 
@@ -213,21 +213,21 @@ In that benchmark-picture, the first and second benchmarks performed test with 1
 
 ### Benchmarks with PoolWithFunc
 
-![](ants_bench_poolwithfunc.png)
+![](https://user-images.githubusercontent.com/7496278/51515565-1e3bdc80-1e4f-11e9-8a08-452ab91d117e.png)
 
 ### Throughput (it is suitable for scenarios where asynchronous tasks are submitted without concern for results) 
 
 #### 100K tasks
 
-![](ants_bench_10w.png)
+![](https://user-images.githubusercontent.com/7496278/51515590-36abf700-1e4f-11e9-91e4-7bd3dcb5f4a5.png)
 
 #### 1M tasks
 
-![](ants_bench_100w.png)
+![](https://user-images.githubusercontent.com/7496278/51515596-44617c80-1e4f-11e9-89e3-01e19d2979a1.png)
 
 #### 10M tasks
 
-![](ants_bench_1000w.png)
+![](https://user-images.githubusercontent.com/7496278/51515615-5e9b5a80-1e4f-11e9-8816-66a935c32b05.png)
 
 There was only the test of `ants` Pool because my computer was crash when it reached 10M goroutines without pool. 
 
