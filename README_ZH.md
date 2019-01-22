@@ -231,9 +231,9 @@ Go1.9
 
 **从该demo测试吞吐性能对比可以看出，使用`ants`的吞吐性能相较于原生goroutine可以保持在2-6倍的性能压制，而内存消耗则可以达到10-20倍的节省优势。** 
 
-[1]: https://travis-ci.com/panjf2000/ants.svg?branch=develop
+[1]: https://travis-ci.com/panjf2000/ants.svg?branch=master
 [2]: https://travis-ci.com/panjf2000/ants
-[3]: https://codecov.io/gh/panjf2000/ants/branch/develop/graph/badge.svg
+[3]: https://codecov.io/gh/panjf2000/ants/branch/master/graph/badge.svg
 [4]: https://codecov.io/gh/panjf2000/ants
 [5]: https://goreportcard.com/badge/github.com/panjf2000/ants
 [6]: https://goreportcard.com/report/github.com/panjf2000/ants
