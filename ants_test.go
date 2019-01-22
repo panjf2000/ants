@@ -136,7 +136,7 @@ func TestPanicHandler(t *testing.T) {
 	if p0.Running() != 0 {
 		t.Errorf("pool should be empty after panic")
 	}
-	p1, err := ants.NewPoolWithFunc(10, func (p interface{}) {
+	p1, err := ants.NewPoolWithFunc(10, func(p interface{}) {
 		panic(p)
 	})
 	if err != nil {
