@@ -1,6 +1,6 @@
 # ants
 
-<div align="center"><img src="https://user-images.githubusercontent.com/7496278/51747068-4cd1e580-20e3-11e9-9685-0b9882569bae.jpg"/></div>
+<div align="center"><img src="https://user-images.githubusercontent.com/7496278/51747562-d7671480-20e4-11e9-84b9-c52c49f4850a.jpg"/></div>
 
 <p align="center">A goroutine pool for Go</p>
 
