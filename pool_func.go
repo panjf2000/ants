@@ -121,7 +121,7 @@ func NewTimingPoolWithFunc(size, expiry int, f pf) (*PoolWithFunc, error) {
 	return p, nil
 }
 
-//-------------------------------------------------------------------------
+//---------------------------------------------------------------------------
 
 // Serve submits a task to pool.
 func (p *PoolWithFunc) Serve(args interface{}) error {
@@ -175,7 +175,7 @@ func (p *PoolWithFunc) Release() error {
 	return nil
 }
 
-//-------------------------------------------------------------------------
+//---------------------------------------------------------------------------
 
 // incRunning increases the number of the currently running goroutines.
 func (p *PoolWithFunc) incRunning() {
@@ -233,7 +233,7 @@ func (p *PoolWithFunc) putWorker(worker *WorkerWithFunc) {
 	worker.recycleTime = time.Now()
 	p.lock.Lock()
 	p.workers = append(p.workers, worker)
-	// Notify there is an available worker put back into queue.
+	// Notify the invoker stuck in 'getWorker()' of there is an available worker in the worker queue.
 	p.cond.Signal()
 	p.lock.Unlock()
 }
