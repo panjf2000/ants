@@ -63,7 +63,7 @@ func Release() {
 	defaultAntsPool.Release()
 }
 
-// Errors for the Ants API.
+// Error types for the Ants API.
 var (
 	ErrInvalidPoolSize   = errors.New("invalid size for pool")
 	ErrInvalidPoolExpiry = errors.New("invalid expiry for pool")
