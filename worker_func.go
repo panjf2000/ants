@@ -54,6 +54,7 @@ func (w *WorkerWithFunc) run() {
 				}
 			}
 		}()
+		
 		for args := range w.args {
 			if args == nil {
 				w.pool.decRunning()
