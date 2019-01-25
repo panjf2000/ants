@@ -42,12 +42,6 @@ func demoFunc() {
 }
 
 func demoPoolFunc(args interface{}) {
-	//m := args.(int)
-	//var n int
-	//for i := 0; i < m; i++ {
-	//	n += i
-	//}
-	//return nil
 	n := args.(int)
 	time.Sleep(time.Duration(n) * time.Millisecond)
 }
@@ -99,7 +93,6 @@ func BenchmarkAntsPoolWithFunc(b *testing.B) {
 			p.Serve(benchParam)
 		}
 		wg.Wait()
-		//b.Logf("running goroutines: %d", p.Running())
 	}
 	b.StopTimer()
 }
