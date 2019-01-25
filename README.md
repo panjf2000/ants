@@ -1,9 +1,8 @@
 # ants
 
-<div align="center"><img src="https://user-images.githubusercontent.com/7496278/51515413-8807b680-1e4e-11e9-8001-9a90655f3006.png"/></div>
+<div align="center"><img src="https://user-images.githubusercontent.com/7496278/51747068-4cd1e580-20e3-11e9-9685-0b9882569bae.jpg"/></div>
 
 <p align="center">A goroutine pool for Go</p>
-
 
 [![Build Status][1]][2]
 [![codecov][3]][4]
@@ -11,7 +10,7 @@
 [![godoc for panjf2000/ants][7]][8]
 [![MIT Licence][9]][10]
 
-[中文项目说明](README_ZH.md) | [Project Tutorial](http://blog.taohuawu.club/article/goroutine-pool)
+[中文](README_ZH.md) | [Project Tutorial](http://blog.taohuawu.club/article/goroutine-pool)
 
 Package `ants` implements a fixed goroutine pool for managing and recycling a massive number of goroutines, allowing developers to limit the number of goroutines that created in your concurrent programs.
 
