@@ -22,6 +22,14 @@ Library `ants` implements a fixed capacity goroutine-pool for managing and recyc
 - Handle panic gracefully to prevent programs from crash.
 - Efficient in memory usage and it even achieves higher performance than unlimited goroutines in golang.
 
+## Tested in the following Golang versions:
+
+- 1.8.x
+- 1.9.x
+- 1.10.x
+- 1.11.x
+- master
+
 
 ## How to install
 
@@ -194,11 +202,11 @@ All the tasks submitted to `ants` pool will not be guaranteed to be addressed in
 ## Benchmarks
 
 ```
-OS : macOS High Sierra
-Processor : 2.7 GHz Intel Core i5
-Memory : 8 GB 1867 MHz DDR3
+OS: macOS High Sierra
+Processor: 2.7 GHz Intel Core i5
+Memory: 8 GB 1867 MHz DDR3
 
-Go1.9
+Go Version: 1.9
 ```
 
 <div align="center"><img src="https://user-images.githubusercontent.com/7496278/51515466-c7ce9e00-1e4e-11e9-89c4-bd3785b3c667.png"/></div>

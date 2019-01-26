@@ -14,13 +14,21 @@
 
 `ants`是一个高性能的协程池，实现了对大规模goroutine的调度管理、goroutine复用，允许使用者在开发并发程序的时候限制协程数量，复用资源，达到更高效执行任务的效果。
 
-## 功能:
+## 功能：
 
 - 实现了自动调度并发的goroutine，复用goroutine
 - 定时清理过期的goroutine，进一步节省资源
 - 提供了友好的接口：任务提交、获取运行中的协程数量、动态调整协程池大小
 - 优雅处理panic，防止程序崩溃
 - 资源复用，极大节省内存使用量；在大规模批量并发任务场景下比原生goroutine并发具有更高的性能
+
+## 目前测试通过的Golang版本：
+
+- 1.8.x
+- 1.9.x
+- 1.10.x
+- 1.11.x
+- master
 
 
 ## 安装
@@ -191,11 +199,11 @@ pool.Release()
 系统参数：
 
 ```
-OS : macOS High Sierra
-Processor : 2.7 GHz Intel Core i5
-Memory : 8 GB 1867 MHz DDR3
+OS: macOS High Sierra
+Processor: 2.7 GHz Intel Core i5
+Memory: 8 GB 1867 MHz DDR3
 
-Go1.9
+Go Version: 1.9
 ```
 
 
