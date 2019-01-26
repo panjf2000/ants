@@ -75,28 +75,25 @@ func TestAntsPoolWithFuncWaitToGetWorker(t *testing.T) {
 }
 
 // TestAntsPoolGetWorkerFromCache is used to test getting worker from sync.Pool.
-func TestAntsPoolGetWorkerFromCache(t *testing.T) {
-	var wg sync.WaitGroup
-	p, _ := ants.NewPool(AntsSize)
-	defer p.Release()
-
-	for i := 0; i < n; i++ {
-		if i == n/2 {
-			time.Sleep(ants.DefaultCleanIntervalTime * time.Second)
-		}
-		wg.Add(1)
-		p.Submit(func() {
-			demoFunc()
-			wg.Done()
-		})
-	}
-	wg.Wait()
-	t.Logf("pool, running workers number:%d", p.Running())
-	mem := runtime.MemStats{}
-	runtime.ReadMemStats(&mem)
-	curMem = mem.TotalAlloc/MiB - curMem
-	t.Logf("memory usage:%d MB", curMem)
-}
+//func TestAntsPoolGetWorkerFromCache(t *testing.T) {
+//	var wg sync.WaitGroup
+//	p, _ := ants.NewPool(AntsSize)
+//	defer p.Release()
+//
+//	for i := 0; i < n; i++ {
+//		wg.Add(1)
+//		p.Submit(func() {
+//			demoPoolFunc(Param)
+//			wg.Done()
+//		})
+//	}
+//	wg.Wait()
+//	t.Logf("pool, running workers number:%d", p.Running())
+//	mem := runtime.MemStats{}
+//	runtime.ReadMemStats(&mem)
+//	curMem = mem.TotalAlloc/MiB - curMem
+//	t.Logf("memory usage:%d MB", curMem)
+//}
 
 //-------------------------------------------------------------------------------------------
 // Contrast between goroutines without a pool and goroutines with ants pool.
@@ -245,17 +242,19 @@ func TestRestCodeCoverage(t *testing.T) {
 	_, err = ants.NewTimingPoolWithFunc(1, -1, demoPoolFunc)
 	t.Log(err)
 
-	p0, _ := ants.NewPool(AntsSize)
+	p0, _ := ants.NewPool(TestSize)
 	defer p0.Submit(demoFunc)
 	defer p0.Release()
 	for i := 0; i < n; i++ {
-		p0.Submit(demoFunc)
+		p0.Submit(func() {
+			demoPoolFunc(Param)
+		})
 	}
 	t.Logf("pool, capacity:%d", p0.Cap())
 	t.Logf("pool, running workers number:%d", p0.Running())
 	t.Logf("pool, free workers number:%d", p0.Free())
+	p0.Tune(TestSize)
 	p0.Tune(AntsSize)
-	p0.Tune(AntsSize / 2)
 	t.Logf("pool, after tuning capacity, capacity:%d, running:%d", p0.Cap(), p0.Running())
 
 	p, _ := ants.NewPoolWithFunc(TestSize, demoPoolFunc)
@@ -269,6 +268,6 @@ func TestRestCodeCoverage(t *testing.T) {
 	t.Logf("pool with func, running workers number:%d", p.Running())
 	t.Logf("pool with func, free workers number:%d", p.Free())
 	p.Tune(TestSize)
-	p.Tune(TestSize / 2)
+	p.Tune(AntsSize)
 	t.Logf("pool with func, after tuning capacity, capacity:%d, running:%d", p.Cap(), p.Running())
 }
