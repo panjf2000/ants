@@ -73,7 +73,7 @@ func (p *PoolWithFunc) periodicallyPurge() {
 		currentTime := time.Now()
 		p.lock.Lock()
 		idleWorkers := p.workers
-		if len(idleWorkers) == 0 && p.Running() == 0 && len(p.release) > 0 {
+		if len(idleWorkers) == 0 && p.Running() == 0 && p.release != nil {
 			p.lock.Unlock()
 			return
 		}
@@ -112,7 +112,6 @@ func NewTimingPoolWithFunc(size, expiry int, f pf) (*PoolWithFunc, error) {
 	}
 	p := &PoolWithFunc{
 		capacity:       int32(size),
-		release:        make(chan sig, 1),
 		expiryDuration: time.Duration(expiry) * time.Second,
 		poolFunc:       f,
 	}
@@ -125,7 +124,7 @@ func NewTimingPoolWithFunc(size, expiry int, f pf) (*PoolWithFunc, error) {
 
 // Serve submits a task to pool.
 func (p *PoolWithFunc) Serve(args interface{}) error {
-	if len(p.release) > 0 {
+	if p.release != nil {
 		return ErrPoolClosed
 	}
 	p.getWorker().args <- args
@@ -162,7 +161,7 @@ func (p *PoolWithFunc) ReSize(size int) {
 // Release Closed this pool.
 func (p *PoolWithFunc) Release() error {
 	p.once.Do(func() {
-		p.release <- sig{}
+		p.release = make(chan sig)
 		p.lock.Lock()
 		idleWorkers := p.workers
 		for i, w := range idleWorkers {
