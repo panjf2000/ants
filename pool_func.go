@@ -46,7 +46,7 @@ type PoolWithFunc struct {
 	workers []*WorkerWithFunc
 
 	// release is used to notice the pool to closed itself.
-	release bool
+	release int32
 
 	// lock for synchronous operation.
 	lock sync.Mutex
@@ -73,7 +73,7 @@ func (p *PoolWithFunc) periodicallyPurge() {
 		currentTime := time.Now()
 		p.lock.Lock()
 		idleWorkers := p.workers
-		if len(idleWorkers) == 0 && p.Running() == 0 && p.release {
+		if len(idleWorkers) == 0 && p.Running() == 0 && atomic.LoadInt32(&p.release) == 1 {
 			p.lock.Unlock()
 			return
 		}
@@ -124,12 +124,11 @@ func NewTimingPoolWithFunc(size, expiry int, f pf) (*PoolWithFunc, error) {
 
 // Serve submits a task to pool.
 func (p *PoolWithFunc) Serve(args interface{}) error {
-	if worker := p.getWorker(); worker != nil {
-		worker.args <- args
-		return nil
-	} else {
+	if 1 == atomic.LoadInt32(&p.release) {
 		return ErrPoolClosed
 	}
+	p.getWorker().args <- args
+	return nil
 }
 
 // Running returns the number of the currently running goroutines.
@@ -162,8 +161,8 @@ func (p *PoolWithFunc) ReSize(size int) {
 // Release Closed this pool.
 func (p *PoolWithFunc) Release() error {
 	p.once.Do(func() {
+		atomic.StoreInt32(&p.release, 1)
 		p.lock.Lock()
-		p.release = true
 		idleWorkers := p.workers
 		for i, w := range idleWorkers {
 			w.args <- nil
@@ -194,10 +193,6 @@ func (p *PoolWithFunc) getWorker() *WorkerWithFunc {
 
 	p.lock.Lock()
 	defer p.lock.Unlock()
-
-	if p.release {
-		return nil
-	}
 
 	idleWorkers := p.workers
 	n := len(idleWorkers) - 1
