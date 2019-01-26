@@ -75,25 +75,39 @@ func TestAntsPoolWithFuncWaitToGetWorker(t *testing.T) {
 }
 
 // TestAntsPoolGetWorkerFromCache is used to test getting worker from sync.Pool.
-//func TestAntsPoolGetWorkerFromCache(t *testing.T) {
-//	var wg sync.WaitGroup
-//	p, _ := ants.NewPool(AntsSize)
-//	defer p.Release()
-//
-//	for i := 0; i < n; i++ {
-//		wg.Add(1)
-//		p.Submit(func() {
-//			demoPoolFunc(Param)
-//			wg.Done()
-//		})
-//	}
-//	wg.Wait()
-//	t.Logf("pool, running workers number:%d", p.Running())
-//	mem := runtime.MemStats{}
-//	runtime.ReadMemStats(&mem)
-//	curMem = mem.TotalAlloc/MiB - curMem
-//	t.Logf("memory usage:%d MB", curMem)
-//}
+func TestAntsPoolGetWorkerFromCache(t *testing.T) {
+	p, _ := ants.NewPool(TestSize)
+	defer p.Release()
+
+	for i := 0; i < AntsSize; i++ {
+		p.Submit(demoFunc)
+	}
+	time.Sleep(ants.DefaultCleanIntervalTime * time.Second)
+	p.Submit(demoFunc)
+	t.Logf("pool, running workers number:%d", p.Running())
+	mem := runtime.MemStats{}
+	runtime.ReadMemStats(&mem)
+	curMem = mem.TotalAlloc/MiB - curMem
+	t.Logf("memory usage:%d MB", curMem)
+}
+
+// TestAntsPoolWithFuncGetWorkerFromCache is used to test getting worker from sync.Pool.
+func TestAntsPoolWithFuncGetWorkerFromCache(t *testing.T) {
+	dur := 10
+	p, _ := ants.NewPoolWithFunc(TestSize, demoPoolFunc)
+	defer p.Release()
+
+	for i := 0; i < AntsSize; i++ {
+		p.Serve(dur)
+	}
+	time.Sleep(ants.DefaultCleanIntervalTime * time.Second)
+	p.Serve(dur)
+	t.Logf("pool, running workers number:%d", p.Running())
+	mem := runtime.MemStats{}
+	runtime.ReadMemStats(&mem)
+	curMem = mem.TotalAlloc/MiB - curMem
+	t.Logf("memory usage:%d MB", curMem)
+}
 
 //-------------------------------------------------------------------------------------------
 // Contrast between goroutines without a pool and goroutines with ants pool.
@@ -246,9 +260,7 @@ func TestRestCodeCoverage(t *testing.T) {
 	defer p0.Submit(demoFunc)
 	defer p0.Release()
 	for i := 0; i < n; i++ {
-		p0.Submit(func() {
-			demoPoolFunc(Param)
-		})
+		p0.Submit(demoFunc)
 	}
 	t.Logf("pool, capacity:%d", p0.Cap())
 	t.Logf("pool, running workers number:%d", p0.Running())
