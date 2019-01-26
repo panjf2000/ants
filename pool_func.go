@@ -211,8 +211,8 @@ func (p *PoolWithFunc) retrieveWorker() *WorkerWithFunc {
 				pool: p,
 				args: make(chan interface{}, workerChanCap),
 			}
-			w.run()
 		}
+		w.run()
 	} else {
 		for {
 			p.cond.Wait()

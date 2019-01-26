@@ -207,8 +207,8 @@ func (p *Pool) retrieveWorker() *Worker {
 				pool: p,
 				task: make(chan f, workerChanCap),
 			}
-			w.run()
 		}
+		w.run()
 	} else {
 		for {
 			p.cond.Wait()
