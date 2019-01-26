@@ -82,7 +82,7 @@ func TestAntsPoolGetWorkerFromCache(t *testing.T) {
 	for i := 0; i < AntsSize; i++ {
 		p.Submit(demoFunc)
 	}
-	time.Sleep(ants.DefaultCleanIntervalTime * time.Second)
+	time.Sleep(2 * ants.DefaultCleanIntervalTime * time.Second)
 	p.Submit(demoFunc)
 	t.Logf("pool, running workers number:%d", p.Running())
 	mem := runtime.MemStats{}
@@ -100,7 +100,7 @@ func TestAntsPoolWithFuncGetWorkerFromCache(t *testing.T) {
 	for i := 0; i < AntsSize; i++ {
 		p.Serve(dur)
 	}
-	time.Sleep(ants.DefaultCleanIntervalTime * time.Second)
+	time.Sleep(2 * ants.DefaultCleanIntervalTime * time.Second)
 	p.Serve(dur)
 	t.Logf("pool, running workers number:%d", p.Running())
 	mem := runtime.MemStats{}
