@@ -54,10 +54,11 @@ func (w *Worker) run() {
 				}
 			}
 		}()
-		
+
 		for f := range w.task {
 			if f == nil {
 				w.pool.decRunning()
+				w.pool.cachePool.Put(w)
 				return
 			}
 			f()

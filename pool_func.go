@@ -59,6 +59,8 @@ type PoolWithFunc struct {
 
 	once sync.Once
 
+	cachePool sync.Pool
+
 	// PanicHandler is used to handle panics from each worker goroutine.
 	// if nil, panics will be thrown out again from worker goroutines.
 	PanicHandler func(interface{})
@@ -198,6 +200,13 @@ func (p *PoolWithFunc) getWorker() *WorkerWithFunc {
 	n := len(idleWorkers) - 1
 	if n < 0 {
 		waiting = p.Running() >= p.Cap()
+		if p.Running() >= p.Cap() {
+			waiting = true
+		} else {
+			if cacheWorker := p.cachePool.Get(); cacheWorker != nil {
+				return cacheWorker.(*WorkerWithFunc)
+			}
+		}
 	} else {
 		w = idleWorkers[n]
 		idleWorkers[n] = nil

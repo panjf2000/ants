@@ -54,10 +54,11 @@ func (w *WorkerWithFunc) run() {
 				}
 			}
 		}()
-		
+
 		for args := range w.args {
 			if args == nil {
 				w.pool.decRunning()
+				w.pool.cachePool.Put(w)
 				return
 			}
 			w.pool.poolFunc(args)
