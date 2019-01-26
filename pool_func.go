@@ -51,15 +51,17 @@ type PoolWithFunc struct {
 	// lock for synchronous operation.
 	lock sync.Mutex
 
-	// cond for waiting to get a idle worker
+	// cond for waiting to get a idle worker.
 	cond *sync.Cond
 
 	// pf is the function for processing tasks.
 	poolFunc pf
 
+	// once makes sure releasing this pool will just be done for one time.
 	once sync.Once
 
-	cachePool sync.Pool
+	// workerCache speeds up the obtainment of the an usable worker in function:retrieveWorker.
+	workerCache sync.Pool
 
 	// PanicHandler is used to handle panics from each worker goroutine.
 	// if nil, panics will be thrown out again from worker goroutines.
@@ -129,7 +131,7 @@ func (p *PoolWithFunc) Serve(args interface{}) error {
 	if 1 == atomic.LoadInt32(&p.release) {
 		return ErrPoolClosed
 	}
-	p.getWorker().args <- args
+	p.retrieveWorker().args <- args
 	return nil
 }
 
@@ -148,15 +150,15 @@ func (p *PoolWithFunc) Cap() int {
 	return int(atomic.LoadInt32(&p.capacity))
 }
 
-// ReSize change the capacity of this pool.
-func (p *PoolWithFunc) ReSize(size int) {
+// Tune change the capacity of this pool.
+func (p *PoolWithFunc) Tune(size int) {
 	if size == p.Cap() {
 		return
 	}
 	atomic.StoreInt32(&p.capacity, int32(size))
 	diff := p.Running() - size
 	for i := 0; i < diff; i++ {
-		p.getWorker().args <- nil
+		p.retrieveWorker().args <- nil
 	}
 }
 
@@ -188,8 +190,8 @@ func (p *PoolWithFunc) decRunning() {
 	atomic.AddInt32(&p.running, -1)
 }
 
-// getWorker returns a available worker to run the tasks.
-func (p *PoolWithFunc) getWorker() *WorkerWithFunc {
+// retrieveWorker returns a available worker to run the tasks.
+func (p *PoolWithFunc) retrieveWorker() *WorkerWithFunc {
 	var w *WorkerWithFunc
 	waiting := false
 
@@ -203,7 +205,7 @@ func (p *PoolWithFunc) getWorker() *WorkerWithFunc {
 		if p.Running() >= p.Cap() {
 			waiting = true
 		} else {
-			if cacheWorker := p.cachePool.Get(); cacheWorker != nil {
+			if cacheWorker := p.workerCache.Get(); cacheWorker != nil {
 				return cacheWorker.(*WorkerWithFunc)
 			}
 		}
@@ -231,17 +233,16 @@ func (p *PoolWithFunc) getWorker() *WorkerWithFunc {
 			args: make(chan interface{}, workerChanCap),
 		}
 		w.run()
-		p.incRunning()
 	}
 	return w
 }
 
-// putWorker puts a worker back into free pool, recycling the goroutines.
-func (p *PoolWithFunc) putWorker(worker *WorkerWithFunc) {
+// revertWorker puts a worker back into free pool, recycling the goroutines.
+func (p *PoolWithFunc) revertWorker(worker *WorkerWithFunc) {
 	worker.recycleTime = time.Now()
 	p.lock.Lock()
 	p.workers = append(p.workers, worker)
-	// Notify the invoker stuck in 'getWorker()' of there is an available worker in the worker queue.
+	// Notify the invoker stuck in 'retrieveWorker()' of there is an available worker in the worker queue.
 	p.cond.Signal()
 	p.lock.Unlock()
 }
