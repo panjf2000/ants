@@ -122,7 +122,7 @@ func NewTimingPool(size, expiry int) (*Pool, error) {
 
 // Submit submits a task to this pool.
 func (p *Pool) Submit(task f) error {
-	if p.release == nil {
+	if p.release != nil {
 		return ErrPoolClosed
 	}
 	p.getWorker().task <- task
