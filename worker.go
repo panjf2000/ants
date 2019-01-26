@@ -23,6 +23,7 @@
 package ants
 
 import (
+	"log"
 	"time"
 )
 
@@ -43,6 +44,7 @@ type Worker struct {
 // run starts a goroutine to repeat the process
 // that performs the function calls.
 func (w *Worker) run() {
+	w.pool.incRunning()
 	go func() {
 		defer func() {
 			if p := recover(); p != nil {
@@ -50,7 +52,7 @@ func (w *Worker) run() {
 				if w.pool.PanicHandler != nil {
 					w.pool.PanicHandler(p)
 				} else {
-					panic(p)
+					log.Printf("worker exits from a panic: %v", p)
 				}
 			}
 		}()
@@ -58,11 +60,11 @@ func (w *Worker) run() {
 		for f := range w.task {
 			if f == nil {
 				w.pool.decRunning()
-				w.pool.cachePool.Put(w)
+				w.pool.workerCache.Put(w)
 				return
 			}
 			f()
-			w.pool.putWorker(w)
+			w.pool.revertWorker(w)
 		}
 	}()
 }
