@@ -53,6 +53,27 @@ const (
 
 var curMem uint64
 
+// TestAntsPoolWaitToGetWorker is used to test waiting to get worker.
+func TestAntsPoolWaitToGetWorker(t *testing.T) {
+	var wg sync.WaitGroup
+	p, _ := ants.NewPool(AntsSize)
+	defer p.Release()
+
+	for i := 0; i < n; i++ {
+		wg.Add(1)
+		p.Submit(func() {
+			demoPoolFunc(Param)
+			wg.Done()
+		})
+	}
+	wg.Wait()
+	t.Logf("pool, running workers number:%d", p.Running())
+	mem := runtime.MemStats{}
+	runtime.ReadMemStats(&mem)
+	curMem = mem.TotalAlloc/MiB - curMem
+	t.Logf("memory usage:%d MB", curMem)
+}
+
 // TestAntsPoolWithFuncWaitToGetWorker is used to test waiting to get worker.
 func TestAntsPoolWithFuncWaitToGetWorker(t *testing.T) {
 	var wg sync.WaitGroup
@@ -102,7 +123,7 @@ func TestAntsPoolWithFuncGetWorkerFromCache(t *testing.T) {
 	}
 	time.Sleep(2 * ants.DefaultCleanIntervalTime * time.Second)
 	p.Serve(dur)
-	t.Logf("pool, running workers number:%d", p.Running())
+	t.Logf("pool with func, running workers number:%d", p.Running())
 	mem := runtime.MemStats{}
 	runtime.ReadMemStats(&mem)
 	curMem = mem.TotalAlloc/MiB - curMem
