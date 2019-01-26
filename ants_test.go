@@ -53,8 +53,8 @@ const (
 
 var curMem uint64
 
-// TestAntsPoolWithFunc makes sure that code coverage of PoolWithFunc is fully or nearly complete.
-func TestAntsPoolWithFuncCoverage(t *testing.T) {
+// TestAntsPoolWithFuncWaitToGetWorker is used to test waiting to get worker.
+func TestAntsPoolWithFuncWaitToGetWorker(t *testing.T) {
 	var wg sync.WaitGroup
 	p, _ := ants.NewPoolWithFunc(AntsSize, func(i interface{}) {
 		demoPoolFunc(i)
@@ -74,16 +74,19 @@ func TestAntsPoolWithFuncCoverage(t *testing.T) {
 	t.Logf("memory usage:%d MB", curMem)
 }
 
-// TestAntsPool makes sure that code coverage of PoolWithFunc is fully or nearly complete.
-func TestAntsPoolCoverage(t *testing.T) {
+// TestAntsPoolGetWorkerFromCache is used to test getting worker from sync.Pool.
+func TestAntsPoolGetWorkerFromCache(t *testing.T) {
 	var wg sync.WaitGroup
 	p, _ := ants.NewPool(AntsSize)
 	defer p.Release()
 
 	for i := 0; i < n; i++ {
+		if i == n/2 {
+			time.Sleep(ants.DefaultCleanIntervalTime * time.Second)
+		}
 		wg.Add(1)
 		p.Submit(func() {
-			demoPoolFunc(Param)
+			demoFunc()
 			wg.Done()
 		})
 	}
@@ -226,7 +229,7 @@ func TestPurge(t *testing.T) {
 		t.Fatalf("create TimingPoolWithFunc failed: %s", err.Error())
 	}
 	p1.Serve(1)
-	time.Sleep(5 * time.Second)
+	time.Sleep(ants.DefaultCleanIntervalTime * time.Second)
 	if p.Running() != 0 {
 		t.Error("all p should be purged")
 	}
@@ -266,6 +269,6 @@ func TestRestCodeCoverage(t *testing.T) {
 	t.Logf("pool with func, running workers number:%d", p.Running())
 	t.Logf("pool with func, free workers number:%d", p.Free())
 	p.Tune(TestSize)
-	p.Tune(AntsSize)
+	p.Tune(TestSize / 2)
 	t.Logf("pool with func, after tuning capacity, capacity:%d, running:%d", p.Cap(), p.Running())
 }
