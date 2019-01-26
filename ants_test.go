@@ -34,14 +34,14 @@ import (
 
 const (
 	_   = 1 << (10 * iota)
-	KiB // 1024
-	MiB // 1048576
-	GiB // 1073741824
-	TiB // 1099511627776             (超过了int32的范围)
-	PiB // 1125899906842624
-	EiB // 1152921504606846976
-	ZiB // 1180591620717411303424    (超过了int64的范围)
-	YiB // 1208925819614629174706176
+	KiB  // 1024
+	MiB  // 1048576
+	GiB  // 1073741824
+	TiB  // 1099511627776             (超过了int32的范围)
+	PiB  // 1125899906842624
+	EiB  // 1152921504606846976
+	ZiB  // 1180591620717411303424    (超过了int64的范围)
+	YiB  // 1208925819614629174706176
 )
 
 const (
@@ -123,10 +123,11 @@ func TestPanicHandler(t *testing.T) {
 	p0.PanicHandler = func(p interface{}) {
 		defer wg.Done()
 		atomic.AddInt64(&panicCounter, 1)
+		t.Logf("catch panic with PanicHandler: %v", p)
 	}
 	wg.Add(1)
 	p0.Submit(func() {
-		panic("test")
+		panic("Oops!")
 	})
 	wg.Wait()
 	c := atomic.LoadInt64(&panicCounter)
@@ -136,6 +137,7 @@ func TestPanicHandler(t *testing.T) {
 	if p0.Running() != 0 {
 		t.Errorf("pool should be empty after panic")
 	}
+
 	p1, err := ants.NewPoolWithFunc(10, func(p interface{}) {
 		panic(p)
 	})
@@ -148,7 +150,7 @@ func TestPanicHandler(t *testing.T) {
 		atomic.AddInt64(&panicCounter, 1)
 	}
 	wg.Add(1)
-	p1.Serve("test")
+	p1.Serve("Oops!")
 	wg.Wait()
 	c = atomic.LoadInt64(&panicCounter)
 	if c != 2 {
@@ -157,6 +159,26 @@ func TestPanicHandler(t *testing.T) {
 	if p1.Running() != 0 {
 		t.Errorf("pool should be empty after panic")
 	}
+}
+
+func TestPoolPanicWithoutHandler(t *testing.T) {
+	p0, err := ants.NewPool(10)
+	if err != nil {
+		t.Fatalf("create new pool failed: %s", err.Error())
+	}
+	defer p0.Release()
+	p0.Submit(func() {
+		panic("Oops!")
+	})
+
+	p1, err := ants.NewPoolWithFunc(10, func(p interface{}) {
+		panic(p)
+	})
+	if err != nil {
+		t.Fatalf("create new pool with func failed: %s", err.Error())
+	}
+	defer p1.Release()
+	p1.Serve("Oops!")
 }
 
 func TestCodeCov(t *testing.T) {
@@ -178,9 +200,9 @@ func TestCodeCov(t *testing.T) {
 	t.Logf("pool, capacity:%d", p0.Cap())
 	t.Logf("pool, running workers number:%d", p0.Running())
 	t.Logf("pool, free workers number:%d", p0.Free())
-	p0.ReSize(AntsSize)
-	p0.ReSize(AntsSize / 2)
-	t.Logf("pool, after resize, capacity:%d, running:%d", p0.Cap(), p0.Running())
+	p0.Tune(AntsSize)
+	p0.Tune(AntsSize / 2)
+	t.Logf("pool, after tuning capacity, capacity:%d, running:%d", p0.Cap(), p0.Running())
 
 	p, _ := ants.NewPoolWithFunc(TestSize, demoPoolFunc)
 	defer p.Serve(Param)
@@ -192,9 +214,9 @@ func TestCodeCov(t *testing.T) {
 	t.Logf("pool with func, capacity:%d", p.Cap())
 	t.Logf("pool with func, running workers number:%d", p.Running())
 	t.Logf("pool with func, free workers number:%d", p.Free())
-	p.ReSize(TestSize)
-	p.ReSize(AntsSize)
-	t.Logf("pool with func, after resize, capacity:%d, running:%d", p.Cap(), p.Running())
+	p.Tune(TestSize)
+	p.Tune(AntsSize)
+	t.Logf("pool with func, after tuning capacity, capacity:%d, running:%d", p.Cap(), p.Running())
 }
 
 func TestPurge(t *testing.T) {
