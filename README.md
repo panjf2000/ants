@@ -171,14 +171,22 @@ p.Submit(func(){})
 ```
 
 ## Tune pool capacity
-You can tune the capacity of  `ants` pool at any time with `ReSize(int)`:
+You can tune the capacity of  `ants` pool at any time with `Tune(int)`:
 
 ``` go
-pool.ReSize(1000) // Tune its capacity to 1000
-pool.ReSize(100000) // Tune its capacity to 100000
+pool.Tune(1000) // Tune its capacity to 1000
+pool.Tune(100000) // Tune its capacity to 100000
 ```
 
 Don't worry about the synchronous problems in this case, the function here is thread-safe (or should be called goroutine-safe).
+
+## Release Pool
+
+```go
+pool.Release()
+```
+
+
 
 ## About sequence
 All the tasks submitted to `ants` pool will not be guaranteed to be addressed in order, because those tasks scatter among a series of concurrent workers, thus those tasks are executed concurrently.

@@ -171,14 +171,20 @@ p.Submit(func(){})
 ```
 
 ## 动态调整协程池容量
-需要动态调整协程池容量可以通过调用`ReSize(int)`：
+需要动态调整协程池容量可以通过调用`Tune(int)`：
 
 ``` go
-pool.ReSize(1000) // Tune its capacity to 1000
-pool.ReSize(100000) // Tune its capacity to 100000
+pool.Tune(1000) // Tune its capacity to 1000
+pool.Tune(100000) // Tune its capacity to 100000
 ```
 
 该方法是线程安全的。
+
+## 销毁协程池
+
+```go
+pool.Release()
+```
 
 ## Benchmarks
 
