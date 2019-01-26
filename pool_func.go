@@ -215,7 +215,6 @@ func (p *PoolWithFunc) getWorker() *WorkerWithFunc {
 			p.workers = p.workers[:l]
 			break
 		}
-
 	} else if w == nil {
 		w = &WorkerWithFunc{
 			pool: p,
