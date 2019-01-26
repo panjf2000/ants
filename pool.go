@@ -28,8 +28,6 @@ import (
 	"time"
 )
 
-type sig struct{}
-
 type f func()
 
 // Pool accept the tasks from client,it limits the total
@@ -222,7 +220,7 @@ func (p *Pool) getWorker() *Worker {
 	} else if w == nil {
 		w = &Worker{
 			pool: p,
-			task: make(chan f, 1),
+			task: make(chan f, workerChanCap),
 		}
 		w.run()
 		p.incRunning()

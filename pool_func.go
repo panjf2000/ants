@@ -224,7 +224,7 @@ func (p *PoolWithFunc) getWorker() *WorkerWithFunc {
 	} else if w == nil {
 		w = &WorkerWithFunc{
 			pool: p,
-			args: make(chan interface{}, 1),
+			args: make(chan interface{}, workerChanCap),
 		}
 		w.run()
 		p.incRunning()
