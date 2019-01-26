@@ -53,7 +53,8 @@ const (
 
 var curMem uint64
 
-func TestAntsPoolWithFunc(t *testing.T) {
+// TestAntsPoolWithFunc makes sure that code coverage of PoolWithFunc is fully or nearly complete.
+func TestAntsPoolWithFuncCoverage(t *testing.T) {
 	var wg sync.WaitGroup
 	p, _ := ants.NewPoolWithFunc(AntsSize, func(i interface{}) {
 		demoPoolFunc(i)
@@ -73,6 +74,30 @@ func TestAntsPoolWithFunc(t *testing.T) {
 	t.Logf("memory usage:%d MB", curMem)
 }
 
+// TestAntsPool makes sure that code coverage of PoolWithFunc is fully or nearly complete.
+func TestAntsPoolCoverage(t *testing.T) {
+	var wg sync.WaitGroup
+	p, _ := ants.NewPool(AntsSize)
+	defer p.Release()
+
+	for i := 0; i < n; i++ {
+		wg.Add(1)
+		p.Submit(func() {
+			demoPoolFunc(Param)
+			wg.Done()
+		})
+	}
+	wg.Wait()
+	t.Logf("pool, running workers number:%d", p.Running())
+	mem := runtime.MemStats{}
+	runtime.ReadMemStats(&mem)
+	curMem = mem.TotalAlloc/MiB - curMem
+	t.Logf("memory usage:%d MB", curMem)
+}
+
+//-------------------------------------------------------------------------------------------
+// Contrast between goroutines without a pool and goroutines with ants pool.
+//-------------------------------------------------------------------------------------------
 func TestNoPool(t *testing.T) {
 	var wg sync.WaitGroup
 	for i := 0; i < n; i++ {
@@ -111,6 +136,9 @@ func TestAntsPool(t *testing.T) {
 	curMem = mem.TotalAlloc/MiB - curMem
 	t.Logf("memory usage:%d MB", curMem)
 }
+
+//-------------------------------------------------------------------------------------------
+//-------------------------------------------------------------------------------------------
 
 func TestPanicHandler(t *testing.T) {
 	p0, err := ants.NewPool(10)
@@ -181,7 +209,30 @@ func TestPoolPanicWithoutHandler(t *testing.T) {
 	p1.Serve("Oops!")
 }
 
-func TestCodeCov(t *testing.T) {
+func TestPurge(t *testing.T) {
+	p, err := ants.NewTimingPool(10, 1)
+	defer p.Release()
+	if err != nil {
+		t.Fatalf("create TimingPool failed: %s", err.Error())
+	}
+	p.Submit(demoFunc)
+	time.Sleep(5 * time.Second)
+	if p.Running() != 0 {
+		t.Error("all p should be purged")
+	}
+	p1, err := ants.NewTimingPoolWithFunc(10, 1, demoPoolFunc)
+	defer p1.Release()
+	if err != nil {
+		t.Fatalf("create TimingPoolWithFunc failed: %s", err.Error())
+	}
+	p1.Serve(1)
+	time.Sleep(5 * time.Second)
+	if p.Running() != 0 {
+		t.Error("all p should be purged")
+	}
+}
+
+func TestRestCodeCoverage(t *testing.T) {
 	_, err := ants.NewTimingPool(-1, -1)
 	t.Log(err)
 	_, err = ants.NewTimingPool(1, -1)
@@ -217,27 +268,4 @@ func TestCodeCov(t *testing.T) {
 	p.Tune(TestSize)
 	p.Tune(AntsSize)
 	t.Logf("pool with func, after tuning capacity, capacity:%d, running:%d", p.Cap(), p.Running())
-}
-
-func TestPurge(t *testing.T) {
-	p, err := ants.NewTimingPool(10, 1)
-	defer p.Release()
-	if err != nil {
-		t.Fatalf("create TimingPool failed: %s", err.Error())
-	}
-	p.Submit(demoFunc)
-	time.Sleep(5 * time.Second)
-	if p.Running() != 0 {
-		t.Error("all p should be purged")
-	}
-	p1, err := ants.NewTimingPoolWithFunc(10, 1, demoPoolFunc)
-	defer p1.Release()
-	if err != nil {
-		t.Fatalf("create TimingPoolWithFunc failed: %s", err.Error())
-	}
-	p1.Serve(1)
-	time.Sleep(5 * time.Second)
-	if p.Running() != 0 {
-		t.Error("all p should be purged")
-	}
 }
