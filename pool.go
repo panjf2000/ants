@@ -189,21 +189,27 @@ func (p *Pool) decRunning() {
 // retrieveWorker returns a available worker to run the tasks.
 func (p *Pool) retrieveWorker() *Worker {
 	var w *Worker
-	var waiting bool
 
 	p.lock.Lock()
 	idleWorkers := p.workers
 	n := len(idleWorkers) - 1
-	if n < 0 {
-		waiting = p.Running() >= p.Cap()
-	} else {
+	if n >= 0 {
 		w = idleWorkers[n]
 		idleWorkers[n] = nil
 		p.workers = idleWorkers[:n]
 		p.lock.Unlock()
-	}
-
-	if waiting {
+	} else if p.Running() < p.Cap() {
+		p.lock.Unlock()
+		if cacheWorker := p.workerCache.Get(); cacheWorker != nil {
+			w = cacheWorker.(*Worker)
+		} else {
+			w = &Worker{
+				pool: p,
+				task: make(chan f, workerChanCap),
+			}
+			w.run()
+		}
+	} else {
 		for {
 			p.cond.Wait()
 			l := len(p.workers) - 1
@@ -216,16 +222,6 @@ func (p *Pool) retrieveWorker() *Worker {
 			break
 		}
 		p.lock.Unlock()
-	} else if w == nil {
-		p.lock.Unlock()
-		if cacheWorker := p.workerCache.Get(); cacheWorker != nil {
-			return cacheWorker.(*Worker)
-		}
-		w = &Worker{
-			pool: p,
-			task: make(chan f, workerChanCap),
-		}
-		w.run()
 	}
 	return w
 }
