@@ -251,7 +251,7 @@ func TestPurge(t *testing.T) {
 		t.Fatalf("create TimingPool failed: %s", err.Error())
 	}
 	p.Submit(demoFunc)
-	time.Sleep(5 * time.Second)
+	time.Sleep(ants.DefaultCleanIntervalTime * time.Second)
 	if p.Running() != 0 {
 		t.Error("all p should be purged")
 	}
