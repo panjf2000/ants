@@ -12,7 +12,7 @@ before_install:
 
 script:
   #- go test -cpu=16 -bench=. -benchmem=true -run=none ./...
-  - go test -race -cpu=1,16 -coverprofile=coverage.txt -covermode=atomic -v
+  - go test -race -coverprofile=coverage.txt -covermode=atomic -v
 
 after_success:
   - bash <(curl -s https://codecov.io/bash)
