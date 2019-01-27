@@ -51,10 +51,17 @@ const (
 	n        = 100000
 )
 
+func SkipIfNotMultiCores(t *testing.T) {
+	if runtime.GOMAXPROCS(0) == 1 {
+		t.SkipNow()
+	}
+}
+
 var curMem uint64
 
 // TestAntsPoolWaitToGetWorker is used to test waiting to get worker.
 func TestAntsPoolWaitToGetWorker(t *testing.T) {
+	SkipIfNotMultiCores(t)
 	var wg sync.WaitGroup
 	p, _ := ants.NewPool(AntsSize)
 	defer p.Release()
@@ -76,6 +83,7 @@ func TestAntsPoolWaitToGetWorker(t *testing.T) {
 
 // TestAntsPoolWithFuncWaitToGetWorker is used to test waiting to get worker.
 func TestAntsPoolWithFuncWaitToGetWorker(t *testing.T) {
+	SkipIfNotMultiCores(t)
 	var wg sync.WaitGroup
 	p, _ := ants.NewPoolWithFunc(AntsSize, func(i interface{}) {
 		demoPoolFunc(i)
@@ -97,6 +105,7 @@ func TestAntsPoolWithFuncWaitToGetWorker(t *testing.T) {
 
 // TestAntsPoolGetWorkerFromCache is used to test getting worker from sync.Pool.
 func TestAntsPoolGetWorkerFromCache(t *testing.T) {
+	SkipIfNotMultiCores(t)
 	p, _ := ants.NewPool(TestSize)
 	defer p.Release()
 
@@ -114,6 +123,7 @@ func TestAntsPoolGetWorkerFromCache(t *testing.T) {
 
 // TestAntsPoolWithFuncGetWorkerFromCache is used to test getting worker from sync.Pool.
 func TestAntsPoolWithFuncGetWorkerFromCache(t *testing.T) {
+	SkipIfNotMultiCores(t)
 	dur := 10
 	p, _ := ants.NewPoolWithFunc(TestSize, demoPoolFunc)
 	defer p.Release()
@@ -134,6 +144,7 @@ func TestAntsPoolWithFuncGetWorkerFromCache(t *testing.T) {
 // Contrast between goroutines without a pool and goroutines with ants pool.
 //-------------------------------------------------------------------------------------------
 func TestNoPool(t *testing.T) {
+	SkipIfNotMultiCores(t)
 	var wg sync.WaitGroup
 	for i := 0; i < n; i++ {
 		wg.Add(1)
@@ -151,6 +162,7 @@ func TestNoPool(t *testing.T) {
 }
 
 func TestAntsPool(t *testing.T) {
+	SkipIfNotMultiCores(t)
 	defer ants.Release()
 	var wg sync.WaitGroup
 	for i := 0; i < n; i++ {
@@ -176,6 +188,7 @@ func TestAntsPool(t *testing.T) {
 //-------------------------------------------------------------------------------------------
 
 func TestPanicHandler(t *testing.T) {
+	SkipIfNotMultiCores(t)
 	p0, err := ants.NewPool(10)
 	if err != nil {
 		t.Fatalf("create new pool failed: %s", err.Error())
@@ -225,6 +238,7 @@ func TestPanicHandler(t *testing.T) {
 }
 
 func TestPoolPanicWithoutHandler(t *testing.T) {
+	SkipIfNotMultiCores(t)
 	p0, err := ants.NewPool(10)
 	if err != nil {
 		t.Fatalf("create new pool failed: %s", err.Error())
@@ -245,6 +259,7 @@ func TestPoolPanicWithoutHandler(t *testing.T) {
 }
 
 func TestPurge(t *testing.T) {
+	SkipIfNotMultiCores(t)
 	p, err := ants.NewTimingPool(10, 1)
 	defer p.Release()
 	if err != nil {
@@ -268,6 +283,7 @@ func TestPurge(t *testing.T) {
 }
 
 func TestRestCodeCoverage(t *testing.T) {
+	SkipIfNotMultiCores(t)
 	_, err := ants.NewTimingPool(-1, -1)
 	t.Log(err)
 	_, err = ants.NewTimingPool(1, -1)
@@ -303,4 +319,8 @@ func TestRestCodeCoverage(t *testing.T) {
 	p.Tune(TestSize)
 	p.Tune(AntsSize)
 	t.Logf("pool with func, after tuning capacity, capacity:%d, running:%d", p.Cap(), p.Running())
+}
+
+func TestInSingleCore(t *testing.T) {
+	t.Log("workerChanCap in ants tested.")
 }
