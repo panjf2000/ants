@@ -34,14 +34,14 @@ import (
 
 const (
 	_   = 1 << (10 * iota)
-	KiB  // 1024
-	MiB  // 1048576
-	GiB  // 1073741824
-	TiB  // 1099511627776             (超过了int32的范围)
-	PiB  // 1125899906842624
-	EiB  // 1152921504606846976
-	ZiB  // 1180591620717411303424    (超过了int64的范围)
-	YiB  // 1208925819614629174706176
+	KiB // 1024
+	MiB // 1048576
+	GiB // 1073741824
+	TiB // 1099511627776             (超过了int32的范围)
+	PiB // 1125899906842624
+	EiB // 1152921504606846976
+	ZiB // 1180591620717411303424    (超过了int64的范围)
+	YiB // 1208925819614629174706176
 )
 
 const (
@@ -304,4 +304,3 @@ func TestRestCodeCoverage(t *testing.T) {
 	p.Tune(AntsSize)
 	t.Logf("pool with func, after tuning capacity, capacity:%d, running:%d", p.Cap(), p.Running())
 }
-
