@@ -38,8 +38,14 @@ const (
 
 var (
 	// Error types for the Ants API.
+
+	// ErrInvalidPoolSize will be returned when setting a negative number as pool capacity.
 	ErrInvalidPoolSize   = errors.New("invalid size for pool")
+
+	// ErrInvalidPoolExpiry will be returned when setting a negative number as the periodic duration to purge goroutines.
 	ErrInvalidPoolExpiry = errors.New("invalid expiry for pool")
+
+	// ErrPoolClosed will be returned when submitting task to a closed pool.
 	ErrPoolClosed        = errors.New("this pool has been closed")
 
 	// workerChanCap determines whether the channel of a worker should be a buffered channel
