@@ -38,7 +38,7 @@ const (
 
 var (
 	// Error types for the Ants API.
-
+	//---------------------------------------------------------------------------
 	// ErrInvalidPoolSize will be returned when setting a negative number as pool capacity.
 	ErrInvalidPoolSize = errors.New("invalid size for pool")
 
@@ -47,10 +47,10 @@ var (
 
 	// ErrPoolClosed will be returned when submitting task to a closed pool.
 	ErrPoolClosed = errors.New("this pool has been closed")
+	//---------------------------------------------------------------------------
 
 	// workerChanCap determines whether the channel of a worker should be a buffered channel
-	// to get the best performance, inspired by fasthttp.
-	// https://github.com/valyala/fasthttp/blob/master/workerpool.go#L139
+	// to get the best performance. Inspired by fasthttp at https://github.com/valyala/fasthttp/blob/master/workerpool.go#L139
 	workerChanCap = func() int {
 		// Use blocking workerChan if GOMAXPROCS=1.
 		// This immediately switches Serve to WorkerFunc, which results
