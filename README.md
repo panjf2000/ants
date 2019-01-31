@@ -12,7 +12,7 @@
 
 [中文](README_ZH.md) | [Project Tutorial](http://blog.taohuawu.club/article/goroutine-pool)
 
-Library `ants` implements a fixed capacity goroutine-pool for managing and recycling a massive number of goroutines, allowing developers to limit the number of goroutines that created in your concurrent programs.
+Library `ants` implements a goroutine pool with fixed capacity, managing and recycling a massive number of goroutines, allowing developers to limit the number of goroutines in your concurrent programs.
 
 ## Features:
 
@@ -44,7 +44,7 @@ glide get github.com/panjf2000/ants
 ```
 
 ## How to use
-Just take a imagination that your program startovers a massive number of goroutines, from which a vast amount of memory will be consumed. To mitigate that kind of thing, all you need to do is to import `ants` package and submit all your tasks to a default pool with fixed capacity created when `ants` has been imported:
+Just take a imagination that your program starts a massive number of goroutines, from which a vast amount of memory will be consumed. To mitigate that kind of situation, all you need to do is to import `ants` package and submit all your tasks to a default pool with fixed capacity activated when package `ants` has been imported:
 
 ``` go
 package main
@@ -169,7 +169,7 @@ ants.Submit(func(){})
 ```
 
 ## Customize limited pool
-`ants` also supports customizing the capacity of pool. You can call the `NewPool` function to instantiate a pool with a given capacity, as following:
+`ants` also supports customizing the capacity of pool. You can invoke the `NewPool` function to instantiate a pool with a given capacity, as following:
 
 ``` go
 // Set 10000 the size of goroutine pool
@@ -197,7 +197,7 @@ pool.Release()
 
 
 ## About sequence
-All the tasks submitted to `ants` pool will not be guaranteed to be addressed in order, because those tasks scatter among a series of concurrent workers, thus those tasks are executed concurrently.
+All tasks submitted to `ants` pool will not be guaranteed to be addressed in order, because those tasks scatter among a series of concurrent workers, thus those tasks are executed concurrently.
 
 ## Benchmarks
 
