@@ -28,8 +28,6 @@ import (
 	"time"
 )
 
-type pf func(interface{})
-
 // PoolWithFunc accept the tasks from client,it limits the total
 // of goroutines to a given number by recycling goroutines.
 type PoolWithFunc struct {
@@ -54,8 +52,8 @@ type PoolWithFunc struct {
 	// cond for waiting to get a idle worker.
 	cond *sync.Cond
 
-	// pf is the function for processing tasks.
-	poolFunc pf
+	// poolFunc is the function for processing tasks.
+	poolFunc func(interface{})
 
 	// once makes sure releasing this pool will just be done for one time.
 	once sync.Once
@@ -102,12 +100,12 @@ func (p *PoolWithFunc) periodicallyPurge() {
 }
 
 // NewPoolWithFunc generates an instance of ants pool with a specific function.
-func NewPoolWithFunc(size int, f pf) (*PoolWithFunc, error) {
-	return NewTimingPoolWithFunc(size, DefaultCleanIntervalTime, f)
+func NewPoolWithFunc(size int, pf func(interface{})) (*PoolWithFunc, error) {
+	return NewTimingPoolWithFunc(size, DefaultCleanIntervalTime, pf)
 }
 
 // NewTimingPoolWithFunc generates an instance of ants pool with a specific function and a custom timed task.
-func NewTimingPoolWithFunc(size, expiry int, f pf) (*PoolWithFunc, error) {
+func NewTimingPoolWithFunc(size, expiry int, pf func(interface{})) (*PoolWithFunc, error) {
 	if size <= 0 {
 		return nil, ErrInvalidPoolSize
 	}
@@ -117,7 +115,7 @@ func NewTimingPoolWithFunc(size, expiry int, f pf) (*PoolWithFunc, error) {
 	p := &PoolWithFunc{
 		capacity:       int32(size),
 		expiryDuration: time.Duration(expiry) * time.Second,
-		poolFunc:       f,
+		poolFunc:       pf,
 	}
 	p.cond = sync.NewCond(&p.lock)
 	go p.periodicallyPurge()
