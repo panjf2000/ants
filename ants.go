@@ -70,7 +70,7 @@ var (
 var defaultAntsPool, _ = NewPool(DefaultAntsPoolSize)
 
 // Submit submits a task to pool.
-func Submit(task f) error {
+func Submit(task func()) error {
 	return defaultAntsPool.Submit(task)
 }
 
