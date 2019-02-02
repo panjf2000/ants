@@ -35,7 +35,7 @@ type Worker struct {
 	pool *Pool
 
 	// task is a job should be done.
-	task chan f
+	task chan func()
 
 	// recycleTime will be update when putting a worker back into queue.
 	recycleTime time.Time
