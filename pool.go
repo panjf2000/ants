@@ -28,8 +28,6 @@ import (
 	"time"
 )
 
-type f func()
-
 // Pool accept the tasks from client,it limits the total
 // of goroutines to a given number by recycling goroutines.
 type Pool struct {
@@ -123,7 +121,7 @@ func NewTimingPool(size, expiry int) (*Pool, error) {
 //---------------------------------------------------------------------------
 
 // Submit submits a task to this pool.
-func (p *Pool) Submit(task f) error {
+func (p *Pool) Submit(task func()) error {
 	if 1 == atomic.LoadInt32(&p.release) {
 		return ErrPoolClosed
 	}
@@ -205,7 +203,7 @@ func (p *Pool) retrieveWorker() *Worker {
 		} else {
 			w = &Worker{
 				pool: p,
-				task: make(chan f, workerChanCap),
+				task: make(chan func(), workerChanCap),
 			}
 		}
 		w.run()
