@@ -100,7 +100,7 @@ func main() {
 	// Submit tasks one by one.
 	for i := 0; i < runTimes; i++ {
 		wg.Add(1)
-		p.Serve(int32(i))
+		p.Invoke(int32(i))
 	}
 	wg.Wait()
 	fmt.Printf("running goroutines: %d\n", p.Running())
@@ -152,7 +152,7 @@ func main() {
 
 		// Throttle the requests traffic with ants pool. This process is asynchronous and
 		// you can receive a result from the channel defined outside.
-		if err := pool.Serve(request); err != nil {
+		if err := pool.Invoke(request); err != nil {
 			http.Error(w, "throttle limit error", http.StatusInternalServerError)
 		}
 
