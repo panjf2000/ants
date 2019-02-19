@@ -244,9 +244,11 @@ In above benchmark picture, the first and second benchmarks performed test cases
 
 #### 10M tasks
 
-![](https://user-images.githubusercontent.com/7496278/51515615-5e9b5a80-1e4f-11e9-8816-66a935c32b05.png)
+![](https://user-images.githubusercontent.com/7496278/52987732-537c2000-3437-11e9-86a6-177f00d7a1d6.png)
 
-There was only the test case with `ants` pool because my program crashed when it reached 10M goroutines without using a pool. 
+### Performance Summary
+
+![](https://user-images.githubusercontent.com/7496278/52987864-ed43cd00-3437-11e9-95c8-c4e10b772820.gif)
 
 **In conclusion, `ants` can up to 2x~6x faster than goroutines without a pool and the memory consumption is reduced by 10 to 20 times.**
 
