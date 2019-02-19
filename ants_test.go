@@ -85,7 +85,7 @@ func TestAntsPoolWithFuncWaitToGetWorker(t *testing.T) {
 
 	for i := 0; i < n; i++ {
 		wg.Add(1)
-		p.Serve(Param)
+		p.Invoke(Param)
 	}
 	wg.Wait()
 	t.Logf("pool with func, running workers number:%d", p.Running())
@@ -119,10 +119,10 @@ func TestAntsPoolWithFuncGetWorkerFromCache(t *testing.T) {
 	defer p.Release()
 
 	for i := 0; i < AntsSize; i++ {
-		p.Serve(dur)
+		p.Invoke(dur)
 	}
 	time.Sleep(2 * ants.DefaultCleanIntervalTime * time.Second)
-	p.Serve(dur)
+	p.Invoke(dur)
 	t.Logf("pool with func, running workers number:%d", p.Running())
 	mem := runtime.MemStats{}
 	runtime.ReadMemStats(&mem)
@@ -213,7 +213,7 @@ func TestPanicHandler(t *testing.T) {
 		atomic.AddInt64(&panicCounter, 1)
 	}
 	wg.Add(1)
-	p1.Serve("Oops!")
+	p1.Invoke("Oops!")
 	wg.Wait()
 	c = atomic.LoadInt64(&panicCounter)
 	if c != 2 {
@@ -241,7 +241,7 @@ func TestPoolPanicWithoutHandler(t *testing.T) {
 		t.Fatalf("create new pool with func failed: %s", err.Error())
 	}
 	defer p1.Release()
-	p1.Serve("Oops!")
+	p1.Invoke("Oops!")
 }
 
 func TestPurge(t *testing.T) {
@@ -260,7 +260,7 @@ func TestPurge(t *testing.T) {
 	if err != nil {
 		t.Fatalf("create TimingPoolWithFunc failed: %s", err.Error())
 	}
-	p1.Serve(1)
+	p1.Invoke(1)
 	time.Sleep(ants.DefaultCleanIntervalTime * time.Second)
 	if p.Running() != 0 {
 		t.Error("all p should be purged")
@@ -291,10 +291,10 @@ func TestRestCodeCoverage(t *testing.T) {
 	t.Logf("pool, after tuning capacity, capacity:%d, running:%d", p0.Cap(), p0.Running())
 
 	p, _ := ants.NewPoolWithFunc(TestSize, demoPoolFunc)
-	defer p.Serve(Param)
+	defer p.Invoke(Param)
 	defer p.Release()
 	for i := 0; i < n; i++ {
-		p.Serve(Param)
+		p.Invoke(Param)
 	}
 	time.Sleep(ants.DefaultCleanIntervalTime * time.Second)
 	t.Logf("pool with func, capacity:%d", p.Cap())
