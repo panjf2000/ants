@@ -73,7 +73,7 @@ func main() {
 	// Submit tasks one by one.
 	for i := 0; i < runTimes; i++ {
 		wg.Add(1)
-		p.Serve(int32(i))
+		p.Invoke(int32(i))
 	}
 	wg.Wait()
 	fmt.Printf("running goroutines: %d\n", p.Running())
