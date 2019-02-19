@@ -245,7 +245,7 @@ Go Version: 1.9
 
 ### 性能小结
 
-![](https://user-images.githubusercontent.com/7496278/52989187-4104e500-343d-11e9-880f-9641eec436ca.gif)
+![](https://user-images.githubusercontent.com/7496278/52989641-51b65a80-343f-11e9-86c0-e855d97343ea.gif)
 
 **从该demo测试吞吐性能对比可以看出，使用`ants`的吞吐性能相较于原生goroutine可以保持在2-6倍的性能压制，而内存消耗则可以达到10-20倍的节省优势。** 
 
