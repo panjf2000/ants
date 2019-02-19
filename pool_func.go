@@ -124,8 +124,8 @@ func NewTimingPoolWithFunc(size, expiry int, pf func(interface{})) (*PoolWithFun
 
 //---------------------------------------------------------------------------
 
-// Serve submits a task to pool.
-func (p *PoolWithFunc) Serve(args interface{}) error {
+// Invoke submits a task to pool.
+func (p *PoolWithFunc) Invoke(args interface{}) error {
 	if 1 == atomic.LoadInt32(&p.release) {
 		return ErrPoolClosed
 	}
