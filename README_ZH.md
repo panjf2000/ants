@@ -241,9 +241,11 @@ Go Version: 1.9
 
 #### 1000w 任务量
 
-![](https://user-images.githubusercontent.com/7496278/51515615-5e9b5a80-1e4f-11e9-8816-66a935c32b05.png)
+![](https://user-images.githubusercontent.com/7496278/52987732-537c2000-3437-11e9-86a6-177f00d7a1d6.png)
 
-1000w任务量的场景下，我的电脑已经无法支撑 golang 的原生 goroutine 并发，所以只测出了使用`ants`池的测试结果。
+### 性能小结
+
+![](https://user-images.githubusercontent.com/7496278/52987864-ed43cd00-3437-11e9-95c8-c4e10b772820.gif)
 
 **从该demo测试吞吐性能对比可以看出，使用`ants`的吞吐性能相较于原生goroutine可以保持在2-6倍的性能压制，而内存消耗则可以达到10-20倍的节省优势。** 
 
