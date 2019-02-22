@@ -287,7 +287,7 @@ func TestRestCodeCoverage(t *testing.T) {
 	t.Logf("pool, running workers number:%d", p0.Running())
 	t.Logf("pool, free workers number:%d", p0.Free())
 	p0.Tune(TestSize)
-	p0.Tune(AntsSize)
+	p0.Tune(TestSize / 10)
 	t.Logf("pool, after tuning capacity, capacity:%d, running:%d", p0.Cap(), p0.Running())
 
 	p, _ := ants.NewPoolWithFunc(TestSize, demoPoolFunc)
@@ -301,6 +301,6 @@ func TestRestCodeCoverage(t *testing.T) {
 	t.Logf("pool with func, running workers number:%d", p.Running())
 	t.Logf("pool with func, free workers number:%d", p.Free())
 	p.Tune(TestSize)
-	p.Tune(AntsSize)
+	p.Tune(TestSize / 10)
 	t.Logf("pool with func, after tuning capacity, capacity:%d, running:%d", p.Cap(), p.Running())
 }
