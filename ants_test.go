@@ -245,23 +245,23 @@ func TestPoolPanicWithoutHandler(t *testing.T) {
 }
 
 func TestPurge(t *testing.T) {
-	p, err := ants.NewTimingPool(10, 1)
+	p, err := ants.NewPool(10)
 	defer p.Release()
 	if err != nil {
 		t.Fatalf("create TimingPool failed: %s", err.Error())
 	}
 	p.Submit(demoFunc)
-	time.Sleep(ants.DefaultCleanIntervalTime * time.Second)
+	time.Sleep(3 * ants.DefaultCleanIntervalTime * time.Second)
 	if p.Running() != 0 {
 		t.Error("all p should be purged")
 	}
-	p1, err := ants.NewTimingPoolWithFunc(10, 1, demoPoolFunc)
+	p1, err := ants.NewPoolWithFunc(10, demoPoolFunc)
 	defer p1.Release()
 	if err != nil {
 		t.Fatalf("create TimingPoolWithFunc failed: %s", err.Error())
 	}
 	p1.Invoke(1)
-	time.Sleep(ants.DefaultCleanIntervalTime * time.Second)
+	time.Sleep(3 * ants.DefaultCleanIntervalTime * time.Second)
 	if p.Running() != 0 {
 		t.Error("all p should be purged")
 	}
