@@ -33,7 +33,7 @@ const (
 	DefaultAntsPoolSize = math.MaxInt32
 
 	// DefaultCleanIntervalTime is the interval time to clean up goroutines.
-	DefaultCleanIntervalTime = 5
+	DefaultCleanIntervalTime = 1
 )
 
 var (
@@ -64,10 +64,11 @@ var (
 		// new connections if WorkerFunc is CPU-bound.
 		return 1
 	}()
+
+    defaultAntsPool, _ = NewPool(DefaultAntsPoolSize)
 )
 
 // Init a instance pool when importing ants.
-var defaultAntsPool, _ = NewPool(DefaultAntsPoolSize)
 
 // Submit submits a task to pool.
 func Submit(task func()) error {
