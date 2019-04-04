@@ -42,6 +42,7 @@ const (
 var (
 	// Error types for the Ants API.
 	//---------------------------------------------------------------------------
+
 	// ErrInvalidPoolSize will be returned when setting a negative number as pool capacity.
 	ErrInvalidPoolSize = errors.New("invalid size for pool")
 
