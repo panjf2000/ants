@@ -28,7 +28,7 @@ Library `ants` implements a goroutine pool with fixed capacity, managing and rec
 - 1.9.x
 - 1.10.x
 - 1.11.x
-- master
+- 1.12.x
 
 
 ## How to install
