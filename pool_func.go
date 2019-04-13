@@ -239,6 +239,5 @@ func (p *PoolWithFunc) revertWorker(worker *WorkerWithFunc) bool {
 	// Notify the invoker stuck in 'retrieveWorker()' of there is an available worker in the worker queue.
 	p.cond.Signal()
 	p.lock.Unlock()
-	p.workerCache.Put(worker)
 	return true
 }
