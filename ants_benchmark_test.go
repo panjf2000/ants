@@ -97,7 +97,7 @@ func BenchmarkAntsPoolWithFunc(b *testing.B) {
 	b.StopTimer()
 }
 
-func BenchmarkGoroutine(b *testing.B) {
+func BenchmarkGoroutineThroughput(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		for j := 0; j < RunTimes; j++ {
 			go demoPoolFunc(benchParam)
@@ -105,7 +105,7 @@ func BenchmarkGoroutine(b *testing.B) {
 	}
 }
 
-func BenchmarkSemaphore(b *testing.B) {
+func BenchmarkSemaphoreThroughput(b *testing.B) {
 	sema := make(chan struct{}, benchAntsSize)
 	for i := 0; i < b.N; i++ {
 		for j := 0; j < RunTimes; j++ {
@@ -118,7 +118,7 @@ func BenchmarkSemaphore(b *testing.B) {
 	}
 }
 
-func BenchmarkAntsPool(b *testing.B) {
+func BenchmarkAntsPoolThroughput(b *testing.B) {
 	p, _ := ants.NewPoolWithFunc(benchAntsSize, demoPoolFunc)
 	defer p.Release()
 	b.StartTimer()

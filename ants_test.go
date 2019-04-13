@@ -96,39 +96,39 @@ func TestAntsPoolWithFuncWaitToGetWorker(t *testing.T) {
 }
 
 // TestAntsPoolGetWorkerFromCache is used to test getting worker from sync.Pool.
-func TestAntsPoolGetWorkerFromCache(t *testing.T) {
-	p, _ := ants.NewPool(TestSize)
-	defer p.Release()
+// func TestAntsPoolGetWorkerFromCache(t *testing.T) {
+// 	p, _ := ants.NewPool(TestSize)
+// 	defer p.Release()
 
-	for i := 0; i < AntsSize; i++ {
-		p.Submit(demoFunc)
-	}
-	time.Sleep(2 * ants.DefaultCleanIntervalTime * time.Second)
-	p.Submit(demoFunc)
-	t.Logf("pool, running workers number:%d", p.Running())
-	mem := runtime.MemStats{}
-	runtime.ReadMemStats(&mem)
-	curMem = mem.TotalAlloc/MiB - curMem
-	t.Logf("memory usage:%d MB", curMem)
-}
+// 	for i := 0; i < AntsSize; i++ {
+// 		p.Submit(demoFunc)
+// 	}
+// 	time.Sleep(2 * ants.DefaultCleanIntervalTime * time.Second)
+// 	p.Submit(demoFunc)
+// 	t.Logf("pool, running workers number:%d", p.Running())
+// 	mem := runtime.MemStats{}
+// 	runtime.ReadMemStats(&mem)
+// 	curMem = mem.TotalAlloc/MiB - curMem
+// 	t.Logf("memory usage:%d MB", curMem)
+// }
 
 // TestAntsPoolWithFuncGetWorkerFromCache is used to test getting worker from sync.Pool.
-func TestAntsPoolWithFuncGetWorkerFromCache(t *testing.T) {
-	dur := 10
-	p, _ := ants.NewPoolWithFunc(TestSize, demoPoolFunc)
-	defer p.Release()
+// func TestAntsPoolWithFuncGetWorkerFromCache(t *testing.T) {
+// 	dur := 10
+// 	p, _ := ants.NewPoolWithFunc(TestSize, demoPoolFunc)
+// 	defer p.Release()
 
-	for i := 0; i < AntsSize; i++ {
-		p.Invoke(dur)
-	}
-	time.Sleep(2 * ants.DefaultCleanIntervalTime * time.Second)
-	p.Invoke(dur)
-	t.Logf("pool with func, running workers number:%d", p.Running())
-	mem := runtime.MemStats{}
-	runtime.ReadMemStats(&mem)
-	curMem = mem.TotalAlloc/MiB - curMem
-	t.Logf("memory usage:%d MB", curMem)
-}
+// 	for i := 0; i < AntsSize; i++ {
+// 		p.Invoke(dur)
+// 	}
+// 	time.Sleep(2 * ants.DefaultCleanIntervalTime * time.Second)
+// 	p.Invoke(dur)
+// 	t.Logf("pool with func, running workers number:%d", p.Running())
+// 	mem := runtime.MemStats{}
+// 	runtime.ReadMemStats(&mem)
+// 	curMem = mem.TotalAlloc/MiB - curMem
+// 	t.Logf("memory usage:%d MB", curMem)
+// }
 
 //-------------------------------------------------------------------------------------------
 // Contrast between goroutines without a pool and goroutines with ants pool.

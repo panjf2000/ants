@@ -72,7 +72,7 @@ func (p *Pool) periodicallyPurge() {
 		currentTime := time.Now()
 		p.lock.Lock()
 		idleWorkers := p.workers
-		if len(idleWorkers) == 0 && p.Running() == 0 && atomic.LoadInt32(&p.release) == 1 {
+		if atomic.LoadInt32(&p.release) == 1 {
 			p.lock.Unlock()
 			return
 		}
@@ -225,11 +225,16 @@ func (p *Pool) retrieveWorker() *Worker {
 }
 
 // revertWorker puts a worker back into free pool, recycling the goroutines.
-func (p *Pool) revertWorker(worker *Worker) {
+func (p *Pool) revertWorker(worker *Worker) bool {
+	if 1 == atomic.LoadInt32(&p.release) {
+		return false
+	}
 	worker.recycleTime = time.Now()
 	p.lock.Lock()
 	p.workers = append(p.workers, worker)
 	// Notify the invoker stuck in 'retrieveWorker()' of there is an available worker in the worker queue.
 	p.cond.Signal()
 	p.lock.Unlock()
+	p.workerCache.Put(worker)
+	return true
 }
