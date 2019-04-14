@@ -63,7 +63,7 @@ type Pool struct {
 	PanicHandler func(interface{})
 }
 
-// clear expired workers periodically.
+// Clear expired workers periodically.
 func (p *Pool) periodicallyPurge() {
 	heartbeat := time.NewTicker(p.expiryDuration)
 	defer heartbeat.Stop()
@@ -72,7 +72,7 @@ func (p *Pool) periodicallyPurge() {
 		currentTime := time.Now()
 		p.lock.Lock()
 		idleWorkers := p.workers
-		if atomic.LoadInt32(&p.release) == 1 {
+		if CLOSED == atomic.LoadInt32(&p.release) {
 			p.lock.Unlock()
 			return
 		}
@@ -98,7 +98,7 @@ func (p *Pool) periodicallyPurge() {
 
 // NewPool generates an instance of ants pool.
 func NewPool(size int) (*Pool, error) {
-	return NewTimingPool(size, DefaultCleanIntervalTime)
+	return NewTimingPool(size, DEFAULT_CLEAN_INTERVAL_TIME)
 }
 
 // NewTimingPool generates an instance of ants pool with a custom timed task.
@@ -122,7 +122,7 @@ func NewTimingPool(size, expiry int) (*Pool, error) {
 
 // Submit submits a task to this pool.
 func (p *Pool) Submit(task func()) error {
-	if 1 == atomic.LoadInt32(&p.release) {
+	if CLOSED == atomic.LoadInt32(&p.release) {
 		return ErrPoolClosed
 	}
 	p.retrieveWorker().task <- task
@@ -226,7 +226,7 @@ func (p *Pool) retrieveWorker() *Worker {
 
 // revertWorker puts a worker back into free pool, recycling the goroutines.
 func (p *Pool) revertWorker(worker *Worker) bool {
-	if 1 == atomic.LoadInt32(&p.release) {
+	if CLOSED == atomic.LoadInt32(&p.release) {
 		return false
 	}
 	worker.recycleTime = time.Now()

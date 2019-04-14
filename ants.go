@@ -29,11 +29,14 @@ import (
 )
 
 const (
-	// DefaultAntsPoolSize is the default capacity for a default goroutine pool.
-	DefaultAntsPoolSize = math.MaxInt32
+	// DEFAULT_ANTS_POOL_SIZE is the default capacity for a default goroutine pool.
+	DEFAULT_ANTS_POOL_SIZE = math.MaxInt32
 
-	// DefaultCleanIntervalTime is the interval time to clean up goroutines.
-	DefaultCleanIntervalTime = 1
+	// DEFAULT_CLEAN_INTERVAL_TIME is the interval time to clean up goroutines.
+	DEFAULT_CLEAN_INTERVAL_TIME = 1
+
+	// CLOSED represents that the pool is closed.
+	CLOSED = 1
 )
 
 var (
@@ -65,7 +68,7 @@ var (
 		return 1
 	}()
 
-    defaultAntsPool, _ = NewPool(DefaultAntsPoolSize)
+    defaultAntsPool, _ = NewPool(DEFAULT_ANTS_POOL_SIZE)
 )
 
 // Init a instance pool when importing ants.

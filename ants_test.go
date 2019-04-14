@@ -103,7 +103,7 @@ func TestAntsPoolGetWorkerFromCache(t *testing.T) {
 	for i := 0; i < AntsSize; i++ {
 		p.Submit(demoFunc)
 	}
-	time.Sleep(2 * ants.DefaultCleanIntervalTime * time.Second)
+	time.Sleep(2 * ants.DEFAULT_CLEAN_INTERVAL_TIME * time.Second)
 	p.Submit(demoFunc)
 	t.Logf("pool, running workers number:%d", p.Running())
 	mem := runtime.MemStats{}
@@ -121,7 +121,7 @@ func TestAntsPoolWithFuncGetWorkerFromCache(t *testing.T) {
 	for i := 0; i < AntsSize; i++ {
 		p.Invoke(dur)
 	}
-	time.Sleep(2 * ants.DefaultCleanIntervalTime * time.Second)
+	time.Sleep(2 * ants.DEFAULT_CLEAN_INTERVAL_TIME * time.Second)
 	p.Invoke(dur)
 	t.Logf("pool with func, running workers number:%d", p.Running())
 	mem := runtime.MemStats{}
@@ -251,7 +251,7 @@ func TestPurge(t *testing.T) {
 		t.Fatalf("create TimingPool failed: %s", err.Error())
 	}
 	p.Submit(demoFunc)
-	time.Sleep(3 * ants.DefaultCleanIntervalTime * time.Second)
+	time.Sleep(3 * ants.DEFAULT_CLEAN_INTERVAL_TIME * time.Second)
 	if p.Running() != 0 {
 		t.Error("all p should be purged")
 	}
@@ -261,7 +261,7 @@ func TestPurge(t *testing.T) {
 		t.Fatalf("create TimingPoolWithFunc failed: %s", err.Error())
 	}
 	p1.Invoke(1)
-	time.Sleep(3 * ants.DefaultCleanIntervalTime * time.Second)
+	time.Sleep(3 * ants.DEFAULT_CLEAN_INTERVAL_TIME * time.Second)
 	if p.Running() != 0 {
 		t.Error("all p should be purged")
 	}
@@ -296,7 +296,7 @@ func TestRestCodeCoverage(t *testing.T) {
 	for i := 0; i < n; i++ {
 		p.Invoke(Param)
 	}
-	time.Sleep(ants.DefaultCleanIntervalTime * time.Second)
+	time.Sleep(ants.DEFAULT_CLEAN_INTERVAL_TIME * time.Second)
 	t.Logf("pool with func, capacity:%d", p.Cap())
 	t.Logf("pool with func, running workers number:%d", p.Running())
 	t.Logf("pool with func, free workers number:%d", p.Free())
