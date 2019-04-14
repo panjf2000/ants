@@ -95,7 +95,7 @@ func TestAntsPoolWithFuncWaitToGetWorker(t *testing.T) {
 	t.Logf("memory usage:%d MB", curMem)
 }
 
-TestAntsPoolGetWorkerFromCache is used to test getting worker from sync.Pool.
+// TestAntsPoolGetWorkerFromCache is used to test getting worker from sync.Pool.
 func TestAntsPoolGetWorkerFromCache(t *testing.T) {
 	p, _ := ants.NewPool(TestSize)
 	defer p.Release()
@@ -112,7 +112,7 @@ func TestAntsPoolGetWorkerFromCache(t *testing.T) {
 	t.Logf("memory usage:%d MB", curMem)
 }
 
-TestAntsPoolWithFuncGetWorkerFromCache is used to test getting worker from sync.Pool.
+// TestAntsPoolWithFuncGetWorkerFromCache is used to test getting worker from sync.Pool.
 func TestAntsPoolWithFuncGetWorkerFromCache(t *testing.T) {
 	dur := 10
 	p, _ := ants.NewPoolWithFunc(TestSize, demoPoolFunc)
