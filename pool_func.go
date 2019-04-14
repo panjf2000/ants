@@ -72,13 +72,12 @@ func (p *PoolWithFunc) periodicallyPurge() {
 	defer heartbeat.Stop()
 
 	for range heartbeat.C {
+		if CLOSED == atomic.LoadInt32(&p.release) {
+			break
+		}
 		currentTime := time.Now()
 		p.lock.Lock()
 		idleWorkers := p.workers
-		if CLOSED == atomic.LoadInt32(&p.release) {
-			p.lock.Unlock()
-			return
-		}
 		n := -1
 		for i, w := range idleWorkers {
 			if currentTime.Sub(w.recycleTime) <= p.expiryDuration {
