@@ -69,7 +69,7 @@ var (
 		return 1
 	}()
 
-    defaultAntsPool, _ = NewPool(DEFAULT_ANTS_POOL_SIZE)
+	defaultAntsPool, _ = NewPool(DEFAULT_ANTS_POOL_SIZE)
 )
 
 // Init a instance pool when importing ants.
