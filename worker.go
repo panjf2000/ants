@@ -23,7 +23,6 @@
 package ants
 
 import (
-	"log"
 	"time"
 )
 
@@ -46,27 +45,28 @@ type Worker struct {
 func (w *Worker) run() {
 	w.pool.incRunning()
 	go func() {
-		defer func() {
-			if p := recover(); p != nil {
-				w.pool.decRunning()
-				w.pool.workerCache.Put(w)
-				if w.pool.PanicHandler != nil {
-					w.pool.PanicHandler(p)
-				} else {
-					log.Printf("worker exits from a panic: %v", p)
-				}
-			}
-		}()
-
 		for f := range w.task {
-			if nil == f {
+			if f == nil {
 				w.pool.decRunning()
 				w.pool.workerCache.Put(w)
 				return
 			}
-			f()
-			if ok := w.pool.revertWorker(w); !ok {
-				break
+			if w.pool.PanicHandler == nil {
+				// if PanicHandler is nil, we do nothing,just throw out.
+				f()
+				w.pool.revertWorker(w)
+			}else {
+				// recover job and make worker continue.
+				func(){
+					defer func() {
+						if v := recover(); v != nil {
+							//Handler can handle panic or call exit.
+							w.pool.PanicHandler(v)
+						}
+						w.pool.revertWorker(w)
+					}()
+					f()
+				}()
 			}
 		}
 	}()
