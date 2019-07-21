@@ -1,16 +1,14 @@
 # ants
 
 <div align="center"><img src="https://user-images.githubusercontent.com/7496278/51748488-8efd2600-20e7-11e9-91f5-1c5b466dcca1.jpg"/></div>
-
 <p align="center">A goroutine pool for Go</p>
-
 [![Build Status][1]][2]
 [![codecov][3]][4]
 [![goreportcard for panjf2000/ants][5]][6]
 [![godoc for panjf2000/ants][7]][8]
 [![MIT Licence][9]][10]
 
-[中文](README_ZH.md) | [Project Tutorial](https://blog.taohuawu.club/goroutine-pool)
+[中文](README_ZH.md) | [Project Tutorial](https://blog.taohuawu.club/high-performance-implementation-of-goroutine-pool)
 
 Library `ants` implements a goroutine pool with fixed capacity, managing and recycling a massive number of goroutines, allowing developers to limit the number of goroutines in your concurrent programs.
 
@@ -211,7 +209,6 @@ Go Version: 1.9
 ```
 
 <div align="center"><img src="https://user-images.githubusercontent.com/7496278/51515466-c7ce9e00-1e4e-11e9-89c4-bd3785b3c667.png"/></div>
-
  In that benchmark-picture, the first and second benchmarks performed test cases with 1M tasks and the rest of benchmarks performed test cases with 10M tasks, both in unlimited goroutines and `ants` pool, and the capacity of this `ants` goroutine-pool was limited to 50K.
 
 - BenchmarkGoroutine-4 represents the benchmarks with unlimited goroutines in golang.
