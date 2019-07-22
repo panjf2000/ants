@@ -9,7 +9,7 @@
 [![godoc for panjf2000/ants][7]][8]
 [![MIT Licence][9]][10]
 
-[中文](README_ZH.md) | [Project Tutorial](https://blog.taohuawu.club/high-performance-implementation-of-goroutine-pool)
+[中文](README_ZH.md) | [Project Blog](https://taohuawu.club/high-performance-implementation-of-goroutine-pool)
 
 Library `ants` implements a goroutine pool with fixed capacity, managing and recycling a massive number of goroutines, allowing developers to limit the number of goroutines in your concurrent programs.
 
