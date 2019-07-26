@@ -104,16 +104,16 @@ func (p *Pool) periodicallyPurge() {
 
 // NewPool generates an instance of ants pool.
 func NewPool(size int) (*Pool, error) {
-	return NewTimingPool(size, DEFAULT_CLEAN_INTERVAL_TIME, false)
+	return NewUltimatePool(size, DEFAULT_CLEAN_INTERVAL_TIME, false)
 }
 
 // NewPoolPreMalloc generates an instance of ants pool with the memory pre-allocation of pool size.
 func NewPoolPreMalloc(size int) (*Pool, error) {
-	return NewTimingPool(size, DEFAULT_CLEAN_INTERVAL_TIME, true)
+	return NewUltimatePool(size, DEFAULT_CLEAN_INTERVAL_TIME, true)
 }
 
-// NewTimingPool generates an instance of ants pool with a custom timed task.
-func NewTimingPool(size, expiry int, preAlloc bool) (*Pool, error) {
+// NewUltimatePool generates an instance of ants pool with a custom timed task.
+func NewUltimatePool(size, expiry int, preAlloc bool) (*Pool, error) {
 	if size <= 0 {
 		return nil, ErrInvalidPoolSize
 	}

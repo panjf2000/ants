@@ -417,13 +417,13 @@ func TestPurgePreMalloc(t *testing.T) {
 }
 
 func TestRestCodeCoverage(t *testing.T) {
-	_, err := ants.NewTimingPool(-1, -1, false)
+	_, err := ants.NewUltimatePool(-1, -1, false)
 	t.Log(err)
-	_, err = ants.NewTimingPool(1, -1, false)
+	_, err = ants.NewUltimatePool(1, -1, false)
 	t.Log(err)
-	_, err = ants.NewTimingPoolWithFunc(-1, -1, demoPoolFunc, false)
+	_, err = ants.NewUltimatePoolWithFunc(-1, -1, demoPoolFunc, false)
 	t.Log(err)
-	_, err = ants.NewTimingPoolWithFunc(1, -1, demoPoolFunc, false)
+	_, err = ants.NewUltimatePoolWithFunc(1, -1, demoPoolFunc, false)
 	t.Log(err)
 
 	p0, _ := ants.NewPool(TestSize)
