@@ -68,7 +68,7 @@ func (p *Pool) periodicallyPurge() {
 	heartbeat := time.NewTicker(p.expiryDuration)
 	defer heartbeat.Stop()
 
-	var purgeWorkers []*Worker
+	var expiredWorkers []*Worker
 	for range heartbeat.C {
 		if CLOSED == atomic.LoadInt32(&p.release) {
 			break
@@ -81,7 +81,7 @@ func (p *Pool) periodicallyPurge() {
 		for i < n && currentTime.Sub(idleWorkers[i].recycleTime) > p.expiryDuration {
 			i++
 		}
-		purgeWorkers = append(purgeWorkers[:0], idleWorkers[:i]...)
+		expiredWorkers = append(expiredWorkers[:0], idleWorkers[:i]...)
 		if i > 0 {
 			m := copy(idleWorkers, idleWorkers[i:])
 			for i = m; i < n; i++ {
@@ -95,9 +95,9 @@ func (p *Pool) periodicallyPurge() {
 		// This notification must be outside the p.lock, since w.task
 		// may be blocking and may consume a lot of time if many workers
 		// are located on non-local CPUs.
-		for i, w := range purgeWorkers {
+		for i, w := range expiredWorkers {
 			w.task <- nil
-			purgeWorkers[i] = nil
+			expiredWorkers[i] = nil
 		}
 	}
 }
