@@ -24,6 +24,7 @@ package ants
 
 import (
 	"log"
+	"runtime"
 	"time"
 )
 
@@ -53,7 +54,10 @@ func (w *WorkerWithFunc) run() {
 				if w.pool.PanicHandler != nil {
 					w.pool.PanicHandler(p)
 				} else {
-					log.Printf("worker exits from a panic: %v", p)
+					log.Printf("worker with func exits from a panic: %v\n", p)
+					var buf [4096]byte
+					n := runtime.Stack(buf[:], false)
+					log.Printf("worker with func exits from panic: %s\n", string(buf[:n]))
 				}
 			}
 		}()

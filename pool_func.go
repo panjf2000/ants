@@ -107,21 +107,36 @@ func (p *PoolWithFunc) periodicallyPurge() {
 
 // NewPoolWithFunc generates an instance of ants pool with a specific function.
 func NewPoolWithFunc(size int, pf func(interface{})) (*PoolWithFunc, error) {
-	return NewTimingPoolWithFunc(size, DEFAULT_CLEAN_INTERVAL_TIME, pf)
+	return NewTimingPoolWithFunc(size, DEFAULT_CLEAN_INTERVAL_TIME, pf, false)
+}
+
+// NewPoolWithFuncPreMalloc generates an instance of ants pool with a specific function and the memory pre-allocation of pool size.
+func NewPoolWithFuncPreMalloc(size int, pf func(interface{})) (*PoolWithFunc, error) {
+	return NewTimingPoolWithFunc(size, DEFAULT_CLEAN_INTERVAL_TIME, pf, true)
 }
 
 // NewTimingPoolWithFunc generates an instance of ants pool with a specific function and a custom timed task.
-func NewTimingPoolWithFunc(size, expiry int, pf func(interface{})) (*PoolWithFunc, error) {
+func NewTimingPoolWithFunc(size, expiry int, pf func(interface{}), preAlloc bool) (*PoolWithFunc, error) {
 	if size <= 0 {
 		return nil, ErrInvalidPoolSize
 	}
 	if expiry <= 0 {
 		return nil, ErrInvalidPoolExpiry
 	}
-	p := &PoolWithFunc{
-		capacity:       int32(size),
-		expiryDuration: time.Duration(expiry) * time.Second,
-		poolFunc:       pf,
+	var p *PoolWithFunc
+	if preAlloc {
+		p = &PoolWithFunc{
+			capacity:       int32(size),
+			expiryDuration: time.Duration(expiry) * time.Second,
+			poolFunc:       pf,
+			workers:        make([]*WorkerWithFunc, 0, size),
+		}
+	} else {
+		p = &PoolWithFunc{
+			capacity:       int32(size),
+			expiryDuration: time.Duration(expiry) * time.Second,
+			poolFunc:       pf,
+		}
 	}
 	p.cond = sync.NewCond(&p.lock)
 	go p.periodicallyPurge()
