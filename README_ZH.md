@@ -1,8 +1,9 @@
 # ants
-
-<div align="center"><img src="https://user-images.githubusercontent.com/7496278/51748488-8efd2600-20e7-11e9-91f5-1c5b466dcca1.jpg"/></div>
-<p align="center">A goroutine pool for Go</p>
-
+<p align="center">
+<img src="https://user-images.githubusercontent.com/7496278/51748488-8efd2600-20e7-11e9-91f5-1c5b466dcca1.jpg"/>
+<br/><br/>
+A goroutine pool for Go
+<br/><br/>
 <a title="Build Status" target="_blank" href="https://travis-ci.com/panjf2000/ants"><img src="https://img.shields.io/travis/com/panjf2000/ants?style=flat-square"></a>
 <a title="Codecov" target="_blank" href="https://codecov.io/gh/panjf2000/ants"><img src="https://img.shields.io/codecov/c/github/panjf2000/ants?style=flat-square"></a>
 <a title="Version" target="_blank" href="https://github.com/panjf2000/ants/releases"><img src="https://img.shields.io/github/tag-pre/panjf2000/ants?style=flat-square"></a>
@@ -10,6 +11,7 @@
 <br/>
 <a title="Go Report Card" target="_blank" href="https://goreportcard.com/report/github.com/panjf2000/ants"><img src="https://goreportcard.com/badge/github.com/panjf2000/ants"></a>
 <a title="Godoc for ants" target="_blank" href="https://godoc.org/github.com/panjf2000/ants"><img src="https://godoc.org/github.com/panjf2000/ants?status.svg"></a>]
+</p>
 
 [英文](README.md) | [项目博客](https://taohuawu.club/high-performance-implementation-of-goroutine-pool)
 
@@ -189,6 +191,17 @@ pool.Tune(100000) // Tune its capacity to 100000
 ```
 
 该方法是线程安全的。
+
+## 预先分配goroutine队列内存
+
+`ants`允许你预先把整个池的容量分配内存， 这个功能可以在某些特定的场景下提高协程池的性能。比如， 有一个场景需要一个超大容量的池，而且每个goroutine里面的任务都是耗时任务，这种情况下，预先分配goroutine队列内存将会减少re-slice时的复制内存损耗。
+
+```go
+// ants will pre-malloc the whole capacity of pool when you invoke this function
+p, _ := ants.NewPoolPreMalloc(AntsSize)
+```
+
+
 
 ## 销毁协程池
 

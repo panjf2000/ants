@@ -1,8 +1,9 @@
 # ants
-
-<div align="center"><img src="https://user-images.githubusercontent.com/7496278/51748488-8efd2600-20e7-11e9-91f5-1c5b466dcca1.jpg"/></div>
-<p align="center">A goroutine pool for Go</p>
-
+<p align="center">
+<img src="https://user-images.githubusercontent.com/7496278/51748488-8efd2600-20e7-11e9-91f5-1c5b466dcca1.jpg"/>
+<br/><br/>
+A goroutine pool for Go
+<br/><br/>
 <a title="Build Status" target="_blank" href="https://travis-ci.com/panjf2000/ants"><img src="https://img.shields.io/travis/com/panjf2000/ants?style=flat-square"></a>
 <a title="Codecov" target="_blank" href="https://codecov.io/gh/panjf2000/ants"><img src="https://img.shields.io/codecov/c/github/panjf2000/ants?style=flat-square"></a>
 <a title="Version" target="_blank" href="https://github.com/panjf2000/ants/releases"><img src="https://img.shields.io/github/tag-pre/panjf2000/ants?style=flat-square"></a>
@@ -10,6 +11,7 @@
 <br/>
 <a title="Go Report Card" target="_blank" href="https://goreportcard.com/report/github.com/panjf2000/ants"><img src="https://goreportcard.com/badge/github.com/panjf2000/ants"></a>
 <a title="Godoc for ants" target="_blank" href="https://godoc.org/github.com/panjf2000/ants"><img src="https://godoc.org/github.com/panjf2000/ants?status.svg"></a>
+</p>
 
 [中文](README_ZH.md) | [Project Blog](https://taohuawu.club/high-performance-implementation-of-goroutine-pool)
 
@@ -189,6 +191,15 @@ pool.Tune(100000) // Tune its capacity to 100000
 ```
 
 Don't worry about the synchronous problems in this case, the function here is thread-safe (or should be called goroutine-safe).
+
+## Pre-malloc goroutine queue in pool
+
+`ants` allows you to pre-allocate memory of goroutine queue in pool, which may get a performance enhancement under some special certain circumstances such as the scenario that requires an pool with ultra-large capacity, meanwhile each task in goroutine lasts for a long time, in this case, pre-mallocing will reduce a lot of costs when re-slicing goroutine queue.
+
+```go
+// ants will pre-malloc the whole capacity of pool when you invoke this function
+p, _ := ants.NewPoolPreMalloc(AntsSize)
+```
 
 ## Release Pool
 
