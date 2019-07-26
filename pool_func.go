@@ -71,7 +71,7 @@ func (p *PoolWithFunc) periodicallyPurge() {
 	heartbeat := time.NewTicker(p.expiryDuration)
 	defer heartbeat.Stop()
 
-	var expiredWorkers []*Worker
+	var expiredWorkers []*WorkerWithFunc
 	for range heartbeat.C {
 		if CLOSED == atomic.LoadInt32(&p.release) {
 			break
