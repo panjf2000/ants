@@ -3,11 +3,13 @@
 <div align="center"><img src="https://user-images.githubusercontent.com/7496278/51748488-8efd2600-20e7-11e9-91f5-1c5b466dcca1.jpg"/></div>
 <p align="center">A goroutine pool for Go</p>
 
-[![Build Status][1]][2]
-[![codecov][3]][4]
-[![goreportcard for panjf2000/ants][5]][6]
-[![godoc for panjf2000/ants][7]][8]
-[![MIT Licence][9]][10]
+<a title="Build Status" target="_blank" href="https://travis-ci.com/panjf2000/ants"><img src="https://img.shields.io/travis/com/panjf2000/ants?style=flat-square"></a>
+<a title="Codecov" target="_blank" href="https://codecov.io/gh/panjf2000/ants"><img src="https://img.shields.io/codecov/c/github/panjf2000/ants?style=flat-square"></a>
+<a title="Version" target="_blank" href="https://github.com/panjf2000/ants/releases"><img src="https://img.shields.io/github/tag-pre/panjf2000/ants?style=flat-square"></a>
+<a title="License" target="_blank" href="https://opensource.org/licenses/mit-license.php"><img src="https://img.shields.io/aur/license/pac?style=flat-square"></a>
+<br/>
+<a title="Go Report Card" target="_blank" href="https://goreportcard.com/report/github.com/panjf2000/ants"><img src="https://goreportcard.com/badge/github.com/panjf2000/ants"></a>
+<a title="Godoc for ants" target="_blank" href="https://godoc.org/github.com/panjf2000/ants"><img src="https://godoc.org/github.com/panjf2000/ants?status.svg"></a>]
 
 [英文](README.md) | [项目博客](https://taohuawu.club/high-performance-implementation-of-goroutine-pool)
 
@@ -246,14 +248,3 @@ Go Version: 1.9
 ![](https://user-images.githubusercontent.com/7496278/52989641-51b65a80-343f-11e9-86c0-e855d97343ea.gif)
 
 **从该demo测试吞吐性能对比可以看出，使用`ants`的吞吐性能相较于原生goroutine可以保持在2-6倍的性能压制，而内存消耗则可以达到10-20倍的节省优势。** 
-
-[1]: https://travis-ci.com/panjf2000/ants.svg?branch=master
-[2]: https://travis-ci.com/panjf2000/ants
-[3]: https://codecov.io/gh/panjf2000/ants/branch/master/graph/badge.svg
-[4]: https://codecov.io/gh/panjf2000/ants
-[5]: https://goreportcard.com/badge/github.com/panjf2000/ants
-[6]: https://goreportcard.com/report/github.com/panjf2000/ants
-[7]: https://godoc.org/github.com/panjf2000/ants?status.svg
-[8]: https://godoc.org/github.com/panjf2000/ants
-[9]: https://badges.frapsoft.com/os/mit/mit.svg?v=103
-[10]: https://opensource.org/licenses/mit-license.php
