@@ -480,8 +480,4 @@ func TestRestCodeCoverage(t *testing.T) {
 	ppremWithFunc.Tune(TestSize / 10)
 	t.Logf("pre-malloc pool with func, after tuning capacity, capacity:%d, running:%d", ppremWithFunc.Cap(),
 		ppremWithFunc.Running())
-
-	// Test for "goto"
-	p0.Submit(demoFunc)
-	p.Invoke(Param)
 }
