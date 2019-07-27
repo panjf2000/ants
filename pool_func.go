@@ -73,7 +73,7 @@ func (p *PoolWithFunc) periodicallyPurge() {
 
 	var expiredWorkers []*WorkerWithFunc
 	for range heartbeat.C {
-		if CLOSED == atomic.LoadInt32(&p.release) {
+		if atomic.LoadInt32(&p.release) == CLOSED {
 			break
 		}
 		currentTime := time.Now()
@@ -147,7 +147,7 @@ func NewUltimatePoolWithFunc(size, expiry int, pf func(interface{}), preAlloc bo
 
 // Invoke submits a task to pool.
 func (p *PoolWithFunc) Invoke(args interface{}) error {
-	if CLOSED == atomic.LoadInt32(&p.release) {
+	if atomic.LoadInt32(&p.release) == CLOSED {
 		return ErrPoolClosed
 	}
 	p.retrieveWorker().args <- args
@@ -171,7 +171,7 @@ func (p *PoolWithFunc) Cap() int {
 
 // Tune change the capacity of this pool.
 func (p *PoolWithFunc) Tune(size int) {
-	if size == p.Cap() {
+	if p.Cap() == size {
 		return
 	}
 	atomic.StoreInt32(&p.capacity, int32(size))
@@ -216,6 +216,7 @@ func (p *PoolWithFunc) retrieveWorker() *WorkerWithFunc {
 	p.lock.Lock()
 	idleWorkers := p.workers
 	n := len(idleWorkers) - 1
+RESUME:
 	if n >= 0 {
 		w = idleWorkers[n]
 		idleWorkers[n] = nil
@@ -234,6 +235,9 @@ func (p *PoolWithFunc) retrieveWorker() *WorkerWithFunc {
 		w.run()
 	} else {
 		for {
+			if p.Running() == 0 {
+				goto RESUME
+			}
 			p.cond.Wait()
 			l := len(p.workers) - 1
 			if l < 0 {
@@ -251,7 +255,7 @@ func (p *PoolWithFunc) retrieveWorker() *WorkerWithFunc {
 
 // revertWorker puts a worker back into free pool, recycling the goroutines.
 func (p *PoolWithFunc) revertWorker(worker *WorkerWithFunc) bool {
-	if CLOSED == atomic.LoadInt32(&p.release) {
+	if atomic.LoadInt32(&p.release) == CLOSED {
 		return false
 	}
 	worker.recycleTime = time.Now()
