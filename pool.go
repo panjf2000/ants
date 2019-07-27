@@ -211,7 +211,6 @@ func (p *Pool) retrieveWorker() *Worker {
 	p.lock.Lock()
 	idleWorkers := p.workers
 	n := len(idleWorkers) - 1
-RESUME:
 	if n >= 0 {
 		w = idleWorkers[n]
 		idleWorkers[n] = nil
@@ -229,21 +228,16 @@ RESUME:
 		}
 		w.run()
 	} else {
-		for {
-			if p.Running() == 0 {
-				goto RESUME
-			}
-			p.cond.Wait()
-			l := len(p.workers) - 1
-			if l < 0 {
-				continue
-			}
-			w = p.workers[l]
-			p.workers[l] = nil
-			p.workers = p.workers[:l]
-			break
+	Reentry:
+		p.cond.Wait()
+		l := len(p.workers) - 1
+		if l < 0 {
+			goto Reentry
 		}
-		p.lock.Unlock()
+		w = p.workers[l]
+		p.workers[l] = nil
+		p.workers = p.workers[:l]
+	p.lock.Unlock()
 	}
 	return w
 }
