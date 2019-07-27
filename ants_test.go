@@ -445,12 +445,12 @@ func TestRestCodeCoverage(t *testing.T) {
 	for i := 0; i < n; i++ {
 		pprem.Submit(demoFunc)
 	}
-	t.Logf("pool with pre-malloc, capacity:%d", pprem.Cap())
-	t.Logf("pool with pre-malloc, running workers number:%d", pprem.Running())
-	t.Logf("pool with pre-malloc, free workers number:%d", pprem.Free())
+	t.Logf("pre-malloc pool, capacity:%d", pprem.Cap())
+	t.Logf("pre-malloc pool, running workers number:%d", pprem.Running())
+	t.Logf("pre-malloc pool, free workers number:%d", pprem.Free())
 	pprem.Tune(TestSize)
 	pprem.Tune(TestSize / 10)
-	t.Logf("pool with pre-malloc, after tuning capacity, capacity:%d, running:%d", p0.Cap(), p0.Running())
+	t.Logf("pre-malloc pool, after tuning capacity, capacity:%d, running:%d", pprem.Cap(), pprem.Running())
 
 	p, _ := ants.NewPoolWithFunc(TestSize, demoPoolFunc)
 	defer p.Invoke(Param)
@@ -473,10 +473,11 @@ func TestRestCodeCoverage(t *testing.T) {
 		ppremWithFunc.Invoke(Param)
 	}
 	time.Sleep(ants.DEFAULT_CLEAN_INTERVAL_TIME * time.Second)
-	t.Logf("pool with func, capacity:%d", ppremWithFunc.Cap())
-	t.Logf("pool with func, running workers number:%d", ppremWithFunc.Running())
-	t.Logf("pool with func, free workers number:%d", ppremWithFunc.Free())
+	t.Logf("pre-malloc pool with func, capacity:%d", ppremWithFunc.Cap())
+	t.Logf("pre-malloc pool with func, running workers number:%d", ppremWithFunc.Running())
+	t.Logf("pre-malloc pool with func, free workers number:%d", ppremWithFunc.Free())
 	ppremWithFunc.Tune(TestSize)
 	ppremWithFunc.Tune(TestSize / 10)
-	t.Logf("pool with func, after tuning capacity, capacity:%d, running:%d", p.Cap(), p.Running())
+	t.Logf("pre-malloc pool with func, after tuning capacity, capacity:%d, running:%d", ppremWithFunc.Cap(),
+		ppremWithFunc.Running())
 }
