@@ -63,7 +63,7 @@ func (w *WorkerWithFunc) run() {
 		}()
 
 		for args := range w.args {
-			if nil == args {
+			if args == nil {
 				w.pool.decRunning()
 				w.pool.workerCache.Put(w)
 				return
