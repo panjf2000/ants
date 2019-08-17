@@ -91,13 +91,6 @@ func (p *PoolWithFunc) periodicallyPurge() {
 			}
 			p.workers = idleWorkers[:m]
 		}
-
-		// There might be a situation that all workers have been cleaned up
-		// while some invokers still get stuck in "p.cond.Wait()",
-		// then it ought to wakes all those invokers.
-		if len(p.workers) == 0 {
-			p.cond.Broadcast()
-		}
 		p.lock.Unlock()
 
 		// Notify obsolete workers to stop.
@@ -107,6 +100,13 @@ func (p *PoolWithFunc) periodicallyPurge() {
 		for i, w := range expiredWorkers {
 			w.args <- nil
 			expiredWorkers[i] = nil
+		}
+
+		// There might be a situation that all workers have been cleaned up(no any worker is running)
+		// while some invokers still get stuck in "p.cond.Wait()",
+		// then it ought to wakes all those invokers.
+		if p.Running() == 0 {
+			p.cond.Broadcast()
 		}
 	}
 }
@@ -245,6 +245,7 @@ func (p *PoolWithFunc) retrieveWorker() *WorkerWithFunc {
 	Reentry:
 		p.cond.Wait()
 		if p.Running() == 0 {
+			p.lock.Unlock()
 			spawnWorker()
 			return w
 		}
