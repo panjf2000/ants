@@ -28,8 +28,7 @@ import (
 	"time"
 )
 
-// PoolWithFunc accept the tasks from client,it limits the total
-// of goroutines to a given number by recycling goroutines.
+// PoolWithFunc accept the tasks from client, it limits the total of goroutines to a given number by recycling goroutines.
 type PoolWithFunc struct {
 	// capacity of the pool.
 	capacity int32
@@ -91,6 +90,13 @@ func (p *PoolWithFunc) periodicallyPurge() {
 				idleWorkers[i] = nil
 			}
 			p.workers = idleWorkers[:m]
+		}
+
+		// There might be a situation that all workers have been cleaned up
+		// while some invokers still get stuck in "p.cond.Wait()",
+		// then it ought to wakes all those invokers.
+		if len(p.workers) == 0 {
+			p.cond.Broadcast()
 		}
 		p.lock.Unlock()
 
@@ -212,6 +218,17 @@ func (p *PoolWithFunc) decRunning() {
 // retrieveWorker returns a available worker to run the tasks.
 func (p *PoolWithFunc) retrieveWorker() *WorkerWithFunc {
 	var w *WorkerWithFunc
+	spawnWorker := func() {
+		if cacheWorker := p.workerCache.Get(); cacheWorker != nil {
+			w = cacheWorker.(*WorkerWithFunc)
+		} else {
+			w = &WorkerWithFunc{
+				pool: p,
+				args: make(chan interface{}, workerChanCap),
+			}
+		}
+		w.run()
+	}
 
 	p.lock.Lock()
 	idleWorkers := p.workers
@@ -223,18 +240,14 @@ func (p *PoolWithFunc) retrieveWorker() *WorkerWithFunc {
 		p.lock.Unlock()
 	} else if p.Running() < p.Cap() {
 		p.lock.Unlock()
-		if cacheWorker := p.workerCache.Get(); cacheWorker != nil {
-			w = cacheWorker.(*WorkerWithFunc)
-		} else {
-			w = &WorkerWithFunc{
-				pool: p,
-				args: make(chan interface{}, workerChanCap),
-			}
-		}
-		w.run()
+		spawnWorker()
 	} else {
 	Reentry:
 		p.cond.Wait()
+		if p.Running() == 0 {
+			spawnWorker()
+			return w
+		}
 		l := len(p.workers) - 1
 		if l < 0 {
 			goto Reentry
@@ -242,7 +255,7 @@ func (p *PoolWithFunc) retrieveWorker() *WorkerWithFunc {
 		w = p.workers[l]
 		p.workers[l] = nil
 		p.workers = p.workers[:l]
-	p.lock.Unlock()
+		p.lock.Unlock()
 	}
 	return w
 }
