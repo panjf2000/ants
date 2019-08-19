@@ -6,6 +6,7 @@ A goroutine pool for Go
 <a title="Build Status" target="_blank" href="https://travis-ci.com/panjf2000/ants"><img src="https://img.shields.io/travis/com/panjf2000/ants?style=flat-square"></a>
 <a title="Codecov" target="_blank" href="https://codecov.io/gh/panjf2000/ants"><img src="https://img.shields.io/codecov/c/github/panjf2000/ants?style=flat-square"></a>
 <a title="Go Report Card" target="_blank" href="https://goreportcard.com/report/github.com/panjf2000/ants"><img src="https://goreportcard.com/badge/github.com/panjf2000/ants?style=flat-square"></a>
+<a title="" target="_blank" href="https://golangci.com/r/github.com/panjf2000/ants"><img src="https://golangci.com/badges/github.com/panjf2000/ants.svg"></a>
 <br/>
 <a title="Godoc for ants" target="_blank" href="https://godoc.org/github.com/panjf2000/ants"><img src="https://img.shields.io/badge/godoc-reference-5272B4.svg?style=flat-square"></a>
 <a title="Release" target="_blank" href="https://github.com/panjf2000/ants/releases"><img src="https://img.shields.io/github/release/panjf2000/ants.svg?style=flat-square"></a>
@@ -92,7 +93,7 @@ func main() {
 	fmt.Printf("running goroutines: %d\n", ants.Running())
 	fmt.Printf("finish all tasks.\n")
 
-	// Use the pool with a function,
+	// Use the pool with a method,
 	// set 10 to the capacity of goroutine pool and 1 second for expired duration.
 	p, _ := ants.NewPoolWithFunc(10, func(i interface{}) {
 		myFunc(i)
@@ -172,7 +173,7 @@ ants.Submit(func(){})
 ```
 
 ## Customize limited pool
-`ants` also supports customizing the capacity of pool. You can invoke the `NewPool` function to instantiate a pool with a given capacity, as following:
+`ants` also supports customizing the capacity of pool. You can invoke the `NewPool` method to instantiate a pool with a given capacity, as following:
 
 ``` go
 // Set 10000 the size of goroutine pool
@@ -189,14 +190,14 @@ pool.Tune(1000) // Tune its capacity to 1000
 pool.Tune(100000) // Tune its capacity to 100000
 ```
 
-Don't worry about the synchronous problems in this case, the function here is thread-safe (or should be called goroutine-safe).
+Don't worry about the synchronous problems in this case, the method here is thread-safe (or should be called goroutine-safe).
 
 ## Pre-malloc goroutine queue in pool
 
 `ants` allows you to pre-allocate memory of goroutine queue in pool, which may get a performance enhancement under some special certain circumstances such as the scenario that requires an pool with ultra-large capacity, meanwhile each task in goroutine lasts for a long time, in this case, pre-mallocing will reduce a lot of costs when re-slicing goroutine queue.
 
 ```go
-// ants will pre-malloc the whole capacity of pool when you invoke this function
+// ants will pre-malloc the whole capacity of pool when you invoke this method
 p, _ := ants.NewPoolPreMalloc(AntsSize)
 ```
 
