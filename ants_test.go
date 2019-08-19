@@ -33,15 +33,15 @@ import (
 )
 
 const (
-	_   = 1 << (10 * iota)
-	KiB // 1024
+	_ = 1 << (10 * iota)
+	//KiB // 1024
 	MiB // 1048576
-	GiB // 1073741824
-	TiB // 1099511627776             (超过了int32的范围)
-	PiB // 1125899906842624
-	EiB // 1152921504606846976
-	ZiB // 1180591620717411303424    (超过了int64的范围)
-	YiB // 1208925819614629174706176
+	//GiB // 1073741824
+	//TiB // 1099511627776             (超过了int32的范围)
+	//PiB // 1125899906842624
+	//EiB // 1152921504606846976
+	//ZiB // 1180591620717411303424    (超过了int64的范围)
+	//YiB // 1208925819614629174706176
 )
 
 const (
@@ -61,7 +61,7 @@ func TestAntsPoolWaitToGetWorker(t *testing.T) {
 
 	for i := 0; i < n; i++ {
 		wg.Add(1)
-		p.Submit(func() {
+		_ = p.Submit(func() {
 			demoPoolFunc(Param)
 			wg.Done()
 		})
@@ -81,7 +81,7 @@ func TestAntsPoolWaitToGetWorkerPreMalloc(t *testing.T) {
 
 	for i := 0; i < n; i++ {
 		wg.Add(1)
-		p.Submit(func() {
+		_ = p.Submit(func() {
 			demoPoolFunc(Param)
 			wg.Done()
 		})
@@ -105,7 +105,7 @@ func TestAntsPoolWithFuncWaitToGetWorker(t *testing.T) {
 
 	for i := 0; i < n; i++ {
 		wg.Add(1)
-		p.Invoke(Param)
+		_ = p.Invoke(Param)
 	}
 	wg.Wait()
 	t.Logf("pool with func, running workers number:%d", p.Running())
@@ -125,7 +125,7 @@ func TestAntsPoolWithFuncWaitToGetWorkerPreMalloc(t *testing.T) {
 
 	for i := 0; i < n; i++ {
 		wg.Add(1)
-		p.Invoke(Param)
+		_ = p.Invoke(Param)
 	}
 	wg.Wait()
 	t.Logf("pool with func, running workers number:%d", p.Running())
@@ -141,10 +141,10 @@ func TestAntsPoolGetWorkerFromCache(t *testing.T) {
 	defer p.Release()
 
 	for i := 0; i < AntsSize; i++ {
-		p.Submit(demoFunc)
+		_ = p.Submit(demoFunc)
 	}
 	time.Sleep(2 * ants.DEFAULT_CLEAN_INTERVAL_TIME * time.Second)
-	p.Submit(demoFunc)
+	_ = p.Submit(demoFunc)
 	t.Logf("pool, running workers number:%d", p.Running())
 	mem := runtime.MemStats{}
 	runtime.ReadMemStats(&mem)
@@ -159,10 +159,10 @@ func TestAntsPoolWithFuncGetWorkerFromCache(t *testing.T) {
 	defer p.Release()
 
 	for i := 0; i < AntsSize; i++ {
-		p.Invoke(dur)
+		_ = p.Invoke(dur)
 	}
 	time.Sleep(2 * ants.DEFAULT_CLEAN_INTERVAL_TIME * time.Second)
-	p.Invoke(dur)
+	_ = p.Invoke(dur)
 	t.Logf("pool with func, running workers number:%d", p.Running())
 	mem := runtime.MemStats{}
 	runtime.ReadMemStats(&mem)
@@ -176,10 +176,10 @@ func TestAntsPoolWithFuncGetWorkerFromCachePreMalloc(t *testing.T) {
 	defer p.Release()
 
 	for i := 0; i < AntsSize; i++ {
-		p.Invoke(dur)
+		_ = p.Invoke(dur)
 	}
 	time.Sleep(2 * ants.DEFAULT_CLEAN_INTERVAL_TIME * time.Second)
-	p.Invoke(dur)
+	_ = p.Invoke(dur)
 	t.Logf("pool with func, running workers number:%d", p.Running())
 	mem := runtime.MemStats{}
 	runtime.ReadMemStats(&mem)
@@ -212,7 +212,7 @@ func TestAntsPool(t *testing.T) {
 	var wg sync.WaitGroup
 	for i := 0; i < n; i++ {
 		wg.Add(1)
-		ants.Submit(func() {
+		_ = ants.Submit(func() {
 			demoFunc()
 			wg.Done()
 		})
@@ -246,7 +246,7 @@ func TestPanicHandler(t *testing.T) {
 		t.Logf("catch panic with PanicHandler: %v", p)
 	}
 	wg.Add(1)
-	p0.Submit(func() {
+	_ = p0.Submit(func() {
 		panic("Oops!")
 	})
 	wg.Wait()
@@ -270,7 +270,7 @@ func TestPanicHandler(t *testing.T) {
 		atomic.AddInt64(&panicCounter, 1)
 	}
 	wg.Add(1)
-	p1.Invoke("Oops!")
+	_ = p1.Invoke("Oops!")
 	wg.Wait()
 	c = atomic.LoadInt64(&panicCounter)
 	if c != 2 {
@@ -295,7 +295,7 @@ func TestPanicHandlerPreMalloc(t *testing.T) {
 		t.Logf("catch panic with PanicHandler: %v", p)
 	}
 	wg.Add(1)
-	p0.Submit(func() {
+	_ = p0.Submit(func() {
 		panic("Oops!")
 	})
 	wg.Wait()
@@ -319,7 +319,7 @@ func TestPanicHandlerPreMalloc(t *testing.T) {
 		atomic.AddInt64(&panicCounter, 1)
 	}
 	wg.Add(1)
-	p1.Invoke("Oops!")
+	_ = p1.Invoke("Oops!")
 	wg.Wait()
 	c = atomic.LoadInt64(&panicCounter)
 	if c != 2 {
@@ -336,7 +336,7 @@ func TestPoolPanicWithoutHandler(t *testing.T) {
 		t.Fatalf("create new pool failed: %s", err.Error())
 	}
 	defer p0.Release()
-	p0.Submit(func() {
+	_ = p0.Submit(func() {
 		panic("Oops!")
 	})
 
@@ -347,7 +347,7 @@ func TestPoolPanicWithoutHandler(t *testing.T) {
 		t.Fatalf("create new pool with func failed: %s", err.Error())
 	}
 	defer p1.Release()
-	p1.Invoke("Oops!")
+	_ = p1.Invoke("Oops!")
 }
 
 func TestPoolPanicWithoutHandlerPreMalloc(t *testing.T) {
@@ -356,7 +356,7 @@ func TestPoolPanicWithoutHandlerPreMalloc(t *testing.T) {
 		t.Fatalf("create new pool failed: %s", err.Error())
 	}
 	defer p0.Release()
-	p0.Submit(func() {
+	_ = p0.Submit(func() {
 		panic("Oops!")
 	})
 
@@ -367,26 +367,26 @@ func TestPoolPanicWithoutHandlerPreMalloc(t *testing.T) {
 		t.Fatalf("create new pool with func failed: %s", err.Error())
 	}
 	defer p1.Release()
-	p1.Invoke("Oops!")
+	_ = p1.Invoke("Oops!")
 }
 
 func TestPurge(t *testing.T) {
 	p, err := ants.NewPool(10)
-	defer p.Release()
 	if err != nil {
 		t.Fatalf("create TimingPool failed: %s", err.Error())
 	}
-	p.Submit(demoFunc)
+	defer p.Release()
+	_ = p.Submit(demoFunc)
 	time.Sleep(3 * ants.DEFAULT_CLEAN_INTERVAL_TIME * time.Second)
 	if p.Running() != 0 {
 		t.Error("all p should be purged")
 	}
 	p1, err := ants.NewPoolWithFunc(10, demoPoolFunc)
-	defer p1.Release()
 	if err != nil {
 		t.Fatalf("create TimingPoolWithFunc failed: %s", err.Error())
 	}
-	p1.Invoke(1)
+	defer p1.Release()
+	_ = p1.Invoke(1)
 	time.Sleep(3 * ants.DEFAULT_CLEAN_INTERVAL_TIME * time.Second)
 	if p.Running() != 0 {
 		t.Error("all p should be purged")
@@ -395,21 +395,21 @@ func TestPurge(t *testing.T) {
 
 func TestPurgePreMalloc(t *testing.T) {
 	p, err := ants.NewPoolPreMalloc(10)
-	defer p.Release()
 	if err != nil {
 		t.Fatalf("create TimingPool failed: %s", err.Error())
 	}
-	p.Submit(demoFunc)
+	defer p.Release()
+	_ = p.Submit(demoFunc)
 	time.Sleep(3 * ants.DEFAULT_CLEAN_INTERVAL_TIME * time.Second)
 	if p.Running() != 0 {
 		t.Error("all p should be purged")
 	}
 	p1, err := ants.NewPoolWithFunc(10, demoPoolFunc)
-	defer p1.Release()
 	if err != nil {
 		t.Fatalf("create TimingPoolWithFunc failed: %s", err.Error())
 	}
-	p1.Invoke(1)
+	defer p1.Release()
+	_ = p1.Invoke(1)
 	time.Sleep(3 * ants.DEFAULT_CLEAN_INTERVAL_TIME * time.Second)
 	if p.Running() != 0 {
 		t.Error("all p should be purged")
@@ -427,10 +427,12 @@ func TestRestCodeCoverage(t *testing.T) {
 	t.Log(err)
 
 	p0, _ := ants.NewPool(TestSize)
-	defer p0.Submit(demoFunc)
+	defer func() {
+		_ = p0.Submit(demoFunc)
+	}()
 	defer p0.Release()
 	for i := 0; i < n; i++ {
-		p0.Submit(demoFunc)
+		_ = p0.Submit(demoFunc)
 	}
 	t.Logf("pool, capacity:%d", p0.Cap())
 	t.Logf("pool, running workers number:%d", p0.Running())
@@ -440,10 +442,12 @@ func TestRestCodeCoverage(t *testing.T) {
 	t.Logf("pool, after tuning capacity, capacity:%d, running:%d", p0.Cap(), p0.Running())
 
 	pprem, _ := ants.NewPoolPreMalloc(TestSize)
-	defer pprem.Submit(demoFunc)
+	defer func() {
+		_ = pprem.Submit(demoFunc)
+	}()
 	defer pprem.Release()
 	for i := 0; i < n; i++ {
-		pprem.Submit(demoFunc)
+		_ = pprem.Submit(demoFunc)
 	}
 	t.Logf("pre-malloc pool, capacity:%d", pprem.Cap())
 	t.Logf("pre-malloc pool, running workers number:%d", pprem.Running())
@@ -453,10 +457,12 @@ func TestRestCodeCoverage(t *testing.T) {
 	t.Logf("pre-malloc pool, after tuning capacity, capacity:%d, running:%d", pprem.Cap(), pprem.Running())
 
 	p, _ := ants.NewPoolWithFunc(TestSize, demoPoolFunc)
-	defer p.Invoke(Param)
+	defer func() {
+		_ = p.Invoke(Param)
+	}()
 	defer p.Release()
 	for i := 0; i < n; i++ {
-		p.Invoke(Param)
+		_ = p.Invoke(Param)
 	}
 	time.Sleep(ants.DEFAULT_CLEAN_INTERVAL_TIME * time.Second)
 	t.Logf("pool with func, capacity:%d", p.Cap())
@@ -467,10 +473,12 @@ func TestRestCodeCoverage(t *testing.T) {
 	t.Logf("pool with func, after tuning capacity, capacity:%d, running:%d", p.Cap(), p.Running())
 
 	ppremWithFunc, _ := ants.NewPoolWithFuncPreMalloc(TestSize, demoPoolFunc)
-	defer ppremWithFunc.Invoke(Param)
+	defer func() {
+		_ = ppremWithFunc.Invoke(Param)
+	}()
 	defer ppremWithFunc.Release()
 	for i := 0; i < n; i++ {
-		ppremWithFunc.Invoke(Param)
+		_ = ppremWithFunc.Invoke(Param)
 	}
 	time.Sleep(ants.DEFAULT_CLEAN_INTERVAL_TIME * time.Second)
 	t.Logf("pre-malloc pool with func, capacity:%d", ppremWithFunc.Cap())
