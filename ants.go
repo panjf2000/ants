@@ -96,5 +96,5 @@ func Free() int {
 
 // Release Closes the default pool.
 func Release() {
-	_ = defaultAntsPool.Release()
+	defaultAntsPool.Release()
 }
