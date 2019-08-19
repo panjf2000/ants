@@ -200,7 +200,7 @@ func (p *Pool) Tune(size int) {
 }
 
 // Release Closes this pool.
-func (p *Pool) Release() error {
+func (p *Pool) Release() {
 	p.once.Do(func() {
 		atomic.StoreInt32(&p.release, 1)
 		p.lock.Lock()
@@ -212,7 +212,6 @@ func (p *Pool) Release() error {
 		p.workers = nil
 		p.lock.Unlock()
 	})
-	return nil
 }
 
 //---------------------------------------------------------------------------
