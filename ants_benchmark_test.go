@@ -90,7 +90,7 @@ func BenchmarkAntsPoolWithFunc(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		wg.Add(RunTimes)
 		for j := 0; j < RunTimes; j++ {
-			p.Invoke(benchParam)
+			_ = p.Invoke(benchParam)
 		}
 		wg.Wait()
 	}
@@ -124,7 +124,7 @@ func BenchmarkAntsPoolThroughput(b *testing.B) {
 	b.StartTimer()
 	for i := 0; i < b.N; i++ {
 		for j := 0; j < RunTimes; j++ {
-			p.Invoke(benchParam)
+			_ = p.Invoke(benchParam)
 		}
 	}
 	b.StopTimer()
