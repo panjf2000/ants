@@ -23,6 +23,7 @@
 package ants_test
 
 import (
+	"runtime"
 	"sync"
 	"testing"
 	"time"
@@ -44,6 +45,22 @@ func demoFunc() {
 func demoPoolFunc(args interface{}) {
 	n := args.(int)
 	time.Sleep(time.Duration(n) * time.Millisecond)
+}
+
+func longRunningFunc() {
+	for {
+		runtime.Gosched()
+	}
+}
+
+func longRunningPoolFunc(arg interface{}) {
+	if ch, ok := arg.(chan struct{}); ok {
+		<-ch
+		return
+	}
+	for {
+		runtime.Gosched()
+	}
 }
 
 func BenchmarkGoroutineWithFunc(b *testing.B) {

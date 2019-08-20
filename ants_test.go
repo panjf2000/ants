@@ -416,6 +416,155 @@ func TestPurgePreMalloc(t *testing.T) {
 	}
 }
 
+func TestNonblockingSubmit(t *testing.T) {
+	poolSize := 10
+	p, err := ants.NewPool(poolSize)
+	if err != nil {
+		t.Fatalf("create TimingPool failed: %s", err.Error())
+	}
+	p.Nonblocking = true
+	defer p.Release()
+	for i := 0; i < poolSize-1; i++ {
+		if err := p.Submit(longRunningFunc); err != nil {
+			t.Fatalf("nonblocking submit when pool is not full shouldn't return error")
+		}
+	}
+	ch := make(chan struct{})
+	f := func() {
+		<-ch
+	}
+	// p is full now.
+	if err := p.Submit(f); err != nil {
+		t.Fatalf("nonblocking submit when pool is not full shouldn't return error")
+	}
+	if err := p.Submit(demoFunc); err == nil || err != ants.ErrPoolOverload {
+		t.Fatalf("nonblocking submit when pool is full should get an ErrPoolOverload")
+	}
+	// interrupt f to get an available worker
+	close(ch)
+	time.Sleep(1 * time.Second)
+	if err := p.Submit(demoFunc); err != nil {
+		t.Fatalf("nonblocking submit when pool is not full shouldn't return error")
+	}
+}
+
+func TestMaxBlockingSubmit(t *testing.T) {
+	poolSize := 10
+	p, err := ants.NewPool(poolSize)
+	if err != nil {
+		t.Fatalf("create TimingPool failed: %s", err.Error())
+	}
+	p.MaxBlockingTasks = 1
+	defer p.Release()
+	for i := 0; i < poolSize-1; i++ {
+		if err := p.Submit(longRunningFunc); err != nil {
+			t.Fatalf("submit when pool is not full shouldn't return error")
+		}
+	}
+	ch := make(chan struct{})
+	f := func() {
+		<-ch
+	}
+	// p is full now.
+	if err := p.Submit(f); err != nil {
+		t.Fatalf("submit when pool is not full shouldn't return error")
+	}
+	var wg sync.WaitGroup
+	wg.Add(1)
+	errCh := make(chan error, 1)
+	go func() {
+		// should be blocked. blocking num == 1
+		if err := p.Submit(demoFunc); err != nil {
+			errCh <- err
+		}
+		wg.Done()
+	}()
+	time.Sleep(1 * time.Second)
+	// already reached max blocking limit
+	if err := p.Submit(demoFunc); err != ants.ErrPoolOverload {
+		t.Fatalf("blocking submit when pool reach max blocking submit should return ErrPoolOverload")
+	}
+	// interrupt f to make blocking submit successful.
+	close(ch)
+	wg.Wait()
+	select {
+	case <-errCh:
+		t.Fatalf("blocking submit when pool is full should not return error")
+	default:
+	}
+}
+
+func TestNonblockingSubmitWithFunc(t *testing.T) {
+	poolSize := 10
+	p, err := ants.NewPoolWithFunc(poolSize, longRunningPoolFunc)
+	if err != nil {
+		t.Fatalf("create TimingPool failed: %s", err.Error())
+	}
+	p.Nonblocking = true
+	defer p.Release()
+	for i := 0; i < poolSize-1; i++ {
+		if err := p.Invoke(nil); err != nil {
+			t.Fatalf("nonblocking submit when pool is not full shouldn't return error")
+		}
+	}
+	ch := make(chan struct{})
+	// p is full now.
+	if err := p.Invoke(ch); err != nil {
+		t.Fatalf("nonblocking submit when pool is not full shouldn't return error")
+	}
+	if err := p.Invoke(nil); err == nil || err != ants.ErrPoolOverload {
+		t.Fatalf("nonblocking submit when pool is full should get an ErrPoolOverload")
+	}
+	// interrupt f to get an available worker
+	close(ch)
+	time.Sleep(1 * time.Second)
+	if err := p.Invoke(nil); err != nil {
+		t.Fatalf("nonblocking submit when pool is not full shouldn't return error")
+	}
+}
+
+func TestMaxBlockingSubmitWithFunc(t *testing.T) {
+	poolSize := 10
+	p, err := ants.NewPoolWithFunc(poolSize, longRunningPoolFunc)
+	if err != nil {
+		t.Fatalf("create TimingPool failed: %s", err.Error())
+	}
+	p.MaxBlockingTasks = 1
+	defer p.Release()
+	for i := 0; i < poolSize-1; i++ {
+		if err := p.Invoke(Param); err != nil {
+			t.Fatalf("submit when pool is not full shouldn't return error")
+		}
+	}
+	ch := make(chan struct{})
+	// p is full now.
+	if err := p.Invoke(ch); err != nil {
+		t.Fatalf("submit when pool is not full shouldn't return error")
+	}
+	var wg sync.WaitGroup
+	wg.Add(1)
+	errCh := make(chan error, 1)
+	go func() {
+		// should be blocked. blocking num == 1
+		if err := p.Invoke(Param); err != nil {
+			errCh <- err
+		}
+		wg.Done()
+	}()
+	time.Sleep(1 * time.Second)
+	// already reached max blocking limit
+	if err := p.Invoke(Param); err != ants.ErrPoolOverload {
+		t.Fatalf("blocking submit when pool reach max blocking submit should return ErrPoolOverload: %v", err)
+	}
+	// interrupt one func to make blocking submit successful.
+	close(ch)
+	wg.Wait()
+	select {
+	case <-errCh:
+		t.Fatalf("blocking submit when pool is full should not return error")
+	default:
+	}
+}
 func TestRestCodeCoverage(t *testing.T) {
 	_, err := ants.NewUltimatePool(-1, -1, false)
 	t.Log(err)

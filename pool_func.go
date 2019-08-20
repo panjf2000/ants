@@ -63,6 +63,19 @@ type PoolWithFunc struct {
 	// PanicHandler is used to handle panics from each worker goroutine.
 	// if nil, panics will be thrown out again from worker goroutines.
 	PanicHandler func(interface{})
+
+	// Max number of goroutine blocking on pool.Submit.
+	// 0 (default value) means no such limit.
+	MaxBlockingTasks int32
+
+	// goroutine already been blocked on pool.Submit
+	// protected by pool.lock
+	blockingNum int32
+
+	// When Nonblocking is true, Pool.Submit will never be blocked.
+	// ErrPoolOverload will be returned when Pool.Submit cannot be done at once.
+	// When Nonblocking is true, MaxBlockingTasks is inoperative.
+	Nonblocking bool
 }
 
 // Clear expired workers periodically.
@@ -156,7 +169,11 @@ func (p *PoolWithFunc) Invoke(args interface{}) error {
 	if atomic.LoadInt32(&p.release) == CLOSED {
 		return ErrPoolClosed
 	}
-	p.retrieveWorker().args <- args
+	if w := p.retrieveWorker(); w == nil {
+		return ErrPoolOverload
+	} else {
+		w.args <- args
+	}
 	return nil
 }
 
@@ -242,8 +259,18 @@ func (p *PoolWithFunc) retrieveWorker() *WorkerWithFunc {
 		p.lock.Unlock()
 		spawnWorker()
 	} else {
+		if p.Nonblocking {
+			p.lock.Unlock()
+			return nil
+		}
 	Reentry:
+		if p.MaxBlockingTasks != 0 && p.blockingNum >= p.MaxBlockingTasks {
+			p.lock.Unlock()
+			return nil
+		}
+		p.blockingNum++
 		p.cond.Wait()
+		p.blockingNum--
 		if p.Running() == 0 {
 			p.lock.Unlock()
 			spawnWorker()

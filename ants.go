@@ -51,6 +51,9 @@ var (
 
 	// ErrPoolClosed will be returned when submitting task to a closed pool.
 	ErrPoolClosed = errors.New("this pool has been closed")
+
+	// ErrPoolOverload will be returned when the pool is full and no workers available.
+	ErrPoolOverload = errors.New("too many goroutines blocked on submit or Nonblocking is set")
 	//---------------------------------------------------------------------------
 
 	// workerChanCap determines whether the channel of a worker should be a buffered channel
