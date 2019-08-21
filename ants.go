@@ -26,6 +26,7 @@ import (
 	"errors"
 	"math"
 	"runtime"
+	"time"
 )
 
 const (
@@ -45,6 +46,9 @@ var (
 
 	// ErrInvalidPoolSize will be returned when setting a negative number as pool capacity.
 	ErrInvalidPoolSize = errors.New("invalid size for pool")
+
+	// ErrLackPoolFunc will be returned when invokers don't provide function for pool.
+	ErrLackPoolFunc = errors.New("must provide function for pool")
 
 	// ErrInvalidPoolExpiry will be returned when setting a negative number as the periodic duration to purge goroutines.
 	ErrInvalidPoolExpiry = errors.New("invalid expiry for pool")
@@ -72,10 +76,68 @@ var (
 		return 1
 	}()
 
+	// Init a instance pool when importing ants.
 	defaultAntsPool, _ = NewPool(DEFAULT_ANTS_POOL_SIZE)
 )
 
-// Init a instance pool when importing ants.
+type Option func(opts *Options)
+
+type Options struct {
+	// ExpiryDuration set the expired time (second) of every worker.
+	ExpiryDuration time.Duration
+
+	// PreAlloc indicate whether to make memory pre-allocation when initializing Pool.
+	PreAlloc bool
+
+	// Max number of goroutine blocking on pool.Submit.
+	// 0 (default value) means no such limit.
+	MaxBlockingTasks int
+
+	// When Nonblocking is true, Pool.Submit will never be blocked.
+	// ErrPoolOverload will be returned when Pool.Submit cannot be done at once.
+	// When Nonblocking is true, MaxBlockingTasks is inoperative.
+	Nonblocking bool
+
+	// PanicHandler is used to handle panics from each worker goroutine.
+	// if nil, panics will be thrown out again from worker goroutines.
+	PanicHandler func(interface{})
+}
+
+func WithOptions(options Options) Option {
+	return func(opts *Options) {
+		*opts = options
+	}
+}
+
+func WithExpiryDuration(expiryDuration time.Duration) Option {
+	return func(opts *Options) {
+		opts.ExpiryDuration = expiryDuration
+	}
+}
+
+func WithPreAlloc(preAlloc bool) Option {
+	return func(opts *Options) {
+		opts.PreAlloc = preAlloc
+	}
+}
+
+func WithMaxBlockingTasks(maxBlockingTasks int) Option {
+	return func(opts *Options) {
+		opts.MaxBlockingTasks = maxBlockingTasks
+	}
+}
+
+func WithNonblocking(nonblocking bool) Option {
+	return func(opts *Options) {
+		opts.Nonblocking = nonblocking
+	}
+}
+
+func WithPanicHandler(panicHandler func(interface{})) Option {
+	return func(opts *Options) {
+		opts.PanicHandler = panicHandler
+	}
+}
 
 // Submit submits a task to pool.
 func Submit(task func()) error {

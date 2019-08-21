@@ -28,10 +28,10 @@ import (
 	"time"
 )
 
-// Worker is the actual executor who runs the tasks,
+// goWorker is the actual executor who runs the tasks,
 // it starts a goroutine that accepts tasks and
 // performs function calls.
-type Worker struct {
+type goWorker struct {
 	// pool who owns this worker.
 	pool *Pool
 
@@ -44,15 +44,15 @@ type Worker struct {
 
 // run starts a goroutine to repeat the process
 // that performs the function calls.
-func (w *Worker) run() {
+func (w *goWorker) run() {
 	w.pool.incRunning()
 	go func() {
 		defer func() {
 			if p := recover(); p != nil {
 				w.pool.decRunning()
 				w.pool.workerCache.Put(w)
-				if w.pool.PanicHandler != nil {
-					w.pool.PanicHandler(p)
+				if w.pool.panicHandler != nil {
+					w.pool.panicHandler(p)
 				} else {
 					log.Printf("worker exits from a panic: %v\n", p)
 					var buf [4096]byte

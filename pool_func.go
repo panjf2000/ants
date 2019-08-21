@@ -40,7 +40,7 @@ type PoolWithFunc struct {
 	expiryDuration time.Duration
 
 	// workers is a slice that store the available workers.
-	workers []*WorkerWithFunc
+	workers []*goWorkerWithFunc
 
 	// release is used to notice the pool to closed itself.
 	release int32
@@ -60,22 +60,22 @@ type PoolWithFunc struct {
 	// workerCache speeds up the obtainment of the an usable worker in function:retrieveWorker.
 	workerCache sync.Pool
 
-	// PanicHandler is used to handle panics from each worker goroutine.
+	// panicHandler is used to handle panics from each worker goroutine.
 	// if nil, panics will be thrown out again from worker goroutines.
-	PanicHandler func(interface{})
+	panicHandler func(interface{})
 
 	// Max number of goroutine blocking on pool.Submit.
 	// 0 (default value) means no such limit.
-	MaxBlockingTasks int32
+	maxBlockingTasks int32
 
 	// goroutine already been blocked on pool.Submit
 	// protected by pool.lock
 	blockingNum int32
 
-	// When Nonblocking is true, Pool.Submit will never be blocked.
+	// When nonblocking is true, Pool.Submit will never be blocked.
 	// ErrPoolOverload will be returned when Pool.Submit cannot be done at once.
-	// When Nonblocking is true, MaxBlockingTasks is inoperative.
-	Nonblocking bool
+	// When nonblocking is true, MaxBlockingTasks is inoperative.
+	nonblocking bool
 }
 
 // Clear expired workers periodically.
@@ -83,7 +83,7 @@ func (p *PoolWithFunc) periodicallyPurge() {
 	heartbeat := time.NewTicker(p.expiryDuration)
 	defer heartbeat.Stop()
 
-	var expiredWorkers []*WorkerWithFunc
+	var expiredWorkers []*goWorkerWithFunc
 	for range heartbeat.C {
 		if atomic.LoadInt32(&p.release) == CLOSED {
 			break
@@ -125,40 +125,52 @@ func (p *PoolWithFunc) periodicallyPurge() {
 }
 
 // NewPoolWithFunc generates an instance of ants pool with a specific function.
-func NewPoolWithFunc(size int, pf func(interface{})) (*PoolWithFunc, error) {
-	return NewUltimatePoolWithFunc(size, DEFAULT_CLEAN_INTERVAL_TIME, pf, false)
-}
-
-// NewPoolWithFuncPreMalloc generates an instance of ants pool with a specific function and the memory pre-allocation of pool size.
-func NewPoolWithFuncPreMalloc(size int, pf func(interface{})) (*PoolWithFunc, error) {
-	return NewUltimatePoolWithFunc(size, DEFAULT_CLEAN_INTERVAL_TIME, pf, true)
-}
-
-// NewUltimatePoolWithFunc generates an instance of ants pool with a specific function and a custom timed task.
-func NewUltimatePoolWithFunc(size, expiry int, pf func(interface{}), preAlloc bool) (*PoolWithFunc, error) {
+func NewPoolWithFunc(size int, pf func(interface{}), options ...Option) (*PoolWithFunc, error) {
 	if size <= 0 {
 		return nil, ErrInvalidPoolSize
 	}
-	if expiry <= 0 {
-		return nil, ErrInvalidPoolExpiry
+
+	if pf == nil {
+		return nil, ErrLackPoolFunc
 	}
+
+	opts := new(Options)
+	for _, option := range options {
+		option(opts)
+	}
+
+	if expiry := opts.ExpiryDuration; expiry < 0 {
+		return nil, ErrInvalidPoolExpiry
+	} else if expiry == 0 {
+		opts.ExpiryDuration = time.Duration(DEFAULT_CLEAN_INTERVAL_TIME) * time.Second
+	}
+
 	var p *PoolWithFunc
-	if preAlloc {
+	if opts.PreAlloc {
 		p = &PoolWithFunc{
-			capacity:       int32(size),
-			expiryDuration: time.Duration(expiry) * time.Second,
-			poolFunc:       pf,
-			workers:        make([]*WorkerWithFunc, 0, size),
+			capacity:         int32(size),
+			expiryDuration:   opts.ExpiryDuration,
+			poolFunc:         pf,
+			workers:          make([]*goWorkerWithFunc, 0, size),
+			nonblocking:      opts.Nonblocking,
+			maxBlockingTasks: int32(opts.MaxBlockingTasks),
+			panicHandler:     opts.PanicHandler,
 		}
 	} else {
 		p = &PoolWithFunc{
-			capacity:       int32(size),
-			expiryDuration: time.Duration(expiry) * time.Second,
-			poolFunc:       pf,
+			capacity:         int32(size),
+			expiryDuration:   opts.ExpiryDuration,
+			poolFunc:         pf,
+			nonblocking:      opts.Nonblocking,
+			maxBlockingTasks: int32(opts.MaxBlockingTasks),
+			panicHandler:     opts.PanicHandler,
 		}
 	}
 	p.cond = sync.NewCond(&p.lock)
+
+	// Start a goroutine to clean up expired workers periodically.
 	go p.periodicallyPurge()
+
 	return p, nil
 }
 
@@ -232,13 +244,13 @@ func (p *PoolWithFunc) decRunning() {
 }
 
 // retrieveWorker returns a available worker to run the tasks.
-func (p *PoolWithFunc) retrieveWorker() *WorkerWithFunc {
-	var w *WorkerWithFunc
+func (p *PoolWithFunc) retrieveWorker() *goWorkerWithFunc {
+	var w *goWorkerWithFunc
 	spawnWorker := func() {
 		if cacheWorker := p.workerCache.Get(); cacheWorker != nil {
-			w = cacheWorker.(*WorkerWithFunc)
+			w = cacheWorker.(*goWorkerWithFunc)
 		} else {
-			w = &WorkerWithFunc{
+			w = &goWorkerWithFunc{
 				pool: p,
 				args: make(chan interface{}, workerChanCap),
 			}
@@ -258,12 +270,12 @@ func (p *PoolWithFunc) retrieveWorker() *WorkerWithFunc {
 		p.lock.Unlock()
 		spawnWorker()
 	} else {
-		if p.Nonblocking {
+		if p.nonblocking {
 			p.lock.Unlock()
 			return nil
 		}
 	Reentry:
-		if p.MaxBlockingTasks != 0 && p.blockingNum >= p.MaxBlockingTasks {
+		if p.maxBlockingTasks != 0 && p.blockingNum >= p.maxBlockingTasks {
 			p.lock.Unlock()
 			return nil
 		}
@@ -288,7 +300,7 @@ func (p *PoolWithFunc) retrieveWorker() *WorkerWithFunc {
 }
 
 // revertWorker puts a worker back into free pool, recycling the goroutines.
-func (p *PoolWithFunc) revertWorker(worker *WorkerWithFunc) bool {
+func (p *PoolWithFunc) revertWorker(worker *goWorkerWithFunc) bool {
 	if atomic.LoadInt32(&p.release) == CLOSED {
 		return false
 	}

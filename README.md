@@ -41,12 +41,6 @@ Library `ants` implements a goroutine pool with fixed capacity, managing and rec
 go get -u github.com/panjf2000/ants
 ```
 
-Or, using glide:
-
-``` sh
-glide get github.com/panjf2000/ants
-```
-
 ## How to use
 Just take a imagination that your program starts a massive number of goroutines, from which a vast amount of memory will be consumed. To mitigate that kind of situation, all you need to do is to import `ants` package and submit all your tasks to a default pool with fixed capacity, activated when package `ants` is imported:
 
@@ -88,13 +82,13 @@ func main() {
 	}
 	for i := 0; i < runTimes; i++ {
 		wg.Add(1)
-		ants.Submit(syncCalculateSum)
+		_ = ants.Submit(syncCalculateSum)
 	}
 	wg.Wait()
 	fmt.Printf("running goroutines: %d\n", ants.Running())
 	fmt.Printf("finish all tasks.\n")
 
-	// Use the pool with a method,
+	// Use the pool with a function,
 	// set 10 to the capacity of goroutine pool and 1 second for expired duration.
 	p, _ := ants.NewPoolWithFunc(10, func(i interface{}) {
 		myFunc(i)
@@ -104,7 +98,7 @@ func main() {
 	// Submit tasks one by one.
 	for i := 0; i < runTimes; i++ {
 		wg.Add(1)
-		p.Invoke(int32(i))
+		_ = p.Invoke(int32(i))
 	}
 	wg.Wait()
 	fmt.Printf("running goroutines: %d\n", p.Running())
@@ -129,7 +123,7 @@ type Request struct {
 }
 
 func main() {
-	pool, _ := ants.NewPoolWithFunc(100, func(payload interface{}) {
+  pool, _ := ants.NewPoolWithFunc(100000, func(payload interface{}) {
 		request, ok := payload.(*Request)
 		if !ok {
 			return
@@ -142,7 +136,7 @@ func main() {
 		}(request.Param)
 
 		request.Result <- reverseParam
-	})
+  })
 	defer pool.Release()
 
 	http.HandleFunc("/reverse", func(w http.ResponseWriter, r *http.Request) {
@@ -167,20 +161,82 @@ func main() {
 }
 ```
 
-## Submit tasks
-Tasks can be submitted by calling `ants.Submit(func())`
+## Functional options for ants pool
+
 ```go
-ants.Submit(func(){})
+type Options struct {
+	// ExpiryDuration set the expired time (second) of every worker.
+	ExpiryDuration time.Duration
+
+	// PreAlloc indicate whether to make memory pre-allocation when initializing Pool.
+	PreAlloc bool
+
+	// Max number of goroutine blocking on pool.Submit.
+	// 0 (default value) means no such limit.
+	MaxBlockingTasks int
+
+	// When Nonblocking is true, Pool.Submit will never be blocked.
+	// ErrPoolOverload will be returned when Pool.Submit cannot be done at once.
+	// When Nonblocking is true, MaxBlockingTasks is inoperative.
+	Nonblocking bool
+
+	// PanicHandler is used to handle panics from each worker goroutine.
+	// if nil, panics will be thrown out again from worker goroutines.
+	PanicHandler func(interface{})
+}
+
+func WithOptions(options Options) Option {
+	return func(opts *Options) {
+		*opts = options
+	}
+}
+
+func WithExpiryDuration(expiryDuration time.Duration) Option {
+	return func(opts *Options) {
+		opts.ExpiryDuration = expiryDuration
+	}
+}
+
+func WithPreAlloc(preAlloc bool) Option {
+	return func(opts *Options) {
+		opts.PreAlloc = preAlloc
+	}
+}
+
+func WithMaxBlockingTasks(maxBlockingTasks int) Option {
+	return func(opts *Options) {
+		opts.MaxBlockingTasks = maxBlockingTasks
+	}
+}
+
+func WithNonblocking(nonblocking bool) Option {
+	return func(opts *Options) {
+		opts.Nonblocking = nonblocking
+	}
+}
+
+func WithPanicHandler(panicHandler func(interface{})) Option {
+	return func(opts *Options) {
+		opts.PanicHandler = panicHandler
+	}
+}
 ```
 
+`ants.Options`contains all optional configurations of ants pool, which allow you to customize the goroutine pool by invoking option functions to set up each configuration in `NewPool`/`NewPoolWithFunc`method.
+
 ## Customize limited pool
+
 `ants` also supports customizing the capacity of pool. You can invoke the `NewPool` method to instantiate a pool with a given capacity, as following:
 
 ``` go
 // Set 10000 the size of goroutine pool
 p, _ := ants.NewPool(10000)
-// Submit a task
-p.Submit(func(){})
+```
+
+## Submit tasks
+Tasks can be submitted by calling `ants.Submit(func())`
+```go
+ants.Submit(func(){})
 ```
 
 ## Tune pool capacity in runtime
@@ -199,7 +255,7 @@ Don't worry about the synchronous problems in this case, the method here is thre
 
 ```go
 // ants will pre-malloc the whole capacity of pool when you invoke this method
-p, _ := ants.NewPoolPreMalloc(AntsSize)
+p, _ := ants.NewPool(100000, ants.WithPreAlloc(true))
 ```
 
 ## Release Pool
@@ -207,8 +263,6 @@ p, _ := ants.NewPoolPreMalloc(AntsSize)
 ```go
 pool.Release()
 ```
-
-
 
 ## About sequence
 All tasks submitted to `ants` pool will not be guaranteed to be addressed in order, because those tasks scatter among a series of concurrent workers, thus those tasks would be executed concurrently.
