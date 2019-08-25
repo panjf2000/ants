@@ -196,15 +196,11 @@ func (p *Pool) Cap() int {
 }
 
 // Tune changes the capacity of this pool.
-func (p *Pool) Tune(size uint) {
-	if p.Cap() == int(size) {
+func (p *Pool) Tune(size int) {
+	if p.Cap() == size {
 		return
 	}
 	atomic.StoreInt32(&p.capacity, int32(size))
-	diff := p.Running() - int(size)
-	for i := 0; i < diff; i++ {
-		p.retrieveWorker().task <- nil
-	}
 }
 
 // Release Closes this pool.
@@ -292,12 +288,14 @@ func (p *Pool) retrieveWorker() *goWorker {
 
 // revertWorker puts a worker back into free pool, recycling the goroutines.
 func (p *Pool) revertWorker(worker *goWorker) bool {
-	if atomic.LoadInt32(&p.release) == CLOSED {
+	if atomic.LoadInt32(&p.release) == CLOSED || p.Running() > p.Cap() {
+		worker.task <- nil
 		return false
 	}
 	worker.recycleTime = time.Now()
 	p.lock.Lock()
 	p.workers = append(p.workers, worker)
+
 	// Notify the invoker stuck in 'retrieveWorker()' of there is an available worker in the worker queue.
 	p.cond.Signal()
 	p.lock.Unlock()

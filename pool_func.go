@@ -210,10 +210,6 @@ func (p *PoolWithFunc) Tune(size int) {
 		return
 	}
 	atomic.StoreInt32(&p.capacity, int32(size))
-	diff := p.Running() - size
-	for i := 0; i < diff; i++ {
-		p.retrieveWorker().args <- nil
-	}
 }
 
 // Release Closed this pool.
@@ -301,12 +297,14 @@ func (p *PoolWithFunc) retrieveWorker() *goWorkerWithFunc {
 
 // revertWorker puts a worker back into free pool, recycling the goroutines.
 func (p *PoolWithFunc) revertWorker(worker *goWorkerWithFunc) bool {
-	if atomic.LoadInt32(&p.release) == CLOSED {
+	if atomic.LoadInt32(&p.release) == CLOSED || p.Running() > p.Cap() {
+		worker.args <- nil
 		return false
 	}
 	worker.recycleTime = time.Now()
 	p.lock.Lock()
 	p.workers = append(p.workers, worker)
+
 	// Notify the invoker stuck in 'retrieveWorker()' of there is an available worker in the worker queue.
 	p.cond.Signal()
 	p.lock.Unlock()
