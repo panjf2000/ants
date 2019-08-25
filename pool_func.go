@@ -92,9 +92,8 @@ func (p *PoolWithFunc) periodicallyPurge() {
 		p.lock.Lock()
 		idleWorkers := p.workers
 		n := len(idleWorkers)
-		i := 0
-		for i < n && currentTime.Sub(idleWorkers[i].recycleTime) > p.expiryDuration {
-			i++
+		var i int
+		for i = 0; i < n && currentTime.Sub(idleWorkers[i].recycleTime) > p.expiryDuration; i++ {
 		}
 		expiredWorkers = append(expiredWorkers[:0], idleWorkers[:i]...)
 		if i > 0 {
