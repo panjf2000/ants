@@ -297,7 +297,6 @@ func (p *PoolWithFunc) retrieveWorker() *goWorkerWithFunc {
 // revertWorker puts a worker back into free pool, recycling the goroutines.
 func (p *PoolWithFunc) revertWorker(worker *goWorkerWithFunc) bool {
 	if atomic.LoadInt32(&p.release) == CLOSED || p.Running() > p.Cap() {
-		worker.args <- nil
 		return false
 	}
 	worker.recycleTime = time.Now()
