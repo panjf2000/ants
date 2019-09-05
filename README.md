@@ -25,6 +25,7 @@ Library `ants` implements a goroutine pool with fixed capacity, managing and rec
 - Friendly interfaces: submitting tasks, getting the number of running goroutines, tuning capacity of pool dynamically, closing pool.
 - Handle panic gracefully to prevent programs from crash.
 - Efficient in memory usage and it even achieves higher performance than unlimited goroutines in golang.
+- Nonblocking mechanism.
 
 ## Tested in the following Golang versions:
 
@@ -33,6 +34,7 @@ Library `ants` implements a goroutine pool with fixed capacity, managing and rec
 - 1.10.x
 - 1.11.x
 - 1.12.x
+- 1.13.x
 
 
 ## How to install
@@ -42,7 +44,7 @@ go get -u github.com/panjf2000/ants
 ```
 
 ## How to use
-Just take a imagination that your program starts a massive number of goroutines, from which a vast amount of memory will be consumed. To mitigate that kind of situation, all you need to do is to import `ants` package and submit all your tasks to a default pool with fixed capacity, activated when package `ants` is imported:
+Just take a imagination that your program starts a massive number of goroutines, resulting in a huge consumption of memory. To mitigate that kind of situation, all you need to do is to import `ants` package and submit all your tasks to a default pool with fixed capacity, activated when package `ants` is imported:
 
 ``` go
 package main
@@ -251,7 +253,7 @@ Don't worry about the synchronous problems in this case, the method here is thre
 
 ## Pre-malloc goroutine queue in pool
 
-`ants` allows you to pre-allocate memory of goroutine queue in pool, which may get a performance enhancement under some special certain circumstances such as the scenario that requires an pool with ultra-large capacity, meanwhile each task in goroutine lasts for a long time, in this case, pre-mallocing will reduce a lot of costs when re-slicing goroutine queue.
+`ants` allows you to pre-allocate memory of goroutine queue in pool, which may get a performance enhancement under some special certain circumstances such as the scenario that requires a pool with ultra-large capacity, meanwhile each task in goroutine lasts for a long time, in this case, pre-mallocing will reduce a lot of costs when re-slicing goroutine queue.
 
 ```go
 // ants will pre-malloc the whole capacity of pool when you invoke this method
@@ -270,13 +272,11 @@ All tasks submitted to `ants` pool will not be guaranteed to be addressed in ord
 ## Benchmarks
 
 <div align="center"><img src="https://user-images.githubusercontent.com/7496278/51515466-c7ce9e00-1e4e-11e9-89c4-bd3785b3c667.png"/></div>
- In that benchmark-picture, the first and second benchmarks performed test cases with 1M tasks and the rest of benchmarks performed test cases with 10M tasks, both in unlimited goroutines and `ants` pool, and the capacity of this `ants` goroutine-pool was limited to 50K.
+ In this benchmark-picture, the first and second benchmarks performed test cases with 1M tasks and the rest of benchmarks performed test cases with 10M tasks, both in unlimited goroutines and `ants` pool, and the capacity of this `ants` goroutine-pool was limited to 50K.
 
 - BenchmarkGoroutine-4 represents the benchmarks with unlimited goroutines in golang.
 
 - BenchmarkPoolGroutine-4 represents the benchmarks with a `ants` pool.
-
-The test data above is a basic benchmark and more detailed benchmarks are about to be uploaded later.
 
 ### Benchmarks with Pool 
 
@@ -284,13 +284,13 @@ The test data above is a basic benchmark and more detailed benchmarks are about
 
 In above benchmark picture, the first and second benchmarks performed test cases with 1M tasks and the rest of benchmarks performed test cases with 10M tasks, both in unlimited goroutines and `ants` pool, and the capacity of this `ants` goroutine-pool was limited to 50K.
 
-**As you can see, `ants` can up to 2x faster than goroutines without pool (10M tasks) and it only consumes half the memory comparing with goroutines without pool. (both 1M and 10M tasks)**
+**As you can see, `ants` performs 2 times faster than goroutines without pool (10M tasks) and it only consumes half the memory comparing with goroutines without pool. (both in 1M and 10M tasks)**
 
 ### Benchmarks with PoolWithFunc
 
 ![](https://user-images.githubusercontent.com/7496278/51515565-1e3bdc80-1e4f-11e9-8a08-452ab91d117e.png)
 
-### Throughput (it is suitable for scenarios where asynchronous tasks are submitted despite of the final results) 
+### Throughput (it is suitable for scenarios where tasks are submitted asynchronously without waiting for the final results) 
 
 #### 100K tasks
 
@@ -308,4 +308,4 @@ In above benchmark picture, the first and second benchmarks performed test cases
 
 ![](https://user-images.githubusercontent.com/7496278/63449727-3ae6d400-c473-11e9-81e3-8b3280d8288a.gif)
 
-**In conclusion, `ants` can up to 2x~6x faster than goroutines without a pool and the memory consumption is reduced by 10 to 20 times.**
+**In conclusion, `ants` performs 2~6 times faster than goroutines without a pool and the memory consumption is reduced by 10 to 20 times.**

@@ -25,6 +25,7 @@ A goroutine pool for Go
 - 提供了友好的接口：任务提交、获取运行中的协程数量、动态调整协程池大小
 - 优雅处理 panic，防止程序崩溃
 - 资源复用，极大节省内存使用量；在大规模批量并发任务场景下比原生 goroutine 并发具有更高的性能
+- 非阻塞机制
 
 ## 目前测试通过的Golang版本：
 
@@ -33,6 +34,7 @@ A goroutine pool for Go
 - 1.10.x
 - 1.11.x
 - 1.12.x
+- 1.13.x
 
 
 ## 安装
@@ -270,11 +272,11 @@ pool.Release()
 ## Benchmarks
 
 <div align="center"><img src="https://user-images.githubusercontent.com/7496278/51515466-c7ce9e00-1e4e-11e9-89c4-bd3785b3c667.png"/></div>
-上图中的前两个 benchmark 测试结果是基于100w 任务量的条件，剩下的几个是基于 1000w 任务量的测试结果，`ants`的默认池容量是 5w。
+上图中的前两个 benchmark 测试结果是基于100w 任务量的条件，剩下的几个是基于 1000w 任务量的测试结果，`ants` 的默认池容量是 5w。
 
 - BenchmarkGoroutine-4 代表原生 goroutine
 
-- BenchmarkPoolGroutine-4 代表使用协程池`ants`
+- BenchmarkPoolGroutine-4 代表使用协程池 `ants`
 
 ### Benchmarks with Pool 
 
