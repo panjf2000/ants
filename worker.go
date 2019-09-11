@@ -48,9 +48,8 @@ func (w *goWorker) run() {
 	w.pool.incRunning()
 	go func() {
 		defer func() {
+			w.pool.decRunning()
 			if p := recover(); p != nil {
-				w.pool.decRunning()
-				w.pool.workerCache.Put(w)
 				if w.pool.panicHandler != nil {
 					w.pool.panicHandler(p)
 				} else {
@@ -60,17 +59,16 @@ func (w *goWorker) run() {
 					log.Printf("worker exits from panic: %s\n", string(buf[:n]))
 				}
 			}
+			w.pool.workerCache.Put(w)
 		}()
 
 		for f := range w.task {
 			if f == nil {
-				w.pool.decRunning()
-				w.pool.workerCache.Put(w)
 				return
 			}
 			f()
 			if ok := w.pool.revertWorker(w); !ok {
-				break
+				return
 			}
 		}
 	}()
