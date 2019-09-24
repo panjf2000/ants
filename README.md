@@ -14,7 +14,7 @@ A goroutine pool for Go
 <a title="License" target="_blank" href="https://opensource.org/licenses/mit-license.php"><img src="https://img.shields.io/aur/license/pac?style=flat-square"></a>
 </p>
 
-[中文](README_ZH.md) | [Project Blog](https://taohuawu.club/high-performance-implementation-of-goroutine-pool)
+# [[中文](README_ZH.md)]
 
 Library `ants` implements a goroutine pool with fixed capacity, managing and recycling a massive number of goroutines, allowing developers to limit the number of goroutines in your concurrent programs.
 
@@ -309,3 +309,15 @@ In above benchmark picture, the first and second benchmarks performed test cases
 ![](https://user-images.githubusercontent.com/7496278/63449727-3ae6d400-c473-11e9-81e3-8b3280d8288a.gif)
 
 **In conclusion, `ants` performs 2~6 times faster than goroutines without a pool and the memory consumption is reduced by 10 to 20 times.**
+
+# License
+
+Source code in `gnet` is available under the MIT [License](/LICENSE).
+
+# Relevant Articles
+
+-  [Goroutine 并发调度模型深度解析之手撸一个高性能协程池](https://taohuawu.club/high-performance-implementation-of-goroutine-pool)
+
+# Users of ants (please feel free to add your projects here ~~)
+
+[![](https://raw.githubusercontent.com/panjf2000/gnet/master/logo.png)](https://github.com/panjf2000/gnet)
