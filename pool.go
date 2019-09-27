@@ -46,7 +46,7 @@ type Pool struct {
 	release int32
 
 	// lock for synchronous operation.
-	lock sync.Mutex
+	lock sync.Locker
 
 	// cond for waiting to get a idle worker.
 	cond *sync.Cond
@@ -146,6 +146,7 @@ func NewPool(size int, options ...Option) (*Pool, error) {
 			nonblocking:      opts.Nonblocking,
 			maxBlockingTasks: int32(opts.MaxBlockingTasks),
 			panicHandler:     opts.PanicHandler,
+			lock:             SpinLock(),
 		}
 	} else {
 		p = &Pool{
@@ -154,9 +155,10 @@ func NewPool(size int, options ...Option) (*Pool, error) {
 			nonblocking:      opts.Nonblocking,
 			maxBlockingTasks: int32(opts.MaxBlockingTasks),
 			panicHandler:     opts.PanicHandler,
+			lock:             SpinLock(),
 		}
 	}
-	p.cond = sync.NewCond(&p.lock)
+	p.cond = sync.NewCond(p.lock)
 
 	// Start a goroutine to clean up expired workers periodically.
 	go p.periodicallyPurge()
