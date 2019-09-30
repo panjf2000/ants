@@ -12,6 +12,7 @@ A goroutine pool for Go
 <a title="Godoc for ants" target="_blank" href="https://godoc.org/github.com/panjf2000/ants"><img src="https://img.shields.io/badge/go-documentation-blue.svg?style=flat-square"></a>
 <a title="Release" target="_blank" href="https://github.com/panjf2000/ants/releases"><img src="https://img.shields.io/github/release/panjf2000/ants.svg?style=flat-square"></a>
 <a title="License" target="_blank" href="https://opensource.org/licenses/mit-license.php"><img src="https://img.shields.io/aur/license/pac?style=flat-square"></a>
+<a title="Awesome" target="_blank" href="https://github.com/avelino/awesome-go"><img src="https://awesome.re/badge-flat2.svg"></a>
 </p>
 
 # [[中文](README_ZH.md)]

@@ -12,6 +12,7 @@ A goroutine pool for Go
 <a title="Godoc for ants" target="_blank" href="https://godoc.org/github.com/panjf2000/ants"><img src="https://img.shields.io/badge/go-documentation-blue.svg?style=flat-square"></a>
 <a title="Release" target="_blank" href="https://github.com/panjf2000/ants/releases"><img src="https://img.shields.io/github/release/panjf2000/ants.svg?style=flat-square"></a>
 <a title="License" target="_blank" href="https://opensource.org/licenses/mit-license.php"><img src="https://img.shields.io/aur/license/pac?style=flat-square"></a>
+<a title="Awesome" target="_blank" href="https://github.com/avelino/awesome-go"><img src="https://awesome.re/badge-flat2.svg"></a>
 </p>
 
 # [[英文](README.md)]
@@ -318,6 +319,6 @@ pool.Release()
 
 -  [Goroutine 并发调度模型深度解析之手撸一个高性能协程池](https://taohuawu.club/high-performance-implementation-of-goroutine-pool)
 
-# 正在使用 ants 的库列表（欢迎补充 ~~）
+# 谁在使用 ants（欢迎补充 ~~）
 
 [![](https://raw.githubusercontent.com/panjf2000/gnet/master/logo.png)](https://github.com/panjf2000/gnet)
