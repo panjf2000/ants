@@ -421,8 +421,10 @@ func TestNonblockingSubmit(t *testing.T) {
 		}
 	}
 	ch := make(chan struct{})
+	ch1 := make(chan struct{})
 	f := func() {
 		<-ch
+		close(ch1)
 	}
 	// p is full now.
 	if err := p.Submit(f); err != nil {
@@ -433,7 +435,7 @@ func TestNonblockingSubmit(t *testing.T) {
 	}
 	// interrupt f to get an available worker
 	close(ch)
-	time.Sleep(1 * time.Second)
+	<-ch1
 	if err := p.Submit(demoFunc); err != nil {
 		t.Fatalf("nonblocking submit when pool is not full shouldn't return error")
 	}
