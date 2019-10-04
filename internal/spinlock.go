@@ -2,7 +2,7 @@
 // Use of this source code is governed by an MIT-style
 // license that can be found in the LICENSE file.
 
-package ants
+package internal
 
 import (
 	"runtime"
@@ -22,6 +22,7 @@ func (sl *spinLock) Unlock() {
 	atomic.StoreUint32((*uint32)(sl), 0)
 }
 
-func SpinLock() sync.Locker {
+// NewSpinLock instantiates a spin-lock.
+func NewSpinLock() sync.Locker {
 	return new(spinLock)
 }

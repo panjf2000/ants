@@ -33,8 +33,8 @@ import (
 )
 
 const (
-	_ = 1 << (10 * iota)
-	//KiB // 1024
+	_   = 1 << (10 * iota)
+	KiB // 1024
 	MiB // 1048576
 	//GiB // 1073741824
 	//TiB // 1099511627776             (超过了int32的范围)
@@ -143,7 +143,7 @@ func TestAntsPoolGetWorkerFromCache(t *testing.T) {
 	for i := 0; i < AntsSize; i++ {
 		_ = p.Submit(demoFunc)
 	}
-	time.Sleep(2 * ants.DEFAULT_CLEAN_INTERVAL_TIME * time.Second)
+	time.Sleep(2 * ants.DefaultCleanIntervalTime)
 	_ = p.Submit(demoFunc)
 	t.Logf("pool, running workers number:%d", p.Running())
 	mem := runtime.MemStats{}
@@ -161,7 +161,7 @@ func TestAntsPoolWithFuncGetWorkerFromCache(t *testing.T) {
 	for i := 0; i < AntsSize; i++ {
 		_ = p.Invoke(dur)
 	}
-	time.Sleep(2 * ants.DEFAULT_CLEAN_INTERVAL_TIME * time.Second)
+	time.Sleep(2 * ants.DefaultCleanIntervalTime)
 	_ = p.Invoke(dur)
 	t.Logf("pool with func, running workers number:%d", p.Running())
 	mem := runtime.MemStats{}
@@ -178,7 +178,7 @@ func TestAntsPoolWithFuncGetWorkerFromCachePreMalloc(t *testing.T) {
 	for i := 0; i < AntsSize; i++ {
 		_ = p.Invoke(dur)
 	}
-	time.Sleep(2 * ants.DEFAULT_CLEAN_INTERVAL_TIME * time.Second)
+	time.Sleep(2 * ants.DefaultCleanIntervalTime)
 	_ = p.Invoke(dur)
 	t.Logf("pool with func, running workers number:%d", p.Running())
 	mem := runtime.MemStats{}
@@ -369,7 +369,7 @@ func TestPurge(t *testing.T) {
 	}
 	defer p.Release()
 	_ = p.Submit(demoFunc)
-	time.Sleep(3 * ants.DEFAULT_CLEAN_INTERVAL_TIME * time.Second)
+	time.Sleep(3 * ants.DefaultCleanIntervalTime)
 	if p.Running() != 0 {
 		t.Error("all p should be purged")
 	}
@@ -379,7 +379,7 @@ func TestPurge(t *testing.T) {
 	}
 	defer p1.Release()
 	_ = p1.Invoke(1)
-	time.Sleep(3 * ants.DEFAULT_CLEAN_INTERVAL_TIME * time.Second)
+	time.Sleep(3 * ants.DefaultCleanIntervalTime)
 	if p.Running() != 0 {
 		t.Error("all p should be purged")
 	}
@@ -392,7 +392,7 @@ func TestPurgePreMalloc(t *testing.T) {
 	}
 	defer p.Release()
 	_ = p.Submit(demoFunc)
-	time.Sleep(3 * ants.DEFAULT_CLEAN_INTERVAL_TIME * time.Second)
+	time.Sleep(3 * ants.DefaultCleanIntervalTime)
 	if p.Running() != 0 {
 		t.Error("all p should be purged")
 	}
@@ -402,7 +402,7 @@ func TestPurgePreMalloc(t *testing.T) {
 	}
 	defer p1.Release()
 	_ = p1.Invoke(1)
-	time.Sleep(3 * ants.DEFAULT_CLEAN_INTERVAL_TIME * time.Second)
+	time.Sleep(3 * ants.DefaultCleanIntervalTime)
 	if p.Running() != 0 {
 		t.Error("all p should be purged")
 	}
@@ -608,7 +608,7 @@ func TestRestCodeCoverage(t *testing.T) {
 	for i := 0; i < n; i++ {
 		_ = p.Invoke(Param)
 	}
-	time.Sleep(ants.DEFAULT_CLEAN_INTERVAL_TIME * time.Second)
+	time.Sleep(ants.DefaultCleanIntervalTime)
 	t.Logf("pool with func, capacity:%d", p.Cap())
 	t.Logf("pool with func, running workers number:%d", p.Running())
 	t.Logf("pool with func, free workers number:%d", p.Free())
@@ -624,7 +624,7 @@ func TestRestCodeCoverage(t *testing.T) {
 	for i := 0; i < n; i++ {
 		_ = ppremWithFunc.Invoke(Param)
 	}
-	time.Sleep(ants.DEFAULT_CLEAN_INTERVAL_TIME * time.Second)
+	time.Sleep(ants.DefaultCleanIntervalTime)
 	t.Logf("pre-malloc pool with func, capacity:%d", ppremWithFunc.Cap())
 	t.Logf("pre-malloc pool with func, running workers number:%d", ppremWithFunc.Running())
 	t.Logf("pre-malloc pool with func, free workers number:%d", ppremWithFunc.Free())

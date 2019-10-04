@@ -26,6 +26,8 @@ import (
 	"sync"
 	"sync/atomic"
 	"time"
+
+	"github.com/panjf2000/ants/v2/internal"
 )
 
 // Pool accept the tasks from client, it limits the total of goroutines to a given number by recycling goroutines.
@@ -134,29 +136,19 @@ func NewPool(size int, options ...Option) (*Pool, error) {
 	if expiry := opts.ExpiryDuration; expiry < 0 {
 		return nil, ErrInvalidPoolExpiry
 	} else if expiry == 0 {
-		opts.ExpiryDuration = time.Duration(DEFAULT_CLEAN_INTERVAL_TIME) * time.Second
+		opts.ExpiryDuration = DefaultCleanIntervalTime
 	}
 
-	var p *Pool
+	p := &Pool{
+		capacity:         int32(size),
+		expiryDuration:   opts.ExpiryDuration,
+		nonblocking:      opts.Nonblocking,
+		maxBlockingTasks: int32(opts.MaxBlockingTasks),
+		panicHandler:     opts.PanicHandler,
+		lock:             internal.NewSpinLock(),
+	}
 	if opts.PreAlloc {
-		p = &Pool{
-			capacity:         int32(size),
-			expiryDuration:   opts.ExpiryDuration,
-			workers:          make([]*goWorker, 0, size),
-			nonblocking:      opts.Nonblocking,
-			maxBlockingTasks: int32(opts.MaxBlockingTasks),
-			panicHandler:     opts.PanicHandler,
-			lock:             SpinLock(),
-		}
-	} else {
-		p = &Pool{
-			capacity:         int32(size),
-			expiryDuration:   opts.ExpiryDuration,
-			nonblocking:      opts.Nonblocking,
-			maxBlockingTasks: int32(opts.MaxBlockingTasks),
-			panicHandler:     opts.PanicHandler,
-			lock:             SpinLock(),
-		}
+		p.workers = make([]*goWorker, 0, size)
 	}
 	p.cond = sync.NewCond(p.lock)
 
@@ -173,11 +165,11 @@ func (p *Pool) Submit(task func()) error {
 	if atomic.LoadInt32(&p.release) == CLOSED {
 		return ErrPoolClosed
 	}
-	if w := p.retrieveWorker(); w == nil {
+	var w *goWorker
+	if w = p.retrieveWorker(); w == nil {
 		return ErrPoolOverload
-	} else {
-		w.task <- task
 	}
+	w.task <- task
 	return nil
 }
 
@@ -188,7 +180,7 @@ func (p *Pool) Running() int {
 
 // Free returns the available goroutines to work.
 func (p *Pool) Free() int {
-	return int(atomic.LoadInt32(&p.capacity) - atomic.LoadInt32(&p.running))
+	return p.Cap() - p.Running()
 }
 
 // Cap returns the capacity of this pool.

@@ -26,6 +26,8 @@ import (
 	"sync"
 	"sync/atomic"
 	"time"
+
+	"github.com/panjf2000/ants/v2/internal"
 )
 
 // PoolWithFunc accept the tasks from client, it limits the total of goroutines to a given number by recycling goroutines.
@@ -141,31 +143,20 @@ func NewPoolWithFunc(size int, pf func(interface{}), options ...Option) (*PoolWi
 	if expiry := opts.ExpiryDuration; expiry < 0 {
 		return nil, ErrInvalidPoolExpiry
 	} else if expiry == 0 {
-		opts.ExpiryDuration = time.Duration(DEFAULT_CLEAN_INTERVAL_TIME) * time.Second
+		opts.ExpiryDuration = DefaultCleanIntervalTime
 	}
 
-	var p *PoolWithFunc
+	p := &PoolWithFunc{
+		capacity:         int32(size),
+		expiryDuration:   opts.ExpiryDuration,
+		poolFunc:         pf,
+		nonblocking:      opts.Nonblocking,
+		maxBlockingTasks: int32(opts.MaxBlockingTasks),
+		panicHandler:     opts.PanicHandler,
+		lock:             internal.NewSpinLock(),
+	}
 	if opts.PreAlloc {
-		p = &PoolWithFunc{
-			capacity:         int32(size),
-			expiryDuration:   opts.ExpiryDuration,
-			poolFunc:         pf,
-			workers:          make([]*goWorkerWithFunc, 0, size),
-			nonblocking:      opts.Nonblocking,
-			maxBlockingTasks: int32(opts.MaxBlockingTasks),
-			panicHandler:     opts.PanicHandler,
-			lock:             SpinLock(),
-		}
-	} else {
-		p = &PoolWithFunc{
-			capacity:         int32(size),
-			expiryDuration:   opts.ExpiryDuration,
-			poolFunc:         pf,
-			nonblocking:      opts.Nonblocking,
-			maxBlockingTasks: int32(opts.MaxBlockingTasks),
-			panicHandler:     opts.PanicHandler,
-			lock:             SpinLock(),
-		}
+		p.workers = make([]*goWorkerWithFunc, 0, size)
 	}
 	p.cond = sync.NewCond(p.lock)
 
@@ -182,11 +173,11 @@ func (p *PoolWithFunc) Invoke(args interface{}) error {
 	if atomic.LoadInt32(&p.release) == CLOSED {
 		return ErrPoolClosed
 	}
-	if w := p.retrieveWorker(); w == nil {
+	var w *goWorkerWithFunc
+	if w = p.retrieveWorker(); w == nil {
 		return ErrPoolOverload
-	} else {
-		w.args <- args
 	}
+	w.args <- args
 	return nil
 }
 
@@ -197,7 +188,7 @@ func (p *PoolWithFunc) Running() int {
 
 // Free returns a available goroutines to work.
 func (p *PoolWithFunc) Free() int {
-	return int(atomic.LoadInt32(&p.capacity) - atomic.LoadInt32(&p.running))
+	return p.Cap() - p.Running()
 }
 
 // Cap returns the capacity of this pool.
