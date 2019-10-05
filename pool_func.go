@@ -155,6 +155,14 @@ func NewPoolWithFunc(size int, pf func(interface{}), options ...Option) (*PoolWi
 		panicHandler:     opts.PanicHandler,
 		lock:             internal.NewSpinLock(),
 	}
+	p.workerCache = sync.Pool{
+		New: func() interface{} {
+			return &goWorkerWithFunc{
+				pool: p,
+				args: make(chan interface{}, workerChanCap),
+			}
+		},
+	}
 	if opts.PreAlloc {
 		p.workers = make([]*goWorkerWithFunc, 0, size)
 	}
@@ -235,14 +243,7 @@ func (p *PoolWithFunc) decRunning() {
 func (p *PoolWithFunc) retrieveWorker() *goWorkerWithFunc {
 	var w *goWorkerWithFunc
 	spawnWorker := func() {
-		if cacheWorker := p.workerCache.Get(); cacheWorker != nil {
-			w = cacheWorker.(*goWorkerWithFunc)
-		} else {
-			w = &goWorkerWithFunc{
-				pool: p,
-				args: make(chan interface{}, workerChanCap),
-			}
-		}
+		w = p.workerCache.Get().(*goWorkerWithFunc)
 		w.run()
 	}
 
