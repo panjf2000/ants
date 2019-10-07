@@ -28,6 +28,7 @@ import (
 	"time"
 
 	"github.com/panjf2000/ants/v2/internal"
+	. "github.com/panjf2000/ants/v2/internal/workerQueue"
 )
 
 // Pool accept the tasks from client, it limits the total of goroutines to a given number by recycling goroutines.
@@ -42,7 +43,6 @@ type Pool struct {
 	expiryDuration time.Duration
 
 	// workers is a slice that store the available workers.
-	// todo: 定义
 	workers WorkerQueue
 
 	// release is used to notice the pool to closed itself.
@@ -83,23 +83,25 @@ func (p *Pool) periodicallyPurge() {
 	heartbeat := time.NewTicker(p.expiryDuration)
 	defer heartbeat.Stop()
 
-	//var expiredWorkers []*goWorker
 	for range heartbeat.C {
 		if atomic.LoadInt32(&p.release) == CLOSED {
 			break
 		}
 
+		expiry := time.Now().Add(-p.expiryDuration)
 		p.lock.Lock()
-		stream := p.workers.ReleaseExpiry(p.expiryDuration)
+		stream := p.workers.ReleaseExpiry(func(item interface{}) bool {
+			return !expiry.After(item.(*goWorker).recycleTime)
+			// return item.(*goWorker).recycleTime.Before(expiry)
+		})
 		p.lock.Unlock()
 
 		// Notify obsolete workers to stop.
 		// This notification must be outside the p.lock, since w.task
 		// may be blocking and may consume a lot of time if many workers
 		// are located on non-local CPUs.
-		// todo: for-range expire channel
 		for w := range stream {
-			w.task <- nil
+			w.(*goWorker).task <- nil
 		}
 
 		// There might be a situation that all workers have been cleaned up(no any worker is running)
@@ -139,7 +141,7 @@ func NewPool(size int, options ...Option) (*Pool, error) {
 	if opts.PreAlloc {
 		p.workers = NewQueue(LoopQueueType, size)
 	} else {
-		p.workers = NewQueue(ArrayQueueType, 0)
+		p.workers = NewQueue(StackType, 0)
 	}
 
 	p.cond = sync.NewCond(p.lock)
@@ -150,7 +152,7 @@ func NewPool(size int, options ...Option) (*Pool, error) {
 	return p, nil
 }
 
-//---------------------------------------------------------------------------
+// ---------------------------------------------------------------------------
 
 // Submit submits a task to this pool.
 func (p *Pool) Submit(task func()) error {
@@ -193,12 +195,14 @@ func (p *Pool) Release() {
 	p.once.Do(func() {
 		atomic.StoreInt32(&p.release, 1)
 		p.lock.Lock()
-		p.workers.ReleaseAll()
+		p.workers.ReleaseAll(func(item interface{}) {
+			item.(*goWorker).task <- nil
+		})
 		p.lock.Unlock()
 	})
 }
 
-//---------------------------------------------------------------------------
+// ---------------------------------------------------------------------------
 
 // incRunning increases the number of the currently running goroutines.
 func (p *Pool) incRunning() {
@@ -226,35 +230,37 @@ func (p *Pool) retrieveWorker() *goWorker {
 	}
 
 	p.lock.Lock()
-	defer p.lock.Unlock()
 
-	n := p.workers.Len()
-	if n > 0 {
-		w = p.workers.Dequeue()
+	var ok bool
+	if w, ok = p.workers.Dequeue().(*goWorker); ok {
+		p.lock.Unlock()
 	} else if p.Running() < p.Cap() {
+		p.lock.Unlock()
 		spawnWorker()
 	} else {
 		if p.nonblocking {
+			p.lock.Unlock()
 			return nil
 		}
 	Reentry:
 		if p.maxBlockingTasks != 0 && p.blockingNum >= p.maxBlockingTasks {
+			p.lock.Unlock()
 			return nil
 		}
 		p.blockingNum++
 		p.cond.Wait()
 		p.blockingNum--
 		if p.Running() == 0 {
+			p.lock.Unlock()
 			spawnWorker()
 			return w
 		}
 
-		l := p.workers.Len()
-		if l == 0 {
+		if w, ok = p.workers.Dequeue().(*goWorker); !ok {
 			goto Reentry
 		}
 
-		w = p.workers.Dequeue()
+		p.lock.Unlock()
 	}
 	return w
 }
@@ -266,11 +272,14 @@ func (p *Pool) revertWorker(worker *goWorker) bool {
 	}
 	worker.recycleTime = time.Now()
 	p.lock.Lock()
-	defer p.lock.Unlock()
 
-	p.workers.Enqueue(worker)
+	err := p.workers.Enqueue(worker)
+	if err != nil {
+		return false
+	}
 
 	// Notify the invoker stuck in 'retrieveWorker()' of there is an available worker in the worker queue.
 	p.cond.Signal()
+	p.lock.Unlock()
 	return true
 }
