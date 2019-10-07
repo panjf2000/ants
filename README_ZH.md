@@ -9,9 +9,8 @@ A goroutine pool for Go
 <a title="Ants on Sourcegraph" target="_blank" href="https://sourcegraph.com/github.com/panjf2000/ants?badge"><img src="https://sourcegraph.com/github.com/panjf2000/ants/-/badge.svg?style=flat-square"></a>
 <br/>
 <a title="" target="_blank" href="https://golangci.com/r/github.com/panjf2000/ants"><img src="https://golangci.com/badges/github.com/panjf2000/ants.svg"></a>
-<a title="Godoc for ants" target="_blank" href="https://godoc.org/github.com/panjf2000/ants"><img src="https://img.shields.io/badge/go-documentation-blue.svg?style=flat-square"></a>
+<a title="Doc for ants" target="_blank" href="https://gowalker.org/github.com/panjf2000/ants?lang=zh-CN"><img src="https://img.shields.io/badge/api-reference-blue.svg?style=flat-square"></a>
 <a title="Release" target="_blank" href="https://github.com/panjf2000/ants/releases"><img src="https://img.shields.io/github/release/panjf2000/ants.svg?style=flat-square"></a>
-<a title="License" target="_blank" href="https://opensource.org/licenses/mit-license.php"><img src="https://img.shields.io/aur/license/pac?style=flat-square"></a>
 <a title="Mentioned in Awesome Go" target="_blank" href="https://github.com/avelino/awesome-go"><img src="https://awesome.re/mentioned-badge-flat.svg"></a>
 </p>
 
@@ -36,6 +35,12 @@ A goroutine pool for Go
 - 1.11.x
 - 1.12.x
 - 1.13.x
+
+## ants 运行时的流程图如下
+
+<p align="center">
+<img width="1028" alt="ants" src="https://user-images.githubusercontent.com/7496278/66307062-f6859980-e935-11e9-9f30-241c348cbc33.png">
+</p>
 
 
 ## 安装
