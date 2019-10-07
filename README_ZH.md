@@ -42,11 +42,18 @@ A goroutine pool for Go
 <img width="1028" alt="ants" src="https://user-images.githubusercontent.com/7496278/66307062-f6859980-e935-11e9-9f30-241c348cbc33.png">
 </p>
 
-
 ## 安装
 
-``` sh
+### 使用 `ants` v1 版本:
+
+``` powershell
 go get -u github.com/panjf2000/ants
+```
+
+### 使用 `ants` v2 版本:
+
+```powershell
+go get -u github.com/panjf2000/ants/v2
 ```
 
 ## 使用
