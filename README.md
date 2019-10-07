@@ -44,8 +44,16 @@ Library `ants` implements a goroutine pool with fixed capacity, managing and rec
 
 ## How to install
 
-``` sh
+### For `ants` v1
+
+``` powershell
 go get -u github.com/panjf2000/ants
+```
+
+### For `ants` v2
+
+```powershell
+go get -u github.com/panjf2000/ants/v2
 ```
 
 ## How to use
