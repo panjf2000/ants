@@ -36,7 +36,7 @@ A goroutine pool for Go
 - 1.12.x
 - 1.13.x
 
-## ants 运行时的流程图如下
+## `ants` 运行时的流程图如下
 
 <p align="center">
 <img width="1028" alt="ants" src="https://user-images.githubusercontent.com/7496278/66307062-f6859980-e935-11e9-9f30-241c348cbc33.png">
@@ -179,6 +179,10 @@ func main() {
 ## Pool 配置
 
 ```go
+// Option represents the optional function.
+type Option func(opts *Options)
+
+// Options contains all options which will be applied when instantiating a ants pool.
 type Options struct {
 	// ExpiryDuration set the expired time (second) of every worker.
 	ExpiryDuration time.Duration
@@ -200,36 +204,42 @@ type Options struct {
 	PanicHandler func(interface{})
 }
 
+// WithOptions accepts the whole options config.
 func WithOptions(options Options) Option {
 	return func(opts *Options) {
 		*opts = options
 	}
 }
 
+// WithExpiryDuration sets up the interval time of cleaning up goroutines.
 func WithExpiryDuration(expiryDuration time.Duration) Option {
 	return func(opts *Options) {
 		opts.ExpiryDuration = expiryDuration
 	}
 }
 
+// WithPreAlloc indicates whether it should malloc for workers.
 func WithPreAlloc(preAlloc bool) Option {
 	return func(opts *Options) {
 		opts.PreAlloc = preAlloc
 	}
 }
 
+// WithMaxBlockingTasks sets up the maximum number of goroutines that are blocked when it reaches the capacity of pool.
 func WithMaxBlockingTasks(maxBlockingTasks int) Option {
 	return func(opts *Options) {
 		opts.MaxBlockingTasks = maxBlockingTasks
 	}
 }
 
+// WithNonblocking indicates that pool will return nil when there is no available workers.
 func WithNonblocking(nonblocking bool) Option {
 	return func(opts *Options) {
 		opts.Nonblocking = nonblocking
 	}
 }
 
+// WithPanicHandler sets up panic handler.
 func WithPanicHandler(panicHandler func(interface{})) Option {
 	return func(opts *Options) {
 		opts.PanicHandler = panicHandler
