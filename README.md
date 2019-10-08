@@ -39,7 +39,7 @@ Library `ants` implements a goroutine pool with fixed capacity, managing and rec
 ## `ants` works as the flowing flowchart
 
 <p align="center">
-<img width="1028" alt="ants" src="https://user-images.githubusercontent.com/7496278/66307062-f6859980-e935-11e9-9f30-241c348cbc33.png">
+<img width="1011" alt="ants-flowchart-en" src="https://user-images.githubusercontent.com/7496278/66396509-7b42e700-ea0c-11e9-8612-b71a4b734683.png">
 </p>
 
 ## How to install

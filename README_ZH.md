@@ -39,7 +39,7 @@ A goroutine pool for Go
 ## `ants` 运行时的流程图如下
 
 <p align="center">
-<img width="1028" alt="ants" src="https://user-images.githubusercontent.com/7496278/66307062-f6859980-e935-11e9-9f30-241c348cbc33.png">
+<img width="845" alt="ants-flowchart-cn" src="https://user-images.githubusercontent.com/7496278/66396519-7ed66e00-ea0c-11e9-9c1a-5ca54bbd61eb.png">
 </p>
 
 ## 安装
