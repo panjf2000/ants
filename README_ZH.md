@@ -9,9 +9,8 @@ A goroutine pool for Go
 <a title="Ants on Sourcegraph" target="_blank" href="https://sourcegraph.com/github.com/panjf2000/ants?badge"><img src="https://sourcegraph.com/github.com/panjf2000/ants/-/badge.svg?style=flat-square"></a>
 <br/>
 <a title="" target="_blank" href="https://golangci.com/r/github.com/panjf2000/ants"><img src="https://golangci.com/badges/github.com/panjf2000/ants.svg"></a>
-<a title="Godoc for ants" target="_blank" href="https://godoc.org/github.com/panjf2000/ants"><img src="https://img.shields.io/badge/go-documentation-blue.svg?style=flat-square"></a>
+<a title="Doc for ants" target="_blank" href="https://gowalker.org/github.com/panjf2000/ants?lang=zh-CN"><img src="https://img.shields.io/badge/api-reference-blue.svg?style=flat-square"></a>
 <a title="Release" target="_blank" href="https://github.com/panjf2000/ants/releases"><img src="https://img.shields.io/github/release/panjf2000/ants.svg?style=flat-square"></a>
-<a title="License" target="_blank" href="https://opensource.org/licenses/mit-license.php"><img src="https://img.shields.io/aur/license/pac?style=flat-square"></a>
 <a title="Mentioned in Awesome Go" target="_blank" href="https://github.com/avelino/awesome-go"><img src="https://awesome.re/mentioned-badge-flat.svg"></a>
 </p>
 
@@ -37,11 +36,24 @@ A goroutine pool for Go
 - 1.12.x
 - 1.13.x
 
+## `ants` 运行时的流程图如下
+
+<p align="center">
+<img width="845" alt="ants-flowchart-cn" src="https://user-images.githubusercontent.com/7496278/66396519-7ed66e00-ea0c-11e9-9c1a-5ca54bbd61eb.png">
+</p>
 
 ## 安装
 
-``` sh
+### 使用 `ants` v1 版本:
+
+``` powershell
 go get -u github.com/panjf2000/ants
+```
+
+### 使用 `ants` v2 版本:
+
+```powershell
+go get -u github.com/panjf2000/ants/v2
 ```
 
 ## 使用
@@ -167,6 +179,10 @@ func main() {
 ## Pool 配置
 
 ```go
+// Option represents the optional function.
+type Option func(opts *Options)
+
+// Options contains all options which will be applied when instantiating a ants pool.
 type Options struct {
 	// ExpiryDuration set the expired time (second) of every worker.
 	ExpiryDuration time.Duration
@@ -188,36 +204,42 @@ type Options struct {
 	PanicHandler func(interface{})
 }
 
+// WithOptions accepts the whole options config.
 func WithOptions(options Options) Option {
 	return func(opts *Options) {
 		*opts = options
 	}
 }
 
+// WithExpiryDuration sets up the interval time of cleaning up goroutines.
 func WithExpiryDuration(expiryDuration time.Duration) Option {
 	return func(opts *Options) {
 		opts.ExpiryDuration = expiryDuration
 	}
 }
 
+// WithPreAlloc indicates whether it should malloc for workers.
 func WithPreAlloc(preAlloc bool) Option {
 	return func(opts *Options) {
 		opts.PreAlloc = preAlloc
 	}
 }
 
+// WithMaxBlockingTasks sets up the maximum number of goroutines that are blocked when it reaches the capacity of pool.
 func WithMaxBlockingTasks(maxBlockingTasks int) Option {
 	return func(opts *Options) {
 		opts.MaxBlockingTasks = maxBlockingTasks
 	}
 }
 
+// WithNonblocking indicates that pool will return nil when there is no available workers.
 func WithNonblocking(nonblocking bool) Option {
 	return func(opts *Options) {
 		opts.Nonblocking = nonblocking
 	}
 }
 
+// WithPanicHandler sets up panic handler.
 func WithPanicHandler(panicHandler func(interface{})) Option {
 	return func(opts *Options) {
 		opts.PanicHandler = panicHandler

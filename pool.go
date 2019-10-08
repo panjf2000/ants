@@ -138,6 +138,14 @@ func NewPool(size int, options ...Option) (*Pool, error) {
 		panicHandler:     opts.PanicHandler,
 		lock:             internal.NewSpinLock(),
 	}
+	p.workerCache = sync.Pool{
+		New: func() interface{} {
+			return &goWorker{
+				pool: p,
+				task: make(chan func(), workerChanCap),
+			}
+		},
+	}
 	if opts.PreAlloc {
 		p.workers = NewQueue(LoopQueueType, size)
 	} else {
@@ -218,14 +226,7 @@ func (p *Pool) decRunning() {
 func (p *Pool) retrieveWorker() *goWorker {
 	var w *goWorker
 	spawnWorker := func() {
-		if cacheWorker := p.workerCache.Get(); cacheWorker != nil {
-			w = cacheWorker.(*goWorker)
-		} else {
-			w = &goWorker{
-				pool: p,
-				task: make(chan func(), workerChanCap),
-			}
-		}
+		w = p.workerCache.Get().(*goWorker)
 		w.run()
 	}
 
