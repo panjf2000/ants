@@ -22,7 +22,7 @@ func TestNewWorkerStack(t *testing.T) {
 }
 
 func TestWorkerStack(t *testing.T) {
-	q := newWorkerStack(0)
+	q := newWorkerArray(arrayType(-1), 0)
 
 	for i := 0; i < 5; i++ {
 		err := q.insert(&goWorker{recycleTime: time.Now()})
