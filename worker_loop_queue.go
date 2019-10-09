@@ -11,7 +11,7 @@ type loopQueue struct {
 }
 
 func newLoopQueue(size int) *loopQueue {
-	if size == 0 {
+	if size <= 0 {
 		return nil
 	}
 

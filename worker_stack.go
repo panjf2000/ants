@@ -8,6 +8,10 @@ type workerStack struct {
 }
 
 func newWorkerStack(size int) *workerStack {
+	if size < 0 {
+		return nil
+	}
+
 	wq := workerStack{
 		items:  make([]*goWorker, 0, size),
 		expiry: make([]*goWorker, 0),
@@ -75,22 +79,16 @@ func (wq *workerStack) releaseExpiry(duration time.Duration) chan *goWorker {
 }
 
 func (wq *workerStack) search(l, r int, expiryTime time.Time) int {
-	if l == r {
-		if expiryTime.After(wq.items[l].recycleTime) {
-			return l
+	var mid int
+	for l <= r {
+		mid = (l + r) / 2
+		if expiryTime.Before(wq.items[mid].recycleTime) {
+			r = mid - 1
 		} else {
-			return -1
+			l = mid + 1
 		}
 	}
-
-	mid := (r-l)/2 + l
-	if mid == l {
-		return wq.search(l, l, expiryTime)
-	} else if expiryTime.After(wq.items[mid].recycleTime) {
-		return wq.search(mid, r, expiryTime)
-	} else {
-		return wq.search(l, mid, expiryTime)
-	}
+	return r
 }
 
 func (wq *workerStack) releaseAll() {

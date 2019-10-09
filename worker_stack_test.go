@@ -64,3 +64,59 @@ func TestWorkerStack(t *testing.T) {
 		t.Fatalf("Len error")
 	}
 }
+
+func TestSearch(t *testing.T) {
+	q := newWorkerStack(0)
+
+	// 1
+	expiry1 := time.Now()
+
+	_ = q.enqueue(&goWorker{recycleTime: time.Now()})
+
+	index := q.search(0, q.len()-1, time.Now())
+	if index != 0 {
+		t.Fatalf("should is 0")
+	}
+
+	index = q.search(0, q.len()-1, expiry1)
+	if index != -1 {
+		t.Fatalf("should is -1")
+	}
+
+	// 2
+	expiry2 := time.Now()
+	_ = q.enqueue(&goWorker{recycleTime: time.Now()})
+
+	index = q.search(0, q.len()-1, expiry1)
+	if index != -1 {
+		t.Fatalf("should is -1")
+	}
+
+	index = q.search(0, q.len()-1, expiry2)
+	if index != 0 {
+		t.Fatalf("should is 0")
+	}
+
+	index = q.search(0, q.len()-1, time.Now())
+	if index != 1 {
+		t.Fatalf("should is 1")
+	}
+
+	// more
+	for i := 0; i < 5; i++ {
+		_ = q.enqueue(&goWorker{recycleTime: time.Now()})
+	}
+
+	expiry3 := time.Now()
+
+	_ = q.enqueue(&goWorker{recycleTime: expiry3})
+
+	for i := 0; i < 10; i++ {
+		_ = q.enqueue(&goWorker{recycleTime: time.Now()})
+	}
+
+	index = q.search(0, q.len()-1, expiry3)
+	if index != 7 {
+		t.Fatalf("should is 7")
+	}
+}
