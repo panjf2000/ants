@@ -1,5 +1,7 @@
 package ants
 
+import "time"
+
 type workerStack struct {
 	items  []*goWorker
 	expiry []*goWorker
@@ -42,7 +44,7 @@ func (wq *workerStack) dequeue() *goWorker {
 	return w
 }
 
-func (wq *workerStack) releaseExpiry(isExpiry func(item *goWorker) bool) chan *goWorker {
+func (wq *workerStack) releaseExpiry(duration time.Duration) chan *goWorker {
 	stream := make(chan *goWorker)
 
 	n := wq.len()
@@ -51,7 +53,8 @@ func (wq *workerStack) releaseExpiry(isExpiry func(item *goWorker) bool) chan *g
 		return stream
 	}
 
-	index := wq.search(0, n-1, isExpiry)
+	expiryTime := time.Now().Add(-duration)
+	index := wq.search(0, n-1, expiryTime)
 
 	wq.expiry = wq.expiry[:0]
 	if index != -1 {
@@ -71,9 +74,9 @@ func (wq *workerStack) releaseExpiry(isExpiry func(item *goWorker) bool) chan *g
 	return stream
 }
 
-func (wq *workerStack) search(l, r int, isExpiry func(item *goWorker) bool) int {
+func (wq *workerStack) search(l, r int, expiryTime time.Time) int {
 	if l == r {
-		if isExpiry(wq.items[l]) {
+		if expiryTime.After(wq.items[l].recycleTime) {
 			return l
 		} else {
 			return -1
@@ -82,17 +85,17 @@ func (wq *workerStack) search(l, r int, isExpiry func(item *goWorker) bool) int 
 
 	mid := (r-l)/2 + l
 	if mid == l {
-		return wq.search(l, l, isExpiry)
-	} else if isExpiry(wq.items[mid]) {
-		return wq.search(mid, r, isExpiry)
+		return wq.search(l, l, expiryTime)
+	} else if expiryTime.After(wq.items[mid].recycleTime) {
+		return wq.search(mid, r, expiryTime)
 	} else {
-		return wq.search(l, mid, isExpiry)
+		return wq.search(l, mid, expiryTime)
 	}
 }
 
-func (wq *workerStack) releaseAll(free func(item *goWorker)) {
+func (wq *workerStack) releaseAll() {
 	for i := 0; i < wq.len(); i++ {
-		free(wq.items[i])
+		wq.items[i].task <- nil
 	}
 	wq.items = wq.items[:0]
 }

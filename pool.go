@@ -87,12 +87,8 @@ func (p *Pool) periodicallyPurge() {
 			break
 		}
 
-		expiry := time.Now().Add(-p.expiryDuration)
 		p.lock.Lock()
-		stream := p.workers.releaseExpiry(func(item *goWorker) bool {
-			return !expiry.After(item.recycleTime)
-			// return item.recycleTime.Before(expiry)
-		})
+		stream := p.workers.releaseExpiry(p.expiryDuration)
 		p.lock.Unlock()
 
 		// Notify obsolete workers to stop.
@@ -202,9 +198,7 @@ func (p *Pool) Release() {
 	p.once.Do(func() {
 		atomic.StoreInt32(&p.release, 1)
 		p.lock.Lock()
-		p.workers.releaseAll(func(item *goWorker) {
-			item.task <- nil
-		})
+		p.workers.releaseAll()
 		p.lock.Unlock()
 	})
 }

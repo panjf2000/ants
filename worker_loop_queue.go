@@ -1,5 +1,7 @@
 package ants
 
+import "time"
+
 type loopQueue struct {
 	items     []*goWorker
 	expiry    []*goWorker
@@ -68,7 +70,7 @@ func (wq *loopQueue) dequeue() *goWorker {
 	return w
 }
 
-func (wq *loopQueue) releaseExpiry(isExpiry func(item *goWorker) bool) chan *goWorker {
+func (wq *loopQueue) releaseExpiry(duration time.Duration) chan *goWorker {
 	stream := make(chan *goWorker)
 
 	if wq.len() == 0 {
@@ -77,9 +79,10 @@ func (wq *loopQueue) releaseExpiry(isExpiry func(item *goWorker) bool) chan *goW
 	}
 
 	wq.expiry = wq.expiry[:0]
+	expiryTime := time.Now().Add(-duration)
 
 	for wq.head != wq.tail {
-		if isExpiry(wq.items[wq.head]) {
+		if expiryTime.After(wq.items[wq.head].recycleTime) {
 			wq.expiry = append(wq.expiry, wq.items[wq.head])
 			wq.head = (wq.head + 1) % wq.remainder
 			continue
@@ -118,13 +121,13 @@ func (wq *loopQueue) releaseExpiry(isExpiry func(item *goWorker) bool) chan *goW
 //	}
 //}
 
-func (wq *loopQueue) releaseAll(free func(item *goWorker)) {
+func (wq *loopQueue) releaseAll() {
 	if wq.len() == 0 {
 		return
 	}
 
 	for wq.head != wq.tail {
-		free(wq.items[wq.head])
+		wq.items[wq.head].task <- nil
 		wq.head = (wq.head + 1) % wq.remainder
 	}
 	wq.items = wq.items[:0]

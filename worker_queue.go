@@ -1,6 +1,9 @@
 package ants
 
-import "errors"
+import (
+	"errors"
+	"time"
+)
 
 var (
 	ErrQueueIsFull       = errors.New("the queue is full")
@@ -13,8 +16,8 @@ type workerQueue interface {
 	isEmpty() bool
 	enqueue(worker *goWorker) error
 	dequeue() *goWorker
-	releaseExpiry(isExpiry func(item *goWorker) bool) chan *goWorker
-	releaseAll(free func(item *goWorker))
+	releaseExpiry(duration time.Duration) chan *goWorker
+	releaseAll()
 }
 
 type queueType int

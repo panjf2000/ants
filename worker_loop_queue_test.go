@@ -36,8 +36,6 @@ func TestLoopQueue(t *testing.T) {
 		}
 	}
 
-	expired := time.Now()
-
 	if q.len() != 5 {
 		t.Fatalf("Len error")
 	}
@@ -48,6 +46,8 @@ func TestLoopQueue(t *testing.T) {
 	if q.len() != 4 {
 		t.Fatalf("Len error")
 	}
+
+	time.Sleep(time.Second)
 
 	for i := 0; i < 6; i++ {
 		err := q.enqueue(&goWorker{recycleTime: time.Now()})
@@ -65,11 +65,9 @@ func TestLoopQueue(t *testing.T) {
 		t.Fatalf("Enqueue error")
 	}
 
-	q.releaseExpiry(func(item *goWorker) bool {
-		return item.recycleTime.Before(expired)
-	})
+	q.releaseExpiry(time.Second)
 
 	if q.len() != 6 {
-		t.Fatalf("Len error")
+		t.Fatalf("Len error: %d", q.len())
 	}
 }

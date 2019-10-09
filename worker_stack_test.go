@@ -45,6 +45,8 @@ func TestWorkerStack(t *testing.T) {
 		t.Fatalf("Enqueue error")
 	}
 
+	time.Sleep(time.Second)
+
 	for i := 0; i < 6; i++ {
 		err := q.enqueue(&goWorker{recycleTime: time.Now()})
 		if err != nil {
@@ -56,10 +58,7 @@ func TestWorkerStack(t *testing.T) {
 		t.Fatalf("Len error")
 	}
 
-	q.releaseExpiry(func(item *goWorker) bool {
-		// return item.(time.Time).Before(expired)
-		return !item.recycleTime.After(expired)
-	})
+	q.releaseExpiry(time.Second)
 
 	if q.len() != 6 {
 		t.Fatalf("Len error")
