@@ -20,8 +20,8 @@ A goroutine pool for Go
 
 ## 功能：
 
-- 实现了自动调度并发的 goroutine，复用 goroutine
-- 定时清理过期的 goroutine，进一步节省资源
+- 自动调度海量的 goroutines，复用 goroutines
+- 定时清理过期的 goroutines，进一步节省资源
 - 提供了友好的接口：任务提交、获取运行中的协程数量、动态调整协程池大小
 - 优雅处理 panic，防止程序崩溃
 - 资源复用，极大节省内存使用量；在大规模批量并发任务场景下比原生 goroutine 并发具有更高的性能
