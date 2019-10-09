@@ -42,7 +42,7 @@ type Pool struct {
 	expiryDuration time.Duration
 
 	// workers is a slice that store the available workers.
-	workers []*goWorker
+	workers workerQueue
 
 	// release is used to notice the pool to closed itself.
 	release int32
@@ -82,35 +82,21 @@ func (p *Pool) periodicallyPurge() {
 	heartbeat := time.NewTicker(p.expiryDuration)
 	defer heartbeat.Stop()
 
-	var expiredWorkers []*goWorker
 	for range heartbeat.C {
 		if atomic.LoadInt32(&p.release) == CLOSED {
 			break
 		}
-		currentTime := time.Now()
+
 		p.lock.Lock()
-		idleWorkers := p.workers
-		n := len(idleWorkers)
-		var i int
-		for i = 0; i < n && currentTime.Sub(idleWorkers[i].recycleTime) > p.expiryDuration; i++ {
-		}
-		expiredWorkers = append(expiredWorkers[:0], idleWorkers[:i]...)
-		if i > 0 {
-			m := copy(idleWorkers, idleWorkers[i:])
-			for i = m; i < n; i++ {
-				idleWorkers[i] = nil
-			}
-			p.workers = idleWorkers[:m]
-		}
+		stream := p.workers.releaseExpiry(p.expiryDuration)
 		p.lock.Unlock()
 
 		// Notify obsolete workers to stop.
 		// This notification must be outside the p.lock, since w.task
 		// may be blocking and may consume a lot of time if many workers
 		// are located on non-local CPUs.
-		for i, w := range expiredWorkers {
+		for w := range stream {
 			w.task <- nil
-			expiredWorkers[i] = nil
 		}
 
 		// There might be a situation that all workers have been cleaned up(no any worker is running)
@@ -156,8 +142,11 @@ func NewPool(size int, options ...Option) (*Pool, error) {
 		},
 	}
 	if opts.PreAlloc {
-		p.workers = make([]*goWorker, 0, size)
+		p.workers = newQueue(loopQueueType, size)
+	} else {
+		p.workers = newQueue(stackType, 0)
 	}
+
 	p.cond = sync.NewCond(p.lock)
 
 	// Start a goroutine to clean up expired workers periodically.
@@ -166,7 +155,7 @@ func NewPool(size int, options ...Option) (*Pool, error) {
 	return p, nil
 }
 
-//---------------------------------------------------------------------------
+// ---------------------------------------------------------------------------
 
 // Submit submits a task to this pool.
 func (p *Pool) Submit(task func()) error {
@@ -209,17 +198,12 @@ func (p *Pool) Release() {
 	p.once.Do(func() {
 		atomic.StoreInt32(&p.release, 1)
 		p.lock.Lock()
-		idleWorkers := p.workers
-		for i, w := range idleWorkers {
-			w.task <- nil
-			idleWorkers[i] = nil
-		}
-		p.workers = nil
+		p.workers.releaseAll()
 		p.lock.Unlock()
 	})
 }
 
-//---------------------------------------------------------------------------
+// ---------------------------------------------------------------------------
 
 // incRunning increases the number of the currently running goroutines.
 func (p *Pool) incRunning() {
@@ -240,12 +224,9 @@ func (p *Pool) retrieveWorker() *goWorker {
 	}
 
 	p.lock.Lock()
-	idleWorkers := p.workers
-	n := len(idleWorkers) - 1
-	if n >= 0 {
-		w = idleWorkers[n]
-		idleWorkers[n] = nil
-		p.workers = idleWorkers[:n]
+
+	w = p.workers.dequeue()
+	if w != nil {
 		p.lock.Unlock()
 	} else if p.Running() < p.Cap() {
 		p.lock.Unlock()
@@ -268,13 +249,12 @@ func (p *Pool) retrieveWorker() *goWorker {
 			spawnWorker()
 			return w
 		}
-		l := len(p.workers) - 1
-		if l < 0 {
+
+		w = p.workers.dequeue()
+		if w == nil {
 			goto Reentry
 		}
-		w = p.workers[l]
-		p.workers[l] = nil
-		p.workers = p.workers[:l]
+
 		p.lock.Unlock()
 	}
 	return w
@@ -287,7 +267,11 @@ func (p *Pool) revertWorker(worker *goWorker) bool {
 	}
 	worker.recycleTime = time.Now()
 	p.lock.Lock()
-	p.workers = append(p.workers, worker)
+
+	err := p.workers.enqueue(worker)
+	if err != nil {
+		return false
+	}
 
 	// Notify the invoker stuck in 'retrieveWorker()' of there is an available worker in the worker queue.
 	p.cond.Signal()
