@@ -1,37 +1,37 @@
 package ants
 
-type WorkerStack struct {
-	items  []interface{}
-	expiry []interface{}
+type workerStack struct {
+	items  []*goWorker
+	expiry []*goWorker
 }
 
-func NewWorkerStack(size int) *WorkerStack {
-	wq := WorkerStack{
-		items:  make([]interface{}, 0, size),
-		expiry: make([]interface{}, 0),
+func newWorkerStack(size int) *workerStack {
+	wq := workerStack{
+		items:  make([]*goWorker, 0, size),
+		expiry: make([]*goWorker, 0),
 	}
 	return &wq
 }
 
-func (wq *WorkerStack) Len() int {
+func (wq *workerStack) len() int {
 	return len(wq.items)
 }
 
-func (wq *WorkerStack) Cap() int {
+func (wq *workerStack) cap() int {
 	return cap(wq.items)
 }
 
-func (wq *WorkerStack) IsEmpty() bool {
+func (wq *workerStack) isEmpty() bool {
 	return len(wq.items) == 0
 }
 
-func (wq *WorkerStack) Enqueue(worker interface{}) error {
+func (wq *workerStack) enqueue(worker *goWorker) error {
 	wq.items = append(wq.items, worker)
 	return nil
 }
 
-func (wq *WorkerStack) Dequeue() interface{} {
-	l := wq.Len()
+func (wq *workerStack) dequeue() *goWorker {
+	l := wq.len()
 	if l == 0 {
 		return nil
 	}
@@ -42,10 +42,10 @@ func (wq *WorkerStack) Dequeue() interface{} {
 	return w
 }
 
-func (wq *WorkerStack) ReleaseExpiry(isExpiry func(item interface{}) bool) chan interface{} {
-	stream := make(chan interface{})
+func (wq *workerStack) releaseExpiry(isExpiry func(item *goWorker) bool) chan *goWorker {
+	stream := make(chan *goWorker)
 
-	n := wq.Len()
+	n := wq.len()
 	if n == 0 {
 		close(stream)
 		return stream
@@ -71,7 +71,7 @@ func (wq *WorkerStack) ReleaseExpiry(isExpiry func(item interface{}) bool) chan 
 	return stream
 }
 
-func (wq *WorkerStack) search(l, r int, isExpiry func(item interface{}) bool) int {
+func (wq *workerStack) search(l, r int, isExpiry func(item *goWorker) bool) int {
 	if l == r {
 		if isExpiry(wq.items[l]) {
 			return l
@@ -90,8 +90,8 @@ func (wq *WorkerStack) search(l, r int, isExpiry func(item interface{}) bool) in
 	}
 }
 
-func (wq *WorkerStack) ReleaseAll(free func(item interface{})) {
-	for i := 0; i < wq.Len(); i++ {
+func (wq *workerStack) releaseAll(free func(item *goWorker)) {
+	for i := 0; i < wq.len(); i++ {
 		free(wq.items[i])
 	}
 	wq.items = wq.items[:0]

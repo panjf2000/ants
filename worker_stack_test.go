@@ -7,61 +7,61 @@ import (
 
 func TestNewWorkerStack(t *testing.T) {
 	size := 100
-	q := NewWorkerStack(size)
-	if q.Len() != 0 {
+	q := newWorkerStack(size)
+	if q.len() != 0 {
 		t.Fatalf("Len error")
 	}
 
-	if q.Cap() != size {
+	if q.cap() != size {
 		t.Fatalf("Cap error")
 	}
 
-	if !q.IsEmpty() {
+	if !q.isEmpty() {
 		t.Fatalf("IsEmpty error")
 	}
 
-	if q.Dequeue() != nil {
+	if q.dequeue() != nil {
 		t.Fatalf("Dequeue error")
 	}
 }
 
 func TestWorkerStack(t *testing.T) {
-	q := NewWorkerStack(0)
+	q := newWorkerStack(0)
 
 	for i := 0; i < 5; i++ {
-		err := q.Enqueue(time.Now())
+		err := q.enqueue(&goWorker{recycleTime: time.Now()})
 		if err != nil {
 			break
 		}
 	}
-	if q.Len() != 5 {
+	if q.len() != 5 {
 		t.Fatalf("Len error")
 	}
 
 	expired := time.Now()
 
-	err := q.Enqueue(expired)
+	err := q.enqueue(&goWorker{recycleTime: expired})
 	if err != nil {
 		t.Fatalf("Enqueue error")
 	}
 
 	for i := 0; i < 6; i++ {
-		err := q.Enqueue(time.Now())
+		err := q.enqueue(&goWorker{recycleTime: time.Now()})
 		if err != nil {
 			t.Fatalf("Enqueue error")
 		}
 	}
 
-	if q.Len() != 12 {
+	if q.len() != 12 {
 		t.Fatalf("Len error")
 	}
 
-	q.ReleaseExpiry(func(item interface{}) bool {
+	q.releaseExpiry(func(item *goWorker) bool {
 		// return item.(time.Time).Before(expired)
-		return !item.(time.Time).After(expired)
+		return !item.recycleTime.After(expired)
 	})
 
-	if q.Len() != 6 {
+	if q.len() != 6 {
 		t.Fatalf("Len error")
 	}
 }

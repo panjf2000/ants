@@ -1,21 +1,21 @@
 package ants
 
-type LoopQueue struct {
-	items     []interface{}
-	expiry    []interface{}
+type loopQueue struct {
+	items     []*goWorker
+	expiry    []*goWorker
 	head      int
 	tail      int
 	remainder int
 }
 
-func NewLoopQueue(size int) *LoopQueue {
+func newLoopQueue(size int) *loopQueue {
 	if size == 0 {
 		return nil
 	}
 
-	wq := LoopQueue{
-		items:     make([]interface{}, size+1),
-		expiry:    make([]interface{}, 0),
+	wq := loopQueue{
+		items:     make([]*goWorker, size+1),
+		expiry:    make([]*goWorker, 0),
 		head:      0,
 		tail:      0,
 		remainder: size + 1,
@@ -24,7 +24,7 @@ func NewLoopQueue(size int) *LoopQueue {
 	return &wq
 }
 
-func (wq *LoopQueue) Len() int {
+func (wq *loopQueue) len() int {
 	if wq.remainder == 0 {
 		return 0
 	}
@@ -32,18 +32,18 @@ func (wq *LoopQueue) Len() int {
 	return (wq.tail - wq.head + wq.remainder) % wq.remainder
 }
 
-func (wq *LoopQueue) Cap() int {
+func (wq *loopQueue) cap() int {
 	if wq.remainder == 0 {
 		return 0
 	}
 	return wq.remainder - 1
 }
 
-func (wq *LoopQueue) IsEmpty() bool {
+func (wq *loopQueue) isEmpty() bool {
 	return wq.tail == wq.head
 }
 
-func (wq *LoopQueue) Enqueue(worker interface{}) error {
+func (wq *loopQueue) enqueue(worker *goWorker) error {
 	if wq.remainder == 0 {
 		return ErrQueueLengthIsZero
 	}
@@ -57,8 +57,8 @@ func (wq *LoopQueue) Enqueue(worker interface{}) error {
 	return nil
 }
 
-func (wq *LoopQueue) Dequeue() interface{} {
-	if wq.Len() == 0 {
+func (wq *loopQueue) dequeue() *goWorker {
+	if wq.len() == 0 {
 		return nil
 	}
 
@@ -68,10 +68,10 @@ func (wq *LoopQueue) Dequeue() interface{} {
 	return w
 }
 
-func (wq *LoopQueue) ReleaseExpiry(isExpiry func(item interface{}) bool) chan interface{} {
-	stream := make(chan interface{})
+func (wq *loopQueue) releaseExpiry(isExpiry func(item *goWorker) bool) chan *goWorker {
+	stream := make(chan *goWorker)
 
-	if wq.Len() == 0 {
+	if wq.len() == 0 {
 		close(stream)
 		return stream
 	}
@@ -118,8 +118,8 @@ func (wq *LoopQueue) ReleaseExpiry(isExpiry func(item interface{}) bool) chan in
 //	}
 //}
 
-func (wq *LoopQueue) ReleaseAll(free func(item interface{})) {
-	if wq.Len() == 0 {
+func (wq *loopQueue) releaseAll(free func(item *goWorker)) {
+	if wq.len() == 0 {
 		return
 	}
 

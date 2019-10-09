@@ -28,7 +28,6 @@ import (
 	"time"
 
 	"github.com/panjf2000/ants/v2/internal"
-	. "github.com/panjf2000/ants/v2/internal/workerQueue"
 )
 
 // Pool accept the tasks from client, it limits the total of goroutines to a given number by recycling goroutines.
@@ -43,7 +42,7 @@ type Pool struct {
 	expiryDuration time.Duration
 
 	// workers is a slice that store the available workers.
-	workers WorkerQueue
+	workers workerQueue
 
 	// release is used to notice the pool to closed itself.
 	release int32
@@ -90,9 +89,9 @@ func (p *Pool) periodicallyPurge() {
 
 		expiry := time.Now().Add(-p.expiryDuration)
 		p.lock.Lock()
-		stream := p.workers.ReleaseExpiry(func(item interface{}) bool {
-			return !expiry.After(item.(*goWorker).recycleTime)
-			// return item.(*goWorker).recycleTime.Before(expiry)
+		stream := p.workers.releaseExpiry(func(item *goWorker) bool {
+			return !expiry.After(item.recycleTime)
+			// return item.recycleTime.Before(expiry)
 		})
 		p.lock.Unlock()
 
@@ -101,7 +100,7 @@ func (p *Pool) periodicallyPurge() {
 		// may be blocking and may consume a lot of time if many workers
 		// are located on non-local CPUs.
 		for w := range stream {
-			w.(*goWorker).task <- nil
+			w.task <- nil
 		}
 
 		// There might be a situation that all workers have been cleaned up(no any worker is running)
@@ -147,9 +146,9 @@ func NewPool(size int, options ...Option) (*Pool, error) {
 		},
 	}
 	if opts.PreAlloc {
-		p.workers = NewQueue(LoopQueueType, size)
+		p.workers = newQueue(loopQueueType, size)
 	} else {
-		p.workers = NewQueue(StackType, 0)
+		p.workers = newQueue(stackType, 0)
 	}
 
 	p.cond = sync.NewCond(p.lock)
@@ -203,8 +202,8 @@ func (p *Pool) Release() {
 	p.once.Do(func() {
 		atomic.StoreInt32(&p.release, 1)
 		p.lock.Lock()
-		p.workers.ReleaseAll(func(item interface{}) {
-			item.(*goWorker).task <- nil
+		p.workers.releaseAll(func(item *goWorker) {
+			item.task <- nil
 		})
 		p.lock.Unlock()
 	})
@@ -232,8 +231,8 @@ func (p *Pool) retrieveWorker() *goWorker {
 
 	p.lock.Lock()
 
-	var ok bool
-	if w, ok = p.workers.Dequeue().(*goWorker); ok {
+	w = p.workers.dequeue()
+	if w != nil {
 		p.lock.Unlock()
 	} else if p.Running() < p.Cap() {
 		p.lock.Unlock()
@@ -257,7 +256,8 @@ func (p *Pool) retrieveWorker() *goWorker {
 			return w
 		}
 
-		if w, ok = p.workers.Dequeue().(*goWorker); !ok {
+		w = p.workers.dequeue()
+		if w == nil {
 			goto Reentry
 		}
 
@@ -274,7 +274,7 @@ func (p *Pool) revertWorker(worker *goWorker) bool {
 	worker.recycleTime = time.Now()
 	p.lock.Lock()
 
-	err := p.workers.Enqueue(worker)
+	err := p.workers.enqueue(worker)
 	if err != nil {
 		return false
 	}

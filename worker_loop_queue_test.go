@@ -7,30 +7,30 @@ import (
 
 func TestNewLoopQueue(t *testing.T) {
 	size := 100
-	q := NewLoopQueue(size)
-	if q.Len() != 0 {
+	q := newLoopQueue(size)
+	if q.len() != 0 {
 		t.Fatalf("Len error")
 	}
 
-	if q.Cap() != size {
+	if q.cap() != size {
 		t.Fatalf("Cap error")
 	}
 
-	if !q.IsEmpty() {
+	if !q.isEmpty() {
 		t.Fatalf("IsEmpty error")
 	}
 
-	if q.Dequeue() != nil {
+	if q.dequeue() != nil {
 		t.Fatalf("Dequeue error")
 	}
 }
 
 func TestLoopQueue(t *testing.T) {
 	size := 10
-	q := NewLoopQueue(size)
+	q := newLoopQueue(size)
 
 	for i := 0; i < 5; i++ {
-		err := q.Enqueue(time.Now())
+		err := q.enqueue(&goWorker{recycleTime: time.Now()})
 		if err != nil {
 			break
 		}
@@ -38,38 +38,38 @@ func TestLoopQueue(t *testing.T) {
 
 	expired := time.Now()
 
-	if q.Len() != 5 {
+	if q.len() != 5 {
 		t.Fatalf("Len error")
 	}
 
-	v := q.Dequeue().(time.Time)
+	v := q.dequeue()
 	t.Log(v)
 
-	if q.Len() != 4 {
+	if q.len() != 4 {
 		t.Fatalf("Len error")
 	}
 
 	for i := 0; i < 6; i++ {
-		err := q.Enqueue(time.Now())
+		err := q.enqueue(&goWorker{recycleTime: time.Now()})
 		if err != nil {
 			break
 		}
 	}
 
-	if q.Len() != 10 {
+	if q.len() != 10 {
 		t.Fatalf("Len error")
 	}
 
-	err := q.Enqueue(time.Now())
+	err := q.enqueue(&goWorker{recycleTime: time.Now()})
 	if err == nil {
 		t.Fatalf("Enqueue error")
 	}
 
-	q.ReleaseExpiry(func(item interface{}) bool {
-		return item.(time.Time).Before(expired)
+	q.releaseExpiry(func(item *goWorker) bool {
+		return item.recycleTime.Before(expired)
 	})
 
-	if q.Len() != 6 {
+	if q.len() != 6 {
 		t.Fatalf("Len error")
 	}
 }

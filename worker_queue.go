@@ -1,28 +1,36 @@
 package ants
 
-import "time"
+import "errors"
 
-type WorkerQueue interface {
-	Len() int
-	Cap() int
-	IsEmpty() bool
-	Enqueue(worker *goWorker) error
-	Dequeue() *goWorker
-	ReleaseExpiry(expiry time.Duration) chan *goWorker
-	ReleaseAll()
-}
-
-type QueueType int
-
-const (
-	ArrayQueueType 	QueueType = 1 << iota
-	LoopQueueType
+var (
+	ErrQueueIsFull       = errors.New("the queue is full")
+	ErrQueueLengthIsZero = errors.New("the queue length is zero")
 )
 
-func NewQueue(qType QueueType, size int) WorkerQueue {
+type workerQueue interface {
+	len() int
+	cap() int
+	isEmpty() bool
+	enqueue(worker *goWorker) error
+	dequeue() *goWorker
+	releaseExpiry(isExpiry func(item *goWorker) bool) chan *goWorker
+	releaseAll(free func(item *goWorker))
+}
+
+type queueType int
+
+const (
+	stackType queueType = 1 << iota
+	loopQueueType
+)
+
+func newQueue(qType queueType, size int) workerQueue {
 	switch qType {
-	case ArrayQueueType: 	return NewSliceQueue(size)
-	case LoopQueueType:		return NewLoopQueue(size)
-	default: 				return NewSliceQueue(size)
+	case stackType:
+		return newWorkerStack(size)
+	case loopQueueType:
+		return newLoopQueue(size)
+	default:
+		return newWorkerStack(size)
 	}
 }
