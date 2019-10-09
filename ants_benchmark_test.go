@@ -20,26 +20,24 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-package ants_test
+package ants
 
 import (
 	"runtime"
 	"sync"
 	"testing"
 	"time"
-
-	"github.com/panjf2000/ants/v2"
 )
 
 const (
-	RunTimes      = 1000000
-	benchParam    = 10
-	benchAntsSize = 200000
+	RunTimes           = 1000000
+	BenchParam         = 10
+	BenchAntsSize      = 200000
+	DefaultExpiredTime = 10 * time.Second
 )
 
 func demoFunc() {
-	n := 10
-	time.Sleep(time.Duration(n) * time.Millisecond)
+	time.Sleep(time.Duration(BenchParam) * time.Millisecond)
 }
 
 func demoPoolFunc(args interface{}) {
@@ -63,13 +61,13 @@ func longRunningPoolFunc(arg interface{}) {
 	}
 }
 
-func BenchmarkGoroutineWithFunc(b *testing.B) {
+func BenchmarkGoroutines(b *testing.B) {
 	var wg sync.WaitGroup
 	for i := 0; i < b.N; i++ {
 		wg.Add(RunTimes)
 		for j := 0; j < RunTimes; j++ {
 			go func() {
-				demoPoolFunc(benchParam)
+				demoFunc()
 				wg.Done()
 			}()
 		}
@@ -77,16 +75,16 @@ func BenchmarkGoroutineWithFunc(b *testing.B) {
 	}
 }
 
-func BenchmarkSemaphoreWithFunc(b *testing.B) {
+func BenchmarkSemaphore(b *testing.B) {
 	var wg sync.WaitGroup
-	sema := make(chan struct{}, benchAntsSize)
+	sema := make(chan struct{}, BenchAntsSize)
 
 	for i := 0; i < b.N; i++ {
 		wg.Add(RunTimes)
 		for j := 0; j < RunTimes; j++ {
 			sema <- struct{}{}
 			go func() {
-				demoPoolFunc(benchParam)
+				demoFunc()
 				<-sema
 				wg.Done()
 			}()
@@ -95,40 +93,40 @@ func BenchmarkSemaphoreWithFunc(b *testing.B) {
 	}
 }
 
-func BenchmarkAntsPoolWithFunc(b *testing.B) {
+func BenchmarkAntsPool(b *testing.B) {
 	var wg sync.WaitGroup
-	p, _ := ants.NewPoolWithFunc(benchAntsSize, func(i interface{}) {
-		demoPoolFunc(i)
-		wg.Done()
-	})
+	p, _ := NewPool(BenchAntsSize, WithExpiryDuration(DefaultExpiredTime))
 	defer p.Release()
 
 	b.StartTimer()
 	for i := 0; i < b.N; i++ {
 		wg.Add(RunTimes)
 		for j := 0; j < RunTimes; j++ {
-			_ = p.Invoke(benchParam)
+			_ = p.Submit(func() {
+				demoFunc()
+				wg.Done()
+			})
 		}
 		wg.Wait()
 	}
 	b.StopTimer()
 }
 
-func BenchmarkGoroutineThroughput(b *testing.B) {
+func BenchmarkGoroutinesThroughput(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		for j := 0; j < RunTimes; j++ {
-			go demoPoolFunc(benchParam)
+			go demoFunc()
 		}
 	}
 }
 
 func BenchmarkSemaphoreThroughput(b *testing.B) {
-	sema := make(chan struct{}, benchAntsSize)
+	sema := make(chan struct{}, BenchAntsSize)
 	for i := 0; i < b.N; i++ {
 		for j := 0; j < RunTimes; j++ {
 			sema <- struct{}{}
 			go func() {
-				demoPoolFunc(benchParam)
+				demoFunc()
 				<-sema
 			}()
 		}
@@ -136,12 +134,12 @@ func BenchmarkSemaphoreThroughput(b *testing.B) {
 }
 
 func BenchmarkAntsPoolThroughput(b *testing.B) {
-	p, _ := ants.NewPoolWithFunc(benchAntsSize, demoPoolFunc)
+	p, _ := NewPool(BenchAntsSize, WithExpiryDuration(DefaultExpiredTime))
 	defer p.Release()
 	b.StartTimer()
 	for i := 0; i < b.N; i++ {
 		for j := 0; j < RunTimes; j++ {
-			_ = p.Invoke(benchParam)
+			_ = p.Submit(demoFunc)
 		}
 	}
 	b.StopTimer()

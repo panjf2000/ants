@@ -78,4 +78,7 @@ func main() {
 	wg.Wait()
 	fmt.Printf("running goroutines: %d\n", p.Running())
 	fmt.Printf("finish all tasks, result is %d\n", sum)
+	if sum != 499500 {
+		panic("the final result is wrong!!!")
+	}
 }

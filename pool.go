@@ -42,7 +42,7 @@ type Pool struct {
 	expiryDuration time.Duration
 
 	// workers is a slice that store the available workers.
-	workers workerQueue
+	workers workerArray
 
 	// release is used to notice the pool to closed itself.
 	release int32
@@ -88,15 +88,15 @@ func (p *Pool) periodicallyPurge() {
 		}
 
 		p.lock.Lock()
-		stream := p.workers.releaseExpiry(p.expiryDuration)
+		expiredWorkers := p.workers.findOutExpiry(p.expiryDuration)
 		p.lock.Unlock()
 
 		// Notify obsolete workers to stop.
 		// This notification must be outside the p.lock, since w.task
 		// may be blocking and may consume a lot of time if many workers
 		// are located on non-local CPUs.
-		for w := range stream {
-			w.task <- nil
+		for i := range expiredWorkers {
+			expiredWorkers[i].task <- nil
 		}
 
 		// There might be a situation that all workers have been cleaned up(no any worker is running)
@@ -142,9 +142,9 @@ func NewPool(size int, options ...Option) (*Pool, error) {
 		},
 	}
 	if opts.PreAlloc {
-		p.workers = newQueue(loopQueueType, size)
+		p.workers = newWorkerArray(loopQueueType, size)
 	} else {
-		p.workers = newQueue(stackType, 0)
+		p.workers = newWorkerArray(stackType, 0)
 	}
 
 	p.cond = sync.NewCond(p.lock)
@@ -198,7 +198,7 @@ func (p *Pool) Release() {
 	p.once.Do(func() {
 		atomic.StoreInt32(&p.release, 1)
 		p.lock.Lock()
-		p.workers.releaseAll()
+		p.workers.release()
 		p.lock.Unlock()
 	})
 }
@@ -225,7 +225,7 @@ func (p *Pool) retrieveWorker() *goWorker {
 
 	p.lock.Lock()
 
-	w = p.workers.dequeue()
+	w = p.workers.detach()
 	if w != nil {
 		p.lock.Unlock()
 	} else if p.Running() < p.Cap() {
@@ -250,7 +250,7 @@ func (p *Pool) retrieveWorker() *goWorker {
 			return w
 		}
 
-		w = p.workers.dequeue()
+		w = p.workers.detach()
 		if w == nil {
 			goto Reentry
 		}
@@ -268,7 +268,7 @@ func (p *Pool) revertWorker(worker *goWorker) bool {
 	worker.recycleTime = time.Now()
 	p.lock.Lock()
 
-	err := p.workers.enqueue(worker)
+	err := p.workers.insert(worker)
 	if err != nil {
 		return false
 	}
