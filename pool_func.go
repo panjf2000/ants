@@ -38,9 +38,6 @@ type PoolWithFunc struct {
 	// running is the number of the currently running goroutines.
 	running int32
 
-	// expiryDuration set the expired time (second) of every worker.
-	expiryDuration time.Duration
-
 	// workers is a slice that store the available workers.
 	workers []*goWorkerWithFunc
 
@@ -62,27 +59,15 @@ type PoolWithFunc struct {
 	// workerCache speeds up the obtainment of the an usable worker in function:retrieveWorker.
 	workerCache sync.Pool
 
-	// panicHandler is used to handle panics from each worker goroutine.
-	// if nil, panics will be thrown out again from worker goroutines.
-	panicHandler func(interface{})
+	// blockingNum is the number of the goroutines already been blocked on pool.Submit, protected by pool.lock
+	blockingNum int
 
-	// Max number of goroutine blocking on pool.Submit.
-	// 0 (default value) means no such limit.
-	maxBlockingTasks int32
-
-	// goroutine already been blocked on pool.Submit
-	// protected by pool.lock
-	blockingNum int32
-
-	// When nonblocking is true, Pool.Submit will never be blocked.
-	// ErrPoolOverload will be returned when Pool.Submit cannot be done at once.
-	// When nonblocking is true, MaxBlockingTasks is inoperative.
-	nonblocking bool
+	options *Options
 }
 
 // Clear expired workers periodically.
 func (p *PoolWithFunc) periodicallyPurge() {
-	heartbeat := time.NewTicker(p.expiryDuration)
+	heartbeat := time.NewTicker(p.options.ExpiryDuration)
 	defer heartbeat.Stop()
 
 	var expiredWorkers []*goWorkerWithFunc
@@ -95,7 +80,7 @@ func (p *PoolWithFunc) periodicallyPurge() {
 		idleWorkers := p.workers
 		n := len(idleWorkers)
 		var i int
-		for i = 0; i < n && currentTime.Sub(idleWorkers[i].recycleTime) > p.expiryDuration; i++ {
+		for i = 0; i < n && currentTime.Sub(idleWorkers[i].recycleTime) > p.options.ExpiryDuration; i++ {
 		}
 		expiredWorkers = append(expiredWorkers[:0], idleWorkers[:i]...)
 		if i > 0 {
@@ -147,13 +132,10 @@ func NewPoolWithFunc(size int, pf func(interface{}), options ...Option) (*PoolWi
 	}
 
 	p := &PoolWithFunc{
-		capacity:         int32(size),
-		expiryDuration:   opts.ExpiryDuration,
-		poolFunc:         pf,
-		nonblocking:      opts.Nonblocking,
-		maxBlockingTasks: int32(opts.MaxBlockingTasks),
-		panicHandler:     opts.PanicHandler,
-		lock:             internal.NewSpinLock(),
+		capacity: int32(size),
+		poolFunc: pf,
+		lock:     internal.NewSpinLock(),
+		options:  opts,
 	}
 	p.workerCache = sync.Pool{
 		New: func() interface{} {
@@ -163,7 +145,7 @@ func NewPoolWithFunc(size int, pf func(interface{}), options ...Option) (*PoolWi
 			}
 		},
 	}
-	if opts.PreAlloc {
+	if p.options.PreAlloc {
 		p.workers = make([]*goWorkerWithFunc, 0, size)
 	}
 	p.cond = sync.NewCond(p.lock)
@@ -206,7 +188,7 @@ func (p *PoolWithFunc) Cap() int {
 
 // Tune change the capacity of this pool.
 func (p *PoolWithFunc) Tune(size int) {
-	if p.Cap() == size {
+	if size < 0 || p.Cap() == size || p.options.PreAlloc {
 		return
 	}
 	atomic.StoreInt32(&p.capacity, int32(size))
@@ -259,12 +241,12 @@ func (p *PoolWithFunc) retrieveWorker() *goWorkerWithFunc {
 		p.lock.Unlock()
 		spawnWorker()
 	} else {
-		if p.nonblocking {
+		if p.options.Nonblocking {
 			p.lock.Unlock()
 			return nil
 		}
 	Reentry:
-		if p.maxBlockingTasks != 0 && p.blockingNum >= p.maxBlockingTasks {
+		if p.options.MaxBlockingTasks != 0 && p.blockingNum >= p.options.MaxBlockingTasks {
 			p.lock.Unlock()
 			return nil
 		}

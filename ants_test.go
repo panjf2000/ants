@@ -486,7 +486,11 @@ func TestMaxBlockingSubmit(t *testing.T) {
 
 func TestNonblockingSubmitWithFunc(t *testing.T) {
 	poolSize := 10
-	p, err := NewPoolWithFunc(poolSize, longRunningPoolFunc, WithNonblocking(true))
+	ch1 := make(chan struct{})
+	p, err := NewPoolWithFunc(poolSize, func(i interface{}) {
+		longRunningPoolFunc(i)
+		close(ch1)
+	}, WithNonblocking(true))
 	if err != nil {
 		t.Fatalf("create TimingPool failed: %s", err.Error())
 	}
@@ -506,7 +510,7 @@ func TestNonblockingSubmitWithFunc(t *testing.T) {
 	}
 	// interrupt f to get an available worker
 	close(ch)
-	time.Sleep(1 * time.Second)
+	<-ch1
 	if err := p.Invoke(nil); err != nil {
 		t.Fatalf("nonblocking submit when pool is not full shouldn't return error")
 	}

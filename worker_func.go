@@ -50,8 +50,8 @@ func (w *goWorkerWithFunc) run() {
 		defer func() {
 			w.pool.decRunning()
 			if p := recover(); p != nil {
-				if w.pool.panicHandler != nil {
-					w.pool.panicHandler(p)
+				if ph := w.pool.options.PanicHandler; ph != nil {
+					ph(p)
 				} else {
 					log.Printf("worker with func exits from a panic: %v\n", p)
 					var buf [4096]byte
