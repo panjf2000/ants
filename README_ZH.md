@@ -1,7 +1,7 @@
 # ants
 <p align="center">
-<img src="https://user-images.githubusercontent.com/7496278/51748488-8efd2600-20e7-11e9-91f5-1c5b466dcca1.jpg"/>
-A goroutine pool for Go
+<img src="https://raw.githubusercontent.com/panjf2000/logos/master/ants/logo.png"/>
+<b>A goroutine pool for Go</b>
 <br/><br/>
 <a title="Build Status" target="_blank" href="https://travis-ci.com/panjf2000/ants"><img src="https://img.shields.io/travis/com/panjf2000/ants?style=flat-square"></a>
 <a title="Codecov" target="_blank" href="https://codecov.io/gh/panjf2000/ants"><img src="https://img.shields.io/codecov/c/github/panjf2000/ants?style=flat-square"></a>
