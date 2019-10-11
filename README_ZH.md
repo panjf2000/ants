@@ -343,4 +343,4 @@ pool.Release()
 
 # 谁在使用 ants（欢迎补充 ~~）
 
-[![](https://raw.githubusercontent.com/panjf2000/gnet/master/logo.png)](https://github.com/panjf2000/gnet)
+[![](https://raw.githubusercontent.com/panjf2000/logos/master/gnet/logo.png)](https://github.com/panjf2000/gnet)
