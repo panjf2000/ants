@@ -1,4 +1,4 @@
-# ants
+<h1 align='center'>ants</h1>
 <p align="center">
 <img src="https://raw.githubusercontent.com/panjf2000/logos/master/ants/logo.png"/>
 <b>A goroutine pool for Go</b>
@@ -14,11 +14,13 @@
 <a title="Mentioned in Awesome Go" target="_blank" href="https://github.com/avelino/awesome-go"><img src="https://awesome.re/mentioned-badge-flat.svg"></a>
 </p>
 
-# [[中文](README_ZH.md)]
+English | [🇨🇳中文](README_ZH.md)
+
+## 📖 Introduction
 
 Library `ants` implements a goroutine pool with fixed capacity, managing and recycling a massive number of goroutines, allowing developers to limit the number of goroutines in your concurrent programs.
 
-## Features:
+## 🚀 Features:
 
 - Managing and recycling a massive number of goroutines automatically
 - Purging overdue goroutines periodically
@@ -27,7 +29,7 @@ Library `ants` implements a goroutine pool with fixed capacity, managing and rec
 - Efficient in memory usage and it even achieves higher performance than unlimited goroutines in Golang
 - Nonblocking mechanism
 
-## Tested in the following Golang versions:
+## ⚔️ Tested in the following Golang versions:
 
 - 1.8.x
 - 1.9.x
@@ -36,13 +38,13 @@ Library `ants` implements a goroutine pool with fixed capacity, managing and rec
 - 1.12.x
 - 1.13.x
 
-## `ants` works as the flowing flowchart
+## 💡 `ants` works as the flowing flowchart
 
 <p align="center">
 <img width="1011" alt="ants-flowchart-en" src="https://user-images.githubusercontent.com/7496278/66396509-7b42e700-ea0c-11e9-8612-b71a4b734683.png">
 </p>
 
-## How to install
+## 🧰 How to install
 
 ### For `ants` v1
 
@@ -56,7 +58,7 @@ go get -u github.com/panjf2000/ants
 go get -u github.com/panjf2000/ants/v2
 ```
 
-## How to use
+## 🛠 How to use
 Just take a imagination that your program starts a massive number of goroutines, resulting in a huge consumption of memory. To mitigate that kind of situation, all you need to do is to import `ants` package and submit all your tasks to a default pool with fixed capacity, activated when package `ants` is imported:
 
 ``` go
@@ -121,7 +123,7 @@ func main() {
 }
 ```
 
-## Integrate with http server
+### Integrate with http server
 ```go
 package main
 
@@ -176,7 +178,7 @@ func main() {
 }
 ```
 
-## Functional options for ants pool
+###  Functional options for ants pool
 
 ```go
 // Option represents the optional function.
@@ -249,7 +251,7 @@ func WithPanicHandler(panicHandler func(interface{})) Option {
 
 `ants.Options`contains all optional configurations of ants pool, which allows you to customize the goroutine pool by invoking option functions to set up each configuration in `NewPool`/`NewPoolWithFunc`method.
 
-## Customize limited pool
+### Customize limited pool
 
 `ants` also supports customizing the capacity of pool. You can invoke the `NewPool` method to instantiate a pool with a given capacity, as following:
 
@@ -258,13 +260,13 @@ func WithPanicHandler(panicHandler func(interface{})) Option {
 p, _ := ants.NewPool(10000)
 ```
 
-## Submit tasks
+### Submit tasks
 Tasks can be submitted by calling `ants.Submit(func())`
 ```go
 ants.Submit(func(){})
 ```
 
-## Tune pool capacity in runtime
+### Tune pool capacity in runtime
 You can tune the capacity of  `ants` pool in runtime with `Tune(int)`:
 
 ``` go
@@ -274,7 +276,7 @@ pool.Tune(100000) // Tune its capacity to 100000
 
 Don't worry about the synchronous problems in this case, the method here is thread-safe (or should be called goroutine-safe).
 
-## Pre-malloc goroutine queue in pool
+### Pre-malloc goroutine queue in pool
 
 `ants` allows you to pre-allocate memory of goroutine queue in pool, which may get a performance enhancement under some special certain circumstances such as the scenario that requires a pool with ultra-large capacity, meanwhile each task in goroutine lasts for a long time, in this case, pre-mallocing will reduce a lot of costs when re-slicing goroutine queue.
 
@@ -283,16 +285,16 @@ Don't worry about the synchronous problems in this case, the method here is thre
 p, _ := ants.NewPool(100000, ants.WithPreAlloc(true))
 ```
 
-## Release Pool
+### Release Pool
 
 ```go
 pool.Release()
 ```
 
-## About sequence
+## ⚙️ About sequence
 All tasks submitted to `ants` pool will not be guaranteed to be addressed in order, because those tasks scatter among a series of concurrent workers, thus those tasks would be executed concurrently.
 
-## Benchmarks
+## 🧲 Benchmarks
 
 <div align="center"><img src="https://user-images.githubusercontent.com/7496278/51515466-c7ce9e00-1e4e-11e9-89c4-bd3785b3c667.png"/></div>
  In this benchmark result, the first and second benchmarks performed test cases with 1M tasks and the rest of benchmarks performed test cases with 10M tasks, both in unlimited goroutines and `ants` pool, and the capacity of this `ants` goroutine-pool was limited to 50K.
@@ -327,20 +329,20 @@ In above benchmark result, the first and second benchmarks performed test cases 
 
 ![](https://user-images.githubusercontent.com/7496278/52987732-537c2000-3437-11e9-86a6-177f00d7a1d6.png)
 
-### Performance Summary
+## 📊 Performance Summary
 
 ![](https://user-images.githubusercontent.com/7496278/63449727-3ae6d400-c473-11e9-81e3-8b3280d8288a.gif)
 
 **In conclusion, `ants` performs 2~6 times faster than goroutines without a pool and the memory consumption is reduced by 10 to 20 times.**
 
-# License
+## 📄 License
 
 Source code in `gnet` is available under the MIT [License](/LICENSE).
 
-# Relevant Articles
+## 📚 Relevant Articles
 
 -  [Goroutine 并发调度模型深度解析之手撸一个高性能协程池](https://taohuawu.club/high-performance-implementation-of-goroutine-pool)
 
-# Users of ants (please feel free to add your projects here ~~)
+## 👨‍👨‍👧‍👦 Users of ants (please feel free to add your projects here ~~)
 
 [![](https://raw.githubusercontent.com/panjf2000/logos/master/gnet/logo.png)](https://github.com/panjf2000/gnet)
