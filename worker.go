@@ -49,6 +49,7 @@ func (w *goWorker) run() {
 	go func() {
 		defer func() {
 			w.pool.decRunning()
+			w.pool.workerCache.Put(w)
 			if p := recover(); p != nil {
 				if ph := w.pool.options.PanicHandler; ph != nil {
 					ph(p)
@@ -59,7 +60,6 @@ func (w *goWorker) run() {
 					log.Printf("worker exits from panic: %s\n", string(buf[:n]))
 				}
 			}
-			w.pool.workerCache.Put(w)
 		}()
 
 		for f := range w.task {
