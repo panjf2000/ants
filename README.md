@@ -8,7 +8,7 @@
 <a title="Go Report Card" target="_blank" href="https://goreportcard.com/report/github.com/panjf2000/ants"><img src="https://goreportcard.com/badge/github.com/panjf2000/ants?style=flat-square"></a>
 <a title="Ants on Sourcegraph" target="_blank" href="https://sourcegraph.com/github.com/panjf2000/ants?badge"><img src="https://sourcegraph.com/github.com/panjf2000/ants/-/badge.svg?style=flat-square"></a>
 <br/>
-<a title="" target="_blank" href="https://golangci.com/r/github.com/panjf2000/ants"><img src="https://golangci.com/badges/github.com/panjf2000/ants.svg"></a>
+<a title="GolangCI" target="_blank" href="https://golangci.com/r/github.com/panjf2000/ants"><img src="https://golangci.com/badges/github.com/panjf2000/ants.svg"></a>
 <a title="Doc for ants" target="_blank" href="https://gowalker.org/github.com/panjf2000/ants?lang=en-US"><img src="https://img.shields.io/badge/api-reference-blue.svg?style=flat-square"></a>
 <a title="Release" target="_blank" href="https://github.com/panjf2000/ants/releases"><img src="https://img.shields.io/github/release/panjf2000/ants.svg?style=flat-square"></a>
 <a title="Mentioned in Awesome Go" target="_blank" href="https://github.com/avelino/awesome-go"><img src="https://awesome.re/mentioned-badge-flat.svg"></a>
@@ -335,6 +335,12 @@ In above benchmark result, the first and second benchmarks performed test cases 
 
 **In conclusion, `ants` performs 2~6 times faster than goroutines without a pool and the memory consumption is reduced by 10 to 20 times.**
 
+## 👏 Contributors
+
+Please read our [Contributing Guidelines](CONTRIBUTING.md) before opening a PR and thank you to all the developers who already made contributions to `ants`!
+
+[![](https://opencollective.com/ants/contributors.svg?width=890&button=false)](https://github.com/panjf2000/ants/graphs/contributors)
+
 ## 📄 License
 
 Source code in `gnet` is available under the MIT [License](/LICENSE).
@@ -345,4 +351,21 @@ Source code in `gnet` is available under the MIT [License](/LICENSE).
 
 ## 👨‍👨‍👧‍👦 Users of ants (please feel free to add your projects here ~~)
 
-[![](https://raw.githubusercontent.com/panjf2000/logos/master/gnet/logo.png)](https://github.com/panjf2000/gnet)
+<a href="https://github.com/panjf2000/gnet" target="_blank"><img src="https://raw.githubusercontent.com/panjf2000/logos/master/gnet/logo.png" width="150" align="middle"/></a>&nbsp;&nbsp;
+
+## 💰 Backers
+
+Support us with a monthly donation and help us continue our activities.
+
+<a href="https://opencollective.com/ants#backers" target="_blank"><img src="https://opencollective.com/ants/backers.svg"></a>
+
+## 💎 Sponsors
+
+Become a bronze sponsor with a monthly donation of $10 and get your logo on our README on Github.
+
+<a href="https://opencollective.com/ants#sponsors" target="_blank"><img src="https://opencollective.com/ants/sponsors.svg"></a>
+
+## ☕️ Buy me a coffee
+
+<img src="https://raw.githubusercontent.com/panjf2000/illustrations/master/payments/WeChatPay.JPG" width="300" align="middle"/>&nbsp;&nbsp;
+<img src="https://raw.githubusercontent.com/panjf2000/illustrations/master/payments/AliPay.JPG" width="300" align="middle"/>&nbsp;&nbsp;
