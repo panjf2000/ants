@@ -30,7 +30,7 @@ import (
 	"github.com/panjf2000/ants/v2/internal"
 )
 
-// PoolWithFunc accept the tasks from client, it limits the total of goroutines to a given number by recycling goroutines.
+// PoolWithFunc accepts the tasks from client, it limits the total of goroutines to a given number by recycling goroutines.
 type PoolWithFunc struct {
 	// capacity of the pool.
 	capacity int32
@@ -186,7 +186,7 @@ func (p *PoolWithFunc) Cap() int {
 	return int(atomic.LoadInt32(&p.capacity))
 }
 
-// Tune change the capacity of this pool.
+// Tune changes the capacity of this pool.
 func (p *PoolWithFunc) Tune(size int) {
 	if size < 0 || p.Cap() == size || p.options.PreAlloc {
 		return
@@ -194,7 +194,7 @@ func (p *PoolWithFunc) Tune(size int) {
 	atomic.StoreInt32(&p.capacity, int32(size))
 }
 
-// Release Closed this pool.
+// Release Closes this pool.
 func (p *PoolWithFunc) Release() {
 	p.once.Do(func() {
 		atomic.StoreInt32(&p.release, 1)

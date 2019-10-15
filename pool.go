@@ -30,7 +30,7 @@ import (
 	"github.com/panjf2000/ants/v2/internal"
 )
 
-// Pool accept the tasks from client, it limits the total of goroutines to a given number by recycling goroutines.
+// Pool accepts the tasks from client, it limits the total of goroutines to a given number by recycling goroutines.
 type Pool struct {
 	// capacity of the pool.
 	capacity int32

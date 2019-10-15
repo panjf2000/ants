@@ -6,10 +6,10 @@ import (
 )
 
 var (
-	// ErrQueueIsFull ...
+	// ErrQueueIsFull will be returned when the worker queue is full.
 	ErrQueueIsFull = errors.New("the queue is full")
 
-	// ErrQueueLengthIsZero ...
+	// ErrQueueLengthIsZero will be returned when trying to insert item to a released worker queue.
 	ErrQueueLengthIsZero = errors.New("the queue length is zero")
 )
 
