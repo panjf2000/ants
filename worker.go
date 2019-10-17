@@ -54,10 +54,7 @@ func (w *goWorker) run() {
 				if ph := w.pool.options.PanicHandler; ph != nil {
 					ph(p)
 				} else {
-					log.Printf("worker exits from a panic: %v\n", p)
-					var buf [4096]byte
-					n := runtime.Stack(buf[:], false)
-					log.Printf("worker exits from panic: %s\n", string(buf[:n]))
+					panic(p)
 				}
 			}
 		}()
