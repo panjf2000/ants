@@ -23,8 +23,6 @@
 package ants
 
 import (
-	"log"
-	"runtime"
 	"time"
 )
 
