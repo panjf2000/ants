@@ -9,15 +9,10 @@ type workerStack struct {
 }
 
 func newWorkerStack(size int) *workerStack {
-	if size < 0 {
-		return nil
-	}
-
-	wq := workerStack{
+	return &workerStack{
 		items: make([]*goWorker, 0, size),
 		size:  size,
 	}
-	return &wq
 }
 
 func (wq *workerStack) len() int {
@@ -45,14 +40,14 @@ func (wq *workerStack) detach() *goWorker {
 	return w
 }
 
-func (wq *workerStack) findOutExpiry(duration time.Duration) []*goWorker {
+func (wq *workerStack) retrieveExpiry(duration time.Duration) []*goWorker {
 	n := wq.len()
 	if n == 0 {
 		return nil
 	}
 
 	expiryTime := time.Now().Add(-duration)
-	index := wq.search(0, n-1, expiryTime)
+	index := wq.binarySearch(0, n-1, expiryTime)
 
 	wq.expiry = wq.expiry[:0]
 	if index != -1 {
@@ -63,7 +58,7 @@ func (wq *workerStack) findOutExpiry(duration time.Duration) []*goWorker {
 	return wq.expiry
 }
 
-func (wq *workerStack) search(l, r int, expiryTime time.Time) int {
+func (wq *workerStack) binarySearch(l, r int, expiryTime time.Time) int {
 	var mid int
 	for l <= r {
 		mid = (l + r) / 2
@@ -76,7 +71,7 @@ func (wq *workerStack) search(l, r int, expiryTime time.Time) int {
 	return r
 }
 
-func (wq *workerStack) release() {
+func (wq *workerStack) reset() {
 	for i := 0; i < wq.len(); i++ {
 		wq.items[i].task <- nil
 	}

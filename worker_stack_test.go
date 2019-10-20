@@ -54,7 +54,7 @@ func TestWorkerStack(t *testing.T) {
 		t.Fatalf("Len error")
 	}
 
-	q.findOutExpiry(time.Second)
+	q.retrieveExpiry(time.Second)
 
 	if q.len() != 6 {
 		t.Fatalf("Len error")
@@ -69,12 +69,12 @@ func TestSearch(t *testing.T) {
 
 	_ = q.insert(&goWorker{recycleTime: time.Now()})
 
-	index := q.search(0, q.len()-1, time.Now())
+	index := q.binarySearch(0, q.len()-1, time.Now())
 	if index != 0 {
 		t.Fatalf("should is 0")
 	}
 
-	index = q.search(0, q.len()-1, expiry1)
+	index = q.binarySearch(0, q.len()-1, expiry1)
 	if index != -1 {
 		t.Fatalf("should is -1")
 	}
@@ -83,17 +83,17 @@ func TestSearch(t *testing.T) {
 	expiry2 := time.Now()
 	_ = q.insert(&goWorker{recycleTime: time.Now()})
 
-	index = q.search(0, q.len()-1, expiry1)
+	index = q.binarySearch(0, q.len()-1, expiry1)
 	if index != -1 {
 		t.Fatalf("should is -1")
 	}
 
-	index = q.search(0, q.len()-1, expiry2)
+	index = q.binarySearch(0, q.len()-1, expiry2)
 	if index != 0 {
 		t.Fatalf("should is 0")
 	}
 
-	index = q.search(0, q.len()-1, time.Now())
+	index = q.binarySearch(0, q.len()-1, time.Now())
 	if index != 1 {
 		t.Fatalf("should is 1")
 	}
@@ -111,7 +111,7 @@ func TestSearch(t *testing.T) {
 		_ = q.insert(&goWorker{recycleTime: time.Now()})
 	}
 
-	index = q.search(0, q.len()-1, expiry3)
+	index = q.binarySearch(0, q.len()-1, expiry3)
 	if index != 7 {
 		t.Fatalf("should is 7")
 	}

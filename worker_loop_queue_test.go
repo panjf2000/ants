@@ -61,7 +61,7 @@ func TestLoopQueue(t *testing.T) {
 		t.Fatalf("Enqueue error")
 	}
 
-	q.findOutExpiry(time.Second)
+	q.retrieveExpiry(time.Second)
 
 	if q.len() != 6 {
 		t.Fatalf("Len error: %d", q.len())

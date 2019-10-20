@@ -73,7 +73,7 @@ func (p *Pool) periodicallyPurge() {
 		}
 
 		p.lock.Lock()
-		expiredWorkers := p.workers.findOutExpiry(p.options.ExpiryDuration)
+		expiredWorkers := p.workers.retrieveExpiry(p.options.ExpiryDuration)
 		p.lock.Unlock()
 
 		// Notify obsolete workers to stop.
@@ -180,7 +180,7 @@ func (p *Pool) Release() {
 	p.once.Do(func() {
 		atomic.StoreInt32(&p.release, 1)
 		p.lock.Lock()
-		p.workers.release()
+		p.workers.reset()
 		p.lock.Unlock()
 	})
 }

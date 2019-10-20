@@ -6,11 +6,11 @@ import (
 )
 
 var (
-	// ErrQueueIsFull will be returned when the worker queue is full.
-	ErrQueueIsFull = errors.New("the queue is full")
+	// errQueueIsFull will be returned when the worker queue is full.
+	errQueueIsFull = errors.New("the queue is full")
 
-	// ErrQueueLengthIsZero will be returned when trying to insert item to a released worker queue.
-	ErrQueueLengthIsZero = errors.New("the queue length is zero")
+	// errQueueIsReleased will be returned when trying to insert item to a released worker queue.
+	errQueueIsReleased = errors.New("the queue length is zero")
 )
 
 type workerArray interface {
@@ -18,8 +18,8 @@ type workerArray interface {
 	isEmpty() bool
 	insert(worker *goWorker) error
 	detach() *goWorker
-	findOutExpiry(duration time.Duration) []*goWorker
-	release()
+	retrieveExpiry(duration time.Duration) []*goWorker
+	reset()
 }
 
 type arrayType int

@@ -3,95 +3,115 @@ package ants
 import "time"
 
 type loopQueue struct {
-	items     []*goWorker
-	expiry    []*goWorker
-	head      int
-	tail      int
-	remainder int
+	items  []*goWorker
+	expiry []*goWorker
+	head   int
+	tail   int
+	size   int
+	isFull bool
 }
 
 func newWorkerLoopQueue(size int) *loopQueue {
-	if size <= 0 {
-		return nil
+	return &loopQueue{
+		items: make([]*goWorker, size),
+		size:  size,
 	}
-
-	wq := loopQueue{
-		items:     make([]*goWorker, size+1),
-		head:      0,
-		tail:      0,
-		remainder: size + 1,
-	}
-
-	return &wq
 }
 
 func (wq *loopQueue) len() int {
-	if wq.remainder == 0 {
+	if wq.size == 0 {
 		return 0
 	}
 
-	return (wq.tail - wq.head + wq.remainder) % wq.remainder
+	if wq.head == wq.tail {
+		if wq.isFull {
+			return wq.size
+		}
+		return 0
+	}
+
+	if wq.tail > wq.head {
+		return wq.tail - wq.head
+	}
+
+	return wq.size - wq.head + wq.tail
 }
 
 func (wq *loopQueue) isEmpty() bool {
-	return wq.tail == wq.head
+	return wq.head == wq.tail && !wq.isFull
 }
 
 func (wq *loopQueue) insert(worker *goWorker) error {
-	if wq.remainder == 0 {
-		return ErrQueueLengthIsZero
-	}
-	next := (wq.tail + 1) % wq.remainder
-	if next == wq.head {
-		return ErrQueueIsFull
+	if wq.size == 0 {
+		return errQueueIsReleased
 	}
 
+	if wq.isFull {
+		return errQueueIsFull
+	}
 	wq.items[wq.tail] = worker
-	wq.tail = next
+	wq.tail++
+
+	if wq.tail == wq.size {
+		wq.tail = 0
+	}
+	if wq.tail == wq.head {
+		wq.isFull = true
+	}
 
 	return nil
 }
 
 func (wq *loopQueue) detach() *goWorker {
-	if wq.len() == 0 {
+	if wq.isEmpty() {
 		return nil
 	}
 
 	w := wq.items[wq.head]
-	wq.head = (wq.head + 1) % wq.remainder
+	wq.head++
+	if wq.head == wq.size {
+		wq.head = 0
+	}
+	wq.isFull = false
 
 	return w
 }
 
-func (wq *loopQueue) findOutExpiry(duration time.Duration) []*goWorker {
-	if wq.len() == 0 {
+func (wq *loopQueue) retrieveExpiry(duration time.Duration) []*goWorker {
+	if wq.isEmpty() {
 		return nil
 	}
 
 	wq.expiry = wq.expiry[:0]
 	expiryTime := time.Now().Add(-duration)
 
-	for wq.head != wq.tail {
+	for !wq.isEmpty() {
 		if expiryTime.Before(wq.items[wq.head].recycleTime) {
 			break
 		}
 		wq.expiry = append(wq.expiry, wq.items[wq.head])
-		wq.head = (wq.head + 1) % wq.remainder
+		wq.head++
+		if wq.head == wq.size {
+			wq.head = 0
+		}
+		wq.isFull = false
 	}
+
 	return wq.expiry
 }
 
-func (wq *loopQueue) release() {
-	if wq.len() == 0 {
+func (wq *loopQueue) reset() {
+	if wq.isEmpty() {
 		return
 	}
 
-	for wq.head != wq.tail {
-		wq.items[wq.head].task <- nil
-		wq.head = (wq.head + 1) % wq.remainder
+Releasing:
+	if w := wq.detach(); w != nil {
+		w.task <- nil
+		goto Releasing
 	}
 	wq.items = wq.items[:0]
-	wq.remainder = 0
+	wq.size = 0
 	wq.head = 0
 	wq.tail = 0
 }
