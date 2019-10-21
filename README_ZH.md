@@ -350,6 +350,8 @@ pool.Release()
 ## 👨‍👨‍👧‍👦 谁在使用 ants（欢迎补充 ~~）
 
 <a href="https://github.com/panjf2000/gnet" target="_blank"><img src="https://raw.githubusercontent.com/panjf2000/logos/master/gnet/logo.png" width="150" align="middle"/></a>&nbsp;&nbsp;
+<a href="https://bytedance.com"><img src="https://bytedance.com/static/images/logo@2x.png" width="300" align="middle"/></a>&nbsp;&nbsp;
+<a href="https://www.tencent.com"><img src="https://www.tencent.com/images/2x/global/footer_logo.png" width="250" align="middle"/></a>&nbsp;&nbsp;
 
 ## 💰 支持
 
