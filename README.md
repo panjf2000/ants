@@ -26,7 +26,7 @@ Library `ants` implements a goroutine pool with fixed capacity, managing and rec
 - Purging overdue goroutines periodically
 - Friendly interfaces: submitting tasks, getting the number of running goroutines, tuning capacity of pool dynamically, closing pool
 - Handle panic gracefully to prevent programs from crash
-- Efficient in memory usage and it even achieves higher performance than unlimited goroutines in Golang
+- Efficient in memory usage and it even achieves [higher performance](#-performance-summary) than unlimited goroutines in Golang
 - Nonblocking mechanism
 
 ## ⚔️ Tested in the following Golang versions:
