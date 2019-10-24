@@ -355,6 +355,12 @@ Source code in `gnet` is available under the MIT [License](/LICENSE).
 <a href="https://bytedance.com"><img src="https://bytedance.com/static/images/logo@2x.png" width="300" align="middle"/></a>&nbsp;&nbsp;
 <a href="https://www.tencent.com"><img src="https://www.tencent.com/images/2x/global/footer_logo.png" width="250" align="middle"/></a>&nbsp;&nbsp;
 
+## JetBrains OS licenses
+
+`ants` had been being developed with GoLand under the **free JetBrains Open Source license(s)** granted by JetBrains s.r.o., hence I would like to express my thanks here.
+
+<a href="https://www.jetbrains.com/?from=ants" target="_blank"><img src="https://raw.githubusercontent.com/panjf2000/illustrations/master/jetbrains/jetbrains-variant-4.png" width="250" align="middle"/></a>
+
 ## 💰 Backers
 
 Support us with a monthly donation and help us continue our activities.
