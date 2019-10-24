@@ -137,13 +137,11 @@ func NewPoolWithFunc(size int, pf func(interface{}), options ...Option) (*PoolWi
 		lock:     internal.NewSpinLock(),
 		options:  opts,
 	}
-	p.workerCache = sync.Pool{
-		New: func() interface{} {
-			return &goWorkerWithFunc{
-				pool: p,
-				args: make(chan interface{}, workerChanCap),
-			}
-		},
+	p.workerCache.New = func() interface{} {
+		return &goWorkerWithFunc{
+			pool: p,
+			args: make(chan interface{}, workerChanCap),
+		}
 	}
 	if p.options.PreAlloc {
 		p.workers = make([]*goWorkerWithFunc, 0, size)

@@ -115,13 +115,11 @@ func NewPool(size int, options ...Option) (*Pool, error) {
 		lock:     internal.NewSpinLock(),
 		options:  opts,
 	}
-	p.workerCache = sync.Pool{
-		New: func() interface{} {
-			return &goWorker{
-				pool: p,
-				task: make(chan func(), workerChanCap),
-			}
-		},
+	p.workerCache.New = func() interface{} {
+		return &goWorker{
+			pool: p,
+			task: make(chan func(), workerChanCap),
+		}
 	}
 	if p.options.PreAlloc {
 		p.workers = newWorkerArray(loopQueueType, size)
