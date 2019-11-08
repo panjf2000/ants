@@ -25,7 +25,8 @@ If applicable, add some logs to help explain your problem.
 
 **System info (please complete the following information):**
  - OS: [e.g. linux, macOS]
- - Go Version [e.g. 1.12]
+ - Go Version: [e.g. 1.12]
+ - ants version: [e.g. v2.2.2]
 
 **Additional context**
 Add any other context about the problem here.
