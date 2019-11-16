@@ -352,7 +352,7 @@ Source code in `gnet` is available under the MIT [License](/LICENSE).
 ## 👨‍👨‍👧‍👦 Users of ants (please feel free to add your projects here ~~)
 
 <a href="https://github.com/panjf2000/gnet" target="_blank"><img src="https://raw.githubusercontent.com/panjf2000/logos/master/gnet/logo.png" width="150" align="middle"/></a>&nbsp;&nbsp;
-<a href="https://www.tencent.com"><img src="https://www.tencent.com/images/2x/global/footer_logo.png" width="250" align="middle"/></a>&nbsp;&nbsp;
+<a href="https://www.tencent.com"><img src="https://www.tencent.com/img/index/tencent_logo.png" width="250" align="middle"/></a>&nbsp;&nbsp;
 
 ## JetBrains OS licenses
 
