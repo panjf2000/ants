@@ -347,7 +347,7 @@ Source code in `gnet` is available under the MIT [License](/LICENSE).
 
 ## 📚 Relevant Articles
 
--  [Goroutine 并发调度模型深度解析之手撸一个高性能协程池](https://taohuawu.club/high-performance-implementation-of-goroutine-pool)
+-  [Goroutine 并发调度模型深度解析之手撸一个高性能 goroutine 池](https://taohuawu.club/high-performance-implementation-of-goroutine-pool)
 
 ## 👨‍👨‍👧‍👦 Users of ants (please feel free to add your projects here ~~)
 

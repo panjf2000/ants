@@ -18,13 +18,13 @@
 
 ## 📖 简介
 
-`ants`是一个高性能的协程池，实现了对大规模 goroutine 的调度管理、goroutine 复用，允许使用者在开发并发程序的时候限制协程数量，复用资源，达到更高效执行任务的效果。
+`ants`是一个高性能的 goroutine 池，实现了对大规模 goroutine 的调度管理、goroutine 复用，允许使用者在开发并发程序的时候限制 goroutine 数量，复用资源，达到更高效执行任务的效果。
 
 ## 🚀 功能：
 
 - 自动调度海量的 goroutines，复用 goroutines
 - 定时清理过期的 goroutines，进一步节省资源
-- 提供了友好的接口：任务提交、获取运行中的协程数量、动态调整协程池大小
+- 提供了友好的接口：任务提交、获取运行中的 goroutine 数量、动态调整 goroutine 池大小
 - 优雅处理 panic，防止程序崩溃
 - 资源复用，极大节省内存使用量；在大规模批量并发任务场景下比原生 goroutine 并发具有[更高的性能](#-性能小结)
 - 非阻塞机制
@@ -59,7 +59,7 @@ go get -u github.com/panjf2000/ants/v2
 ```
 
 ## 🛠 使用
-写 go 并发程序的时候如果程序会启动大量的 goroutine ，势必会消耗大量的系统资源（内存，CPU），通过使用 `ants`，可以实例化一个协程池，复用 goroutine ，节省资源，提升性能：
+写 go 并发程序的时候如果程序会启动大量的 goroutine ，势必会消耗大量的系统资源（内存，CPU），通过使用 `ants`，可以实例化一个 goroutine 池，复用 goroutine ，节省资源，提升性能：
 
 ``` go
 package main
@@ -267,8 +267,8 @@ p, _ := ants.NewPool(10000)
 ants.Submit(func(){})
 ```
 
-### 动态调整协程池容量
-需要动态调整协程池容量可以通过调用`Tune(int)`：
+### 动态调整 goroutine 池容量
+需要动态调整 goroutine 池容量可以通过调用`Tune(int)`：
 
 ``` go
 pool.Tune(1000) // Tune its capacity to 1000
@@ -279,14 +279,14 @@ pool.Tune(100000) // Tune its capacity to 100000
 
 ### 预先分配 goroutine 队列内存
 
-`ants`允许你预先把整个池的容量分配内存， 这个功能可以在某些特定的场景下提高协程池的性能。比如， 有一个场景需要一个超大容量的池，而且每个 goroutine 里面的任务都是耗时任务，这种情况下，预先分配 goroutine 队列内存将会减少 re-slice 时的复制内存损耗。
+`ants`允许你预先把整个池的容量分配内存， 这个功能可以在某些特定的场景下提高 goroutine 池的性能。比如， 有一个场景需要一个超大容量的池，而且每个 goroutine 里面的任务都是耗时任务，这种情况下，预先分配 goroutine 队列内存将会减少 re-slice 时的复制内存损耗。
 
 ```go
 // ants will pre-malloc the whole capacity of pool when you invoke this function
 p, _ := ants.NewPool(100000, ants.WithPreAlloc(true))
 ```
 
-### 销毁协程池
+### 销毁 goroutine 池
 
 ```go
 pool.Release()
@@ -299,7 +299,7 @@ pool.Release()
 
 - BenchmarkGoroutine-4 代表原生 goroutine
 
-- BenchmarkPoolGroutine-4 代表使用协程池 `ants`
+- BenchmarkPoolGroutine-4 代表使用 goroutine 池 `ants`
 
 ### Benchmarks with Pool 
 
@@ -345,7 +345,7 @@ pool.Release()
 
 ## 📚 相关文章
 
--  [Goroutine 并发调度模型深度解析之手撸一个高性能协程池](https://taohuawu.club/high-performance-implementation-of-goroutine-pool)
+-  [Goroutine 并发调度模型深度解析之手撸一个高性能 goroutine 池](https://taohuawu.club/high-performance-implementation-of-goroutine-pool)
 
 ## 👨‍👨‍👧‍👦 谁在使用 ants（欢迎补充 ~~）
 
