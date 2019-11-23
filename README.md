@@ -52,7 +52,7 @@ Library `ants` implements a goroutine pool with fixed capacity, managing and rec
 go get -u github.com/panjf2000/ants
 ```
 
-### For `ants` v2
+### For `ants` v2 (with GO111MODULE=on)
 
 ```powershell
 go get -u github.com/panjf2000/ants/v2

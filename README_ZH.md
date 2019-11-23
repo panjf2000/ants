@@ -52,7 +52,7 @@
 go get -u github.com/panjf2000/ants
 ```
 
-### 使用 `ants` v2 版本:
+### 使用 `ants` v2 版本 (开启 GO111MODULE=on):
 
 ```powershell
 go get -u github.com/panjf2000/ants/v2
