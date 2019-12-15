@@ -1,7 +1,6 @@
-<h1 align='center'>ants</h1>
 <p align="center">
 <img src="https://raw.githubusercontent.com/panjf2000/logos/master/ants/logo.png"/>
-<b>A goroutine pool for Go</b>
+<b>Go 语言的 goroutine 池</b>
 <br/><br/>
 <a title="Build Status" target="_blank" href="https://travis-ci.com/panjf2000/ants"><img src="https://img.shields.io/travis/com/panjf2000/ants?style=flat-square&logo=appveyor"></a>
 <a title="Codecov" target="_blank" href="https://codecov.io/gh/panjf2000/ants"><img src="https://img.shields.io/codecov/c/github/panjf2000/ants?style=flat-square&logo=appveyor"></a>
@@ -24,8 +23,8 @@
 ## 🚀 功能：
 
 - 自动调度海量的 goroutines，复用 goroutines
-- 定时清理过期的 goroutines，进一步节省资源
-- 提供了友好的接口：任务提交、获取运行中的 goroutine 数量、动态调整 goroutine 池大小
+- 定期清理过期的 goroutines，进一步节省资源
+- 提供了大量有用的接口：任务提交、获取运行中的 goroutine 数量、动态调整 goroutine 池大小
 - 优雅处理 panic，防止程序崩溃
 - 资源复用，极大节省内存使用量；在大规模批量并发任务场景下比原生 goroutine 并发具有[更高的性能](#-性能小结)
 - 非阻塞机制

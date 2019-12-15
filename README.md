@@ -1,7 +1,6 @@
-<h1 align='center'>ants</h1>
 <p align="center">
 <img src="https://raw.githubusercontent.com/panjf2000/logos/master/ants/logo.png"/>
-<b>A goroutine pool for Go</b>
+<b>A goroutine pool in Go</b>
 <br/><br/>
 <a title="Build Status" target="_blank" href="https://travis-ci.com/panjf2000/ants"><img src="https://img.shields.io/travis/com/panjf2000/ants?style=flat-square&logo=appveyor"></a>
 <a title="Codecov" target="_blank" href="https://codecov.io/gh/panjf2000/ants"><img src="https://img.shields.io/codecov/c/github/panjf2000/ants?style=flat-square&logo=appveyor"></a>
@@ -25,7 +24,7 @@ Library `ants` implements a goroutine pool with fixed capacity, managing and rec
 
 - Managing and recycling a massive number of goroutines automatically
 - Purging overdue goroutines periodically
-- Friendly interfaces: submitting tasks, getting the number of running goroutines, tuning capacity of pool dynamically, closing pool
+- Abundant APIs: submitting tasks, getting the number of running goroutines, tuning capacity of pool dynamically, closing pool
 - Handle panic gracefully to prevent programs from crash
 - Efficient in memory usage and it even achieves [higher performance](#-performance-summary) than unlimited goroutines in Golang
 - Nonblocking mechanism
