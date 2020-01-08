@@ -28,6 +28,8 @@ import (
 	"sync/atomic"
 	"testing"
 	"time"
+
+	"github.com/stretchr/testify/assert"
 )
 
 const (
@@ -238,9 +240,7 @@ func TestPanicHandler(t *testing.T) {
 		atomic.AddInt64(&panicCounter, 1)
 		t.Logf("catch panic with PanicHandler: %v", p)
 	}))
-	if err != nil {
-		t.Fatalf("create new pool failed: %s", err.Error())
-	}
+	assert.NoErrorf(t, err, "create new pool failed: %v", err)
 	defer p0.Release()
 	wg.Add(1)
 	_ = p0.Submit(func() {
@@ -248,31 +248,20 @@ func TestPanicHandler(t *testing.T) {
 	})
 	wg.Wait()
 	c := atomic.LoadInt64(&panicCounter)
-	if c != 1 {
-		t.Errorf("panic handler didn't work, panicCounter: %d", c)
-	}
-	if p0.Running() != 0 {
-		t.Errorf("pool should be empty after panic")
-	}
-
+	assert.EqualValuesf(t, 1, c, "panic handler didn't work, panicCounter: %d", c)
+	assert.EqualValues(t, 0, p0.Running(), "pool should be empty after panic")
 	p1, err := NewPoolWithFunc(10, func(p interface{}) { panic(p) }, WithPanicHandler(func(p interface{}) {
 		defer wg.Done()
 		atomic.AddInt64(&panicCounter, 1)
 	}))
-	if err != nil {
-		t.Fatalf("create new pool with func failed: %s", err.Error())
-	}
+	assert.NoErrorf(t, err, "create new pool with func failed: %v", err)
 	defer p1.Release()
 	wg.Add(1)
 	_ = p1.Invoke("Oops!")
 	wg.Wait()
 	c = atomic.LoadInt64(&panicCounter)
-	if c != 2 {
-		t.Errorf("panic handler didn't work, panicCounter: %d", c)
-	}
-	if p1.Running() != 0 {
-		t.Errorf("pool should be empty after panic")
-	}
+	assert.EqualValuesf(t, 2, c, "panic handler didn't work, panicCounter: %d", c)
+	assert.EqualValues(t, 0, p1.Running(), "pool should be empty after panic")
 }
 
 func TestPanicHandlerPreMalloc(t *testing.T) {
@@ -283,9 +272,7 @@ func TestPanicHandlerPreMalloc(t *testing.T) {
 		atomic.AddInt64(&panicCounter, 1)
 		t.Logf("catch panic with PanicHandler: %v", p)
 	}))
-	if err != nil {
-		t.Fatalf("create new pool failed: %s", err.Error())
-	}
+	assert.NoErrorf(t, err, "create new pool failed: %v", err)
 	defer p0.Release()
 	wg.Add(1)
 	_ = p0.Submit(func() {
@@ -293,38 +280,25 @@ func TestPanicHandlerPreMalloc(t *testing.T) {
 	})
 	wg.Wait()
 	c := atomic.LoadInt64(&panicCounter)
-	if c != 1 {
-		t.Errorf("panic handler didn't work, panicCounter: %d", c)
-	}
-	if p0.Running() != 0 {
-		t.Errorf("pool should be empty after panic")
-	}
-
+	assert.EqualValuesf(t, 1, c, "panic handler didn't work, panicCounter: %d", c)
+	assert.EqualValues(t, 0, p0.Running(), "pool should be empty after panic")
 	p1, err := NewPoolWithFunc(10, func(p interface{}) { panic(p) }, WithPanicHandler(func(p interface{}) {
 		defer wg.Done()
 		atomic.AddInt64(&panicCounter, 1)
 	}))
-	if err != nil {
-		t.Fatalf("create new pool with func failed: %s", err.Error())
-	}
+	assert.NoErrorf(t, err, "create new pool with func failed: %v", err)
 	defer p1.Release()
 	wg.Add(1)
 	_ = p1.Invoke("Oops!")
 	wg.Wait()
 	c = atomic.LoadInt64(&panicCounter)
-	if c != 2 {
-		t.Errorf("panic handler didn't work, panicCounter: %d", c)
-	}
-	if p1.Running() != 0 {
-		t.Errorf("pool should be empty after panic")
-	}
+	assert.EqualValuesf(t, 2, c, "panic handler didn't work, panicCounter: %d", c)
+	assert.EqualValues(t, 0, p1.Running(), "pool should be empty after panic")
 }
 
 func TestPoolPanicWithoutHandler(t *testing.T) {
 	p0, err := NewPool(10)
-	if err != nil {
-		t.Fatalf("create new pool failed: %s", err.Error())
-	}
+	assert.NoErrorf(t, err, "create new pool failed: %v", err)
 	defer p0.Release()
 	_ = p0.Submit(func() {
 		panic("Oops!")
@@ -333,18 +307,14 @@ func TestPoolPanicWithoutHandler(t *testing.T) {
 	p1, err := NewPoolWithFunc(10, func(p interface{}) {
 		panic(p)
 	})
-	if err != nil {
-		t.Fatalf("create new pool with func failed: %s", err.Error())
-	}
+	assert.NoErrorf(t, err, "create new pool with func failed: %v", err)
 	defer p1.Release()
 	_ = p1.Invoke("Oops!")
 }
 
 func TestPoolPanicWithoutHandlerPreMalloc(t *testing.T) {
 	p0, err := NewPool(10, WithPreAlloc(true))
-	if err != nil {
-		t.Fatalf("create new pool failed: %s", err.Error())
-	}
+	assert.NoErrorf(t, err, "create new pool failed: %v", err)
 	defer p0.Release()
 	_ = p0.Submit(func() {
 		panic("Oops!")
@@ -353,70 +323,50 @@ func TestPoolPanicWithoutHandlerPreMalloc(t *testing.T) {
 	p1, err := NewPoolWithFunc(10, func(p interface{}) {
 		panic(p)
 	})
-	if err != nil {
-		t.Fatalf("create new pool with func failed: %s", err.Error())
-	}
+
+	assert.NoErrorf(t, err, "create new pool with func failed: %v", err)
+
 	defer p1.Release()
 	_ = p1.Invoke("Oops!")
 }
 
 func TestPurge(t *testing.T) {
 	p, err := NewPool(10)
-	if err != nil {
-		t.Fatalf("create TimingPool failed: %s", err.Error())
-	}
+	assert.NoErrorf(t, err, "create TimingPool failed: %v", err)
 	defer p.Release()
 	_ = p.Submit(demoFunc)
 	time.Sleep(3 * DefaultCleanIntervalTime)
-	if p.Running() != 0 {
-		t.Error("all p should be purged")
-	}
+	assert.EqualValues(t, 0, p.Running(), "all p should be purged")
 	p1, err := NewPoolWithFunc(10, demoPoolFunc)
-	if err != nil {
-		t.Fatalf("create TimingPoolWithFunc failed: %s", err.Error())
-	}
+	assert.NoErrorf(t, err, "create TimingPoolWithFunc failed: %v", err)
 	defer p1.Release()
 	_ = p1.Invoke(1)
 	time.Sleep(3 * DefaultCleanIntervalTime)
-	if p.Running() != 0 {
-		t.Error("all p should be purged")
-	}
+	assert.EqualValues(t, 0, p.Running(), "all p should be purged")
 }
 
 func TestPurgePreMalloc(t *testing.T) {
 	p, err := NewPool(10, WithPreAlloc(true))
-	if err != nil {
-		t.Fatalf("create TimingPool failed: %s", err.Error())
-	}
+	assert.NoErrorf(t, err, "create TimingPool failed: %v", err)
 	defer p.Release()
 	_ = p.Submit(demoFunc)
 	time.Sleep(3 * DefaultCleanIntervalTime)
-	if p.Running() != 0 {
-		t.Error("all p should be purged")
-	}
+	assert.EqualValues(t, 0, p.Running(), "all p should be purged")
 	p1, err := NewPoolWithFunc(10, demoPoolFunc)
-	if err != nil {
-		t.Fatalf("create TimingPoolWithFunc failed: %s", err.Error())
-	}
+	assert.NoErrorf(t, err, "create TimingPoolWithFunc failed: %v", err)
 	defer p1.Release()
 	_ = p1.Invoke(1)
 	time.Sleep(3 * DefaultCleanIntervalTime)
-	if p.Running() != 0 {
-		t.Error("all p should be purged")
-	}
+	assert.EqualValues(t, 0, p.Running(), "all p should be purged")
 }
 
 func TestNonblockingSubmit(t *testing.T) {
 	poolSize := 10
 	p, err := NewPool(poolSize, WithNonblocking(true))
-	if err != nil {
-		t.Fatalf("create TimingPool failed: %s", err.Error())
-	}
+	assert.NoErrorf(t, err, "create TimingPool failed: %v", err)
 	defer p.Release()
 	for i := 0; i < poolSize-1; i++ {
-		if err := p.Submit(longRunningFunc); err != nil {
-			t.Fatalf("nonblocking submit when pool is not full shouldn't return error")
-		}
+		assert.NoError(t, p.Submit(longRunningFunc), "nonblocking submit when pool is not full shouldn't return error")
 	}
 	ch := make(chan struct{})
 	ch1 := make(chan struct{})
@@ -425,40 +375,28 @@ func TestNonblockingSubmit(t *testing.T) {
 		close(ch1)
 	}
 	// p is full now.
-	if err := p.Submit(f); err != nil {
-		t.Fatalf("nonblocking submit when pool is not full shouldn't return error")
-	}
-	if err := p.Submit(demoFunc); err == nil || err != ErrPoolOverload {
-		t.Fatalf("nonblocking submit when pool is full should get an ErrPoolOverload")
-	}
+	assert.NoError(t, p.Submit(f), "nonblocking submit when pool is not full shouldn't return error")
+	assert.EqualError(t, p.Submit(demoFunc), ErrPoolOverload.Error(), "nonblocking submit when pool is full should get an ErrPoolOverload")
 	// interrupt f to get an available worker
 	close(ch)
 	<-ch1
-	if err := p.Submit(demoFunc); err != nil {
-		t.Fatalf("nonblocking submit when pool is not full shouldn't return error")
-	}
+	assert.NoError(t, p.Submit(demoFunc), "nonblocking submit when pool is not full shouldn't return error")
 }
 
 func TestMaxBlockingSubmit(t *testing.T) {
 	poolSize := 10
 	p, err := NewPool(poolSize, WithMaxBlockingTasks(1))
-	if err != nil {
-		t.Fatalf("create TimingPool failed: %s", err.Error())
-	}
+	assert.NoErrorf(t, err, "create TimingPool failed: %v", err)
 	defer p.Release()
 	for i := 0; i < poolSize-1; i++ {
-		if err := p.Submit(longRunningFunc); err != nil {
-			t.Fatalf("submit when pool is not full shouldn't return error")
-		}
+		assert.NoError(t, p.Submit(longRunningFunc), "submit when pool is not full shouldn't return error")
 	}
 	ch := make(chan struct{})
 	f := func() {
 		<-ch
 	}
 	// p is full now.
-	if err := p.Submit(f); err != nil {
-		t.Fatalf("submit when pool is not full shouldn't return error")
-	}
+	assert.NoError(t, p.Submit(f), "submit when pool is not full shouldn't return error")
 	var wg sync.WaitGroup
 	wg.Add(1)
 	errCh := make(chan error, 1)
@@ -471,9 +409,7 @@ func TestMaxBlockingSubmit(t *testing.T) {
 	}()
 	time.Sleep(1 * time.Second)
 	// already reached max blocking limit
-	if err := p.Submit(demoFunc); err != ErrPoolOverload {
-		t.Fatalf("blocking submit when pool reach max blocking submit should return ErrPoolOverload")
-	}
+	assert.EqualError(t, p.Submit(demoFunc), ErrPoolOverload.Error(), "blocking submit when pool reach max blocking submit should return ErrPoolOverload")
 	// interrupt f to make blocking submit successful.
 	close(ch)
 	wg.Wait()
@@ -491,48 +427,32 @@ func TestNonblockingSubmitWithFunc(t *testing.T) {
 		longRunningPoolFunc(i)
 		close(ch1)
 	}, WithNonblocking(true))
-	if err != nil {
-		t.Fatalf("create TimingPool failed: %s", err.Error())
-	}
+	assert.NoError(t, err, "create TimingPool failed: %v", err)
 	defer p.Release()
 	for i := 0; i < poolSize-1; i++ {
-		if err := p.Invoke(nil); err != nil {
-			t.Fatalf("nonblocking submit when pool is not full shouldn't return error")
-		}
+		assert.NoError(t, p.Invoke(nil), "nonblocking submit when pool is not full shouldn't return error")
 	}
 	ch := make(chan struct{})
 	// p is full now.
-	if err := p.Invoke(ch); err != nil {
-		t.Fatalf("nonblocking submit when pool is not full shouldn't return error")
-	}
-	if err := p.Invoke(nil); err == nil || err != ErrPoolOverload {
-		t.Fatalf("nonblocking submit when pool is full should get an ErrPoolOverload")
-	}
+	assert.NoError(t, p.Invoke(ch), "nonblocking submit when pool is not full shouldn't return error")
+	assert.EqualError(t, p.Invoke(nil), ErrPoolOverload.Error(), "nonblocking submit when pool is full should get an ErrPoolOverload")
 	// interrupt f to get an available worker
 	close(ch)
 	<-ch1
-	if err := p.Invoke(nil); err != nil {
-		t.Fatalf("nonblocking submit when pool is not full shouldn't return error")
-	}
+	assert.NoError(t, p.Invoke(nil), "nonblocking submit when pool is not full shouldn't return error")
 }
 
 func TestMaxBlockingSubmitWithFunc(t *testing.T) {
 	poolSize := 10
 	p, err := NewPoolWithFunc(poolSize, longRunningPoolFunc, WithMaxBlockingTasks(1))
-	if err != nil {
-		t.Fatalf("create TimingPool failed: %s", err.Error())
-	}
+	assert.NoError(t, err, "create TimingPool failed: %v", err)
 	defer p.Release()
 	for i := 0; i < poolSize-1; i++ {
-		if err := p.Invoke(Param); err != nil {
-			t.Fatalf("submit when pool is not full shouldn't return error")
-		}
+		assert.NoError(t, p.Invoke(Param), "submit when pool is not full shouldn't return error")
 	}
 	ch := make(chan struct{})
 	// p is full now.
-	if err := p.Invoke(ch); err != nil {
-		t.Fatalf("submit when pool is not full shouldn't return error")
-	}
+	assert.NoError(t, p.Invoke(ch), "submit when pool is not full shouldn't return error")
 	var wg sync.WaitGroup
 	wg.Add(1)
 	errCh := make(chan error, 1)
@@ -545,9 +465,7 @@ func TestMaxBlockingSubmitWithFunc(t *testing.T) {
 	}()
 	time.Sleep(1 * time.Second)
 	// already reached max blocking limit
-	if err := p.Invoke(Param); err != ErrPoolOverload {
-		t.Fatalf("blocking submit when pool reach max blocking submit should return ErrPoolOverload: %v", err)
-	}
+	assert.EqualErrorf(t, p.Invoke(Param), ErrPoolOverload.Error(), "blocking submit when pool reach max blocking submit should return ErrPoolOverload: %v", err)
 	// interrupt one func to make blocking submit successful.
 	close(ch)
 	wg.Wait()

@@ -3,22 +3,16 @@ package ants
 import (
 	"testing"
 	"time"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestNewLoopQueue(t *testing.T) {
 	size := 100
 	q := newWorkerLoopQueue(size)
-	if q.len() != 0 {
-		t.Fatalf("Len error")
-	}
-
-	if !q.isEmpty() {
-		t.Fatalf("IsEmpty error")
-	}
-
-	if q.detach() != nil {
-		t.Fatalf("Dequeue error")
-	}
+	assert.EqualValues(t, 0, q.len(), "Len error")
+	assert.Equal(t, true, q.isEmpty(), "IsEmpty error")
+	assert.Nil(t, q.detach(), "Dequeue error")
 }
 
 func TestLoopQueue(t *testing.T) {
@@ -31,17 +25,10 @@ func TestLoopQueue(t *testing.T) {
 			break
 		}
 	}
-
-	if q.len() != 5 {
-		t.Fatalf("Len error")
-	}
-
+	assert.EqualValues(t, 5, q.len(), "Len error")
 	v := q.detach()
 	t.Log(v)
-
-	if q.len() != 4 {
-		t.Fatalf("Len error")
-	}
+	assert.EqualValues(t, 4, q.len(), "Len error")
 
 	time.Sleep(time.Second)
 
@@ -51,19 +38,11 @@ func TestLoopQueue(t *testing.T) {
 			break
 		}
 	}
-
-	if q.len() != 10 {
-		t.Fatalf("Len error")
-	}
+	assert.EqualValues(t, 10, q.len(), "Len error")
 
 	err := q.insert(&goWorker{recycleTime: time.Now()})
-	if err == nil {
-		t.Fatalf("Enqueue error")
-	}
+	assert.Error(t, err, "Enqueue, error")
 
 	q.retrieveExpiry(time.Second)
-
-	if q.len() != 6 {
-		t.Fatalf("Len error: %d", q.len())
-	}
+	assert.EqualValuesf(t, 6, q.len(), "Len error: %d", q.len())
 }
