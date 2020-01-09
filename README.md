@@ -186,10 +186,10 @@ type Option func(opts *Options)
 
 // Options contains all options which will be applied when instantiating a ants pool.
 type Options struct {
-	// ExpiryDuration set the expired time (second) of every worker.
+	// ExpiryDuration sets the expired time (second) of every worker.
 	ExpiryDuration time.Duration
 
-	// PreAlloc indicate whether to make memory pre-allocation when initializing Pool.
+	// PreAlloc indicates whether to make memory pre-allocation when initializing Pool.
 	PreAlloc bool
 
 	// Max number of goroutine blocking on pool.Submit.
