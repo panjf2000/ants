@@ -198,9 +198,8 @@ func (p *PoolWithFunc) Release() {
 		atomic.StoreInt32(&p.release, 1)
 		p.lock.Lock()
 		idleWorkers := p.workers
-		for i, w := range idleWorkers {
+		for _, w := range idleWorkers {
 			w.args <- nil
-			idleWorkers[i] = nil
 		}
 		p.workers = nil
 		p.lock.Unlock()
