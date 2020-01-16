@@ -35,9 +35,14 @@ const (
 
 	// DefaultCleanIntervalTime is the interval time to clean up goroutines.
 	DefaultCleanIntervalTime = time.Second
+)
+
+const (
+	// OPENED represents that the pool is opened.
+	OPENED = iota
 
 	// CLOSED represents that the pool is closed.
-	CLOSED = 1
+	CLOSED
 )
 
 var (
@@ -170,4 +175,9 @@ func Free() int {
 // Release Closes the default pool.
 func Release() {
 	defaultAntsPool.Release()
+}
+
+// Reboot reboots the default pool.
+func Reboot() {
+	defaultAntsPool.Reboot()
 }

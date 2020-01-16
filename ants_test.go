@@ -475,6 +475,60 @@ func TestMaxBlockingSubmitWithFunc(t *testing.T) {
 	default:
 	}
 }
+
+func TestRebootDefaultPool(t *testing.T) {
+	defer Release()
+	Reboot()
+	var wg sync.WaitGroup
+	wg.Add(1)
+	_ = Submit(func() {
+		demoFunc()
+		wg.Done()
+	})
+	wg.Wait()
+	Release()
+	assert.EqualError(t, Submit(nil), ErrPoolClosed.Error(), "pool should be closed")
+	Reboot()
+	wg.Add(1)
+	assert.NoError(t, Submit(func() { wg.Done() }), "pool should be rebooted")
+	wg.Wait()
+}
+
+func TestRebootNewPool(t *testing.T) {
+	var wg sync.WaitGroup
+	p, err := NewPool(10)
+	assert.NoErrorf(t, err, "create Pool failed: %v", err)
+	defer p.Release()
+	wg.Add(1)
+	_ = p.Submit(func() {
+		demoFunc()
+		wg.Done()
+	})
+	wg.Wait()
+	p.Release()
+	assert.EqualError(t, p.Submit(nil), ErrPoolClosed.Error(), "pool should be closed")
+	p.Reboot()
+	wg.Add(1)
+	assert.NoError(t, p.Submit(func() { wg.Done() }), "pool should be rebooted")
+	wg.Wait()
+
+	p1, err := NewPoolWithFunc(10, func(i interface{}) {
+		demoPoolFunc(i)
+		wg.Done()
+	})
+	assert.NoErrorf(t, err, "create TimingPoolWithFunc failed: %v", err)
+	defer p1.Release()
+	wg.Add(1)
+	_ = p1.Invoke(1)
+	wg.Wait()
+	p1.Release()
+	assert.EqualError(t, p1.Invoke(nil), ErrPoolClosed.Error(), "pool should be closed")
+	p1.Reboot()
+	wg.Add(1)
+	assert.NoError(t, p1.Invoke(1), "pool should be rebooted")
+	wg.Wait()
+}
+
 func TestRestCodeCoverage(t *testing.T) {
 	_, err := NewPool(-1, WithExpiryDuration(-1))
 	t.Log(err)
