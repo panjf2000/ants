@@ -291,7 +291,15 @@ p, _ := ants.NewPool(100000, ants.WithPreAlloc(true))
 pool.Release()
 ```
 
+### Reboot Pool
+
+```go
+// A pool that has been released can be still used once you invoke the Reboot().
+pool.Reboot()
+```
+
 ## ⚙️ About sequence
+
 All tasks submitted to `ants` pool will not be guaranteed to be addressed in order, because those tasks scatter among a series of concurrent workers, thus those tasks would be executed concurrently.
 
 ## 🧲 Benchmarks
