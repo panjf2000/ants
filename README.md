@@ -24,7 +24,7 @@ Library `ants` implements a goroutine pool with fixed capacity, managing and rec
 
 - Managing and recycling a massive number of goroutines automatically
 - Purging overdue goroutines periodically
-- Abundant APIs: submitting tasks, getting the number of running goroutines, tuning capacity of pool dynamically, closing pool
+- Abundant APIs: submitting tasks, getting the number of running goroutines, tuning capacity of pool dynamically, releasing pool, rebooting pool
 - Handle panic gracefully to prevent programs from crash
 - Efficient in memory usage and it even achieves [higher performance](#-performance-summary) than unlimited goroutines in Golang
 - Nonblocking mechanism
@@ -278,7 +278,7 @@ Don't worry about the synchronous problems in this case, the method here is thre
 
 ### Pre-malloc goroutine queue in pool
 
-`ants` allows you to pre-allocate memory of goroutine queue in pool, which may get a performance enhancement under some special certain circumstances such as the scenario that requires a pool with ultra-large capacity, meanwhile each task in goroutine lasts for a long time, in this case, pre-mallocing will reduce a lot of costs when re-slicing goroutine queue.
+`ants` allows you to pre-allocate memory of goroutine queue in pool, which may get a performance enhancement under some special certain circumstances such as the scenario that requires a pool with ultra-large capacity, meanwhile each task in goroutine lasts for a long time, in this case, pre-mallocing will reduce a lot of memory allocation in goroutine queue.
 
 ```go
 // ants will pre-malloc the whole capacity of pool when you invoke this method
@@ -351,7 +351,7 @@ Please read our [Contributing Guidelines](CONTRIBUTING.md) before opening a PR a
 
 ## 📄 License
 
-Source code in `gnet` is available under the MIT [License](/LICENSE).
+Source code in `ants` is available under the MIT [License](/LICENSE).
 
 ## 📚 Relevant Articles
 

@@ -24,7 +24,7 @@
 
 - 自动调度海量的 goroutines，复用 goroutines
 - 定期清理过期的 goroutines，进一步节省资源
-- 提供了大量有用的接口：任务提交、获取运行中的 goroutine 数量、动态调整 goroutine 池大小
+- 提供了大量有用的接口：任务提交、获取运行中的 goroutine 数量、动态调整 Pool 大小、释放 Pool、重启 Pool
 - 优雅处理 panic，防止程序崩溃
 - 资源复用，极大节省内存使用量；在大规模批量并发任务场景下比原生 goroutine 并发具有[更高的性能](#-性能小结)
 - 非阻塞机制
@@ -279,20 +279,20 @@ pool.Tune(100000) // Tune its capacity to 100000
 
 ### 预先分配 goroutine 队列内存
 
-`ants`允许你预先把整个池的容量分配内存， 这个功能可以在某些特定的场景下提高 goroutine 池的性能。比如， 有一个场景需要一个超大容量的池，而且每个 goroutine 里面的任务都是耗时任务，这种情况下，预先分配 goroutine 队列内存将会减少 re-slice 时的复制内存损耗。
+`ants`允许你预先把整个池的容量分配内存， 这个功能可以在某些特定的场景下提高 goroutine 池的性能。比如， 有一个场景需要一个超大容量的池，而且每个 goroutine 里面的任务都是耗时任务，这种情况下，预先分配 goroutine 队列内存将会减少不必要的内存重新分配。
 
 ```go
 // ants will pre-malloc the whole capacity of pool when you invoke this function
 p, _ := ants.NewPool(100000, ants.WithPreAlloc(true))
 ```
 
-### 销毁 goroutine 池
+### 释放 Pool
 
 ```go
 pool.Release()
 ```
 
-### Reboot Pool
+### 重启 Pool
 
 ```go
 // 只要调用 Reboot() 方法，就可以重新激活一个之前已经被销毁掉的池，并且投入使用。
@@ -352,7 +352,7 @@ pool.Reboot()
 
 ## 📄 证书
 
-`gnet` 的源码允许用户在遵循 MIT [开源证书](/LICENSE) 规则的前提下使用。
+`ants` 的源码允许用户在遵循 MIT [开源证书](/LICENSE) 规则的前提下使用。
 
 ## 📚 相关文章
 
