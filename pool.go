@@ -247,6 +247,7 @@ func (p *Pool) revertWorker(worker *goWorker) bool {
 	}
 	worker.recycleTime = time.Now()
 	p.lock.Lock()
+	defer p.lock.Unlock()
 
 	err := p.workers.insert(worker)
 	if err != nil {
@@ -255,6 +256,5 @@ func (p *Pool) revertWorker(worker *goWorker) bool {
 
 	// Notify the invoker stuck in 'retrieveWorker()' of there is an available worker in the worker queue.
 	p.cond.Signal()
-	p.lock.Unlock()
 	return true
 }
