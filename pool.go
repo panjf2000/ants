@@ -252,6 +252,7 @@ func (p *Pool) revertWorker(worker *goWorker) bool {
 
 	err := p.workers.insert(worker)
 	if err != nil {
+		p.lock.Unlock()
 		return false
 	}
 
