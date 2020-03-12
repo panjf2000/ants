@@ -23,6 +23,8 @@
 package ants
 
 import (
+	"log"
+	"os"
 	"runtime"
 	"sync"
 	"sync/atomic"
@@ -546,7 +548,7 @@ func TestRestCodeCoverage(t *testing.T) {
 	poolOpts, _ := NewPool(1, WithOptions(options))
 	t.Logf("Pool with options, capacity: %d", poolOpts.Cap())
 
-	p0, _ := NewPool(TestSize)
+	p0, _ := NewPool(TestSize, WithLogger(log.New(os.Stderr, "", log.LstdFlags)))
 	defer func() {
 		_ = p0.Submit(demoFunc)
 	}()

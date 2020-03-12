@@ -96,15 +96,16 @@ func NewPool(size int, options ...Option) (*Pool, error) {
 		return nil, ErrInvalidPoolSize
 	}
 
-	opts := new(Options)
-	for _, option := range options {
-		option(opts)
-	}
+	opts := loadOptions(options...)
 
 	if expiry := opts.ExpiryDuration; expiry < 0 {
 		return nil, ErrInvalidPoolExpiry
 	} else if expiry == 0 {
 		opts.ExpiryDuration = DefaultCleanIntervalTime
+	}
+
+	if opts.Logger == nil {
+		opts.Logger = defaultLogger
 	}
 
 	p := &Pool{
