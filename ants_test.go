@@ -378,7 +378,8 @@ func TestNonblockingSubmit(t *testing.T) {
 	}
 	// p is full now.
 	assert.NoError(t, p.Submit(f), "nonblocking submit when pool is not full shouldn't return error")
-	assert.EqualError(t, p.Submit(demoFunc), ErrPoolOverload.Error(), "nonblocking submit when pool is full should get an ErrPoolOverload")
+	assert.EqualError(t, p.Submit(demoFunc), ErrPoolOverload.Error(),
+		"nonblocking submit when pool is full should get an ErrPoolOverload")
 	// interrupt f to get an available worker
 	close(ch)
 	<-ch1
@@ -411,7 +412,8 @@ func TestMaxBlockingSubmit(t *testing.T) {
 	}()
 	time.Sleep(1 * time.Second)
 	// already reached max blocking limit
-	assert.EqualError(t, p.Submit(demoFunc), ErrPoolOverload.Error(), "blocking submit when pool reach max blocking submit should return ErrPoolOverload")
+	assert.EqualError(t, p.Submit(demoFunc), ErrPoolOverload.Error(),
+		"blocking submit when pool reach max blocking submit should return ErrPoolOverload")
 	// interrupt f to make blocking submit successful.
 	close(ch)
 	wg.Wait()
@@ -437,7 +439,8 @@ func TestNonblockingSubmitWithFunc(t *testing.T) {
 	ch := make(chan struct{})
 	// p is full now.
 	assert.NoError(t, p.Invoke(ch), "nonblocking submit when pool is not full shouldn't return error")
-	assert.EqualError(t, p.Invoke(nil), ErrPoolOverload.Error(), "nonblocking submit when pool is full should get an ErrPoolOverload")
+	assert.EqualError(t, p.Invoke(nil), ErrPoolOverload.Error(),
+		"nonblocking submit when pool is full should get an ErrPoolOverload")
 	// interrupt f to get an available worker
 	close(ch)
 	<-ch1
@@ -467,7 +470,8 @@ func TestMaxBlockingSubmitWithFunc(t *testing.T) {
 	}()
 	time.Sleep(1 * time.Second)
 	// already reached max blocking limit
-	assert.EqualErrorf(t, p.Invoke(Param), ErrPoolOverload.Error(), "blocking submit when pool reach max blocking submit should return ErrPoolOverload: %v", err)
+	assert.EqualErrorf(t, p.Invoke(Param), ErrPoolOverload.Error(),
+		"blocking submit when pool reach max blocking submit should return ErrPoolOverload: %v", err)
 	// interrupt one func to make blocking submit successful.
 	close(ch)
 	wg.Wait()

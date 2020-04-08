@@ -68,7 +68,8 @@ var (
 	//---------------------------------------------------------------------------
 
 	// workerChanCap determines whether the channel of a worker should be a buffered channel
-	// to get the best performance. Inspired by fasthttp at https://github.com/valyala/fasthttp/blob/master/workerpool.go#L139
+	// to get the best performance. Inspired by fasthttp at
+	// https://github.com/valyala/fasthttp/blob/master/workerpool.go#L139
 	workerChanCap = func() int {
 		// Use blocking workerChan if GOMAXPROCS=1.
 		// This immediately switches Serve to WorkerFunc, which results

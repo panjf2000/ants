@@ -30,7 +30,8 @@ import (
 	"github.com/panjf2000/ants/v2/internal"
 )
 
-// PoolWithFunc accepts the tasks from client, it limits the total of goroutines to a given number by recycling goroutines.
+// PoolWithFunc accepts the tasks from client,
+// it limits the total of goroutines to a given number by recycling goroutines.
 type PoolWithFunc struct {
 	// capacity of the pool.
 	capacity int32

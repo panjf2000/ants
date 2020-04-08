@@ -34,7 +34,8 @@ type Options struct {
 	// if nil, panics will be thrown out again from worker goroutines.
 	PanicHandler func(interface{})
 
-	// Logger is the customized logger for logging info, if it is not set, default standard logger from log package is used.
+	// Logger is the customized logger for logging info, if it is not set,
+	// default standard logger from log package is used.
 	Logger Logger
 }
 
