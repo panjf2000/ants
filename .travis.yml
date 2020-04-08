@@ -13,27 +13,28 @@ go:
   - 1.13.x
   - 1.14.x
 
+go_import_path: github.com/panjf2000/ants
+
 before_install:
   - if [[ "${GO111MODULE}" = "on" ]]; then mkdir "${HOME}/go"; export GOPATH="${HOME}/go";
     export PATH="$GOPATH/bin:$PATH"; fi
+  - mkdir -p ~/bin/ && export PATH="~/bin/:$PATH"
 
 install:
   - go get -u golang.org/x/lint/golint
-  - curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh
-    | sh -s -- -b $(go env GOPATH)/bin v1.24.0
-  - mkdir -p ~/bin/ && export PATH="~/bin/:$PATH"
-  - curl -sfL https://raw.githubusercontent.com/reviewdog/reviewdog/master/install.sh|
-    sh -s -- -b ~/bin
-
-go_import_path: github.com/panjf2000/ants
+  - curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v1.24.0
+  - curl -sfL https://raw.githubusercontent.com/reviewdog/reviewdog/master/install.sh | sh -s -- -b ~/bin
 
 script:
-  - golint ./... | reviewdog -f=golint -reporter=github-check
-  - golangci-lint run --out-format=line-number -E golint -E misspell -E lll -E gofmt
-    | reviewdog -f=golangci-lint -reporter=github-check
-  - golint ./... | reviewdog -f=golint -reporter=github-pr-review
-  - golangci-lint run --out-format=line-number -E golint -E misspell -E lll -E gofmt
-    | reviewdog -f=golangci-lint -reporter=github-pr-review
+  - |-
+    case $TRAVIS_OS_NAME in
+      linux|osx)
+        golint ./... | reviewdog -f=golint -reporter=github-check
+        golangci-lint run --out-format=line-number -E gofmt -E golint -E misspell -E lll | reviewdog -f=golangci-lint -reporter=github-check
+        golint ./... | reviewdog -f=golint -reporter=github-pr-review
+        golangci-lint run --out-format=line-number -E gofmt -E golint -E misspell -E lll | reviewdog -f=golangci-lint -reporter=github-pr-review
+        ;;
+    esac
   - go test -race -coverprofile=coverage.txt -covermode=atomic -v
 
 after_success:
