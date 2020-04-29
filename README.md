@@ -139,7 +139,7 @@ type Request struct {
 }
 
 func main() {
-  pool, _ := ants.NewPoolWithFunc(100000, func(payload interface{}) {
+	pool, _ := ants.NewPoolWithFunc(100000, func(payload interface{}) {
 		request, ok := payload.(*Request)
 		if !ok {
 			return
@@ -152,7 +152,7 @@ func main() {
 		}(request.Param)
 
 		request.Result <- reverseParam
-  })
+	})
 	defer pool.Release()
 
 	http.HandleFunc("/reverse", func(w http.ResponseWriter, r *http.Request) {
