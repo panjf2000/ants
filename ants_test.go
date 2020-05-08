@@ -535,6 +535,20 @@ func TestRebootNewPool(t *testing.T) {
 	wg.Wait()
 }
 
+func TestInfinitePool(t *testing.T) {
+	c := make(chan struct{})
+	p, _ := NewPool(-1)
+	_ = p.Submit(func() {
+		_ = p.Submit(func() {
+			<-c
+		})
+	})
+	c <- struct{}{}
+	if n := p.Running(); n != 2 {
+		t.Errorf("expect 2 workers running, but got %d", n)
+	}
+}
+
 func TestRestCodeCoverage(t *testing.T) {
 	_, err := NewPool(-1, WithExpiryDuration(-1))
 	t.Log(err)

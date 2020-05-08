@@ -223,8 +223,7 @@ func (p *PoolWithFunc) decRunning() {
 }
 
 // retrieveWorker returns a available worker to run the tasks.
-func (p *PoolWithFunc) retrieveWorker() *goWorkerWithFunc {
-	var w *goWorkerWithFunc
+func (p *PoolWithFunc) retrieveWorker() (w *goWorkerWithFunc) {
 	spawnWorker := func() {
 		w = p.workerCache.Get().(*goWorkerWithFunc)
 		w.run()
@@ -244,12 +243,12 @@ func (p *PoolWithFunc) retrieveWorker() *goWorkerWithFunc {
 	} else {
 		if p.options.Nonblocking {
 			p.lock.Unlock()
-			return nil
+			return
 		}
 	Reentry:
 		if p.options.MaxBlockingTasks != 0 && p.blockingNum >= p.options.MaxBlockingTasks {
 			p.lock.Unlock()
-			return nil
+			return
 		}
 		p.blockingNum++
 		p.cond.Wait()
@@ -257,7 +256,7 @@ func (p *PoolWithFunc) retrieveWorker() *goWorkerWithFunc {
 		if p.Running() == 0 {
 			p.lock.Unlock()
 			spawnWorker()
-			return w
+			return
 		}
 		l := len(p.workers) - 1
 		if l < 0 {
@@ -268,7 +267,7 @@ func (p *PoolWithFunc) retrieveWorker() *goWorkerWithFunc {
 		p.workers = p.workers[:l]
 		p.lock.Unlock()
 	}
-	return w
+	return
 }
 
 // revertWorker puts a worker back into free pool, recycling the goroutines.
