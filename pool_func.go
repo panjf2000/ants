@@ -130,6 +130,10 @@ func NewPoolWithFunc(size int, pf func(interface{}), options ...Option) (*PoolWi
 		opts.Logger = defaultLogger
 	}
 
+	if n := opts.WorkerChanCap; n <= 0 {
+		opts.WorkerChanCap = workerChanCap
+	}
+
 	p := &PoolWithFunc{
 		capacity: int32(size),
 		poolFunc: pf,
@@ -139,7 +143,7 @@ func NewPoolWithFunc(size int, pf func(interface{}), options ...Option) (*PoolWi
 	p.workerCache.New = func() interface{} {
 		return &goWorkerWithFunc{
 			pool: p,
-			args: make(chan interface{}, workerChanCap),
+			args: make(chan interface{}, opts.WorkerChanCap),
 		}
 	}
 	if p.options.PreAlloc {

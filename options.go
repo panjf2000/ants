@@ -37,6 +37,10 @@ type Options struct {
 	// Logger is the customized logger for logging info, if it is not set,
 	// default standard logger from log package is used.
 	Logger Logger
+
+	// Max number of task can buffered of every worker.
+	// 0 (default value) will overwrite by workerChanCap
+	WorkerChanCap int
 }
 
 // WithOptions accepts the whole options config.
@@ -85,5 +89,12 @@ func WithPanicHandler(panicHandler func(interface{})) Option {
 func WithLogger(logger Logger) Option {
 	return func(opts *Options) {
 		opts.Logger = logger
+	}
+}
+
+// WithWorkerChanCap sets up the maximum number of task that can buffered of every worker.
+func WithWorkerChanCap(n int) Option {
+	return func(opts *Options) {
+		opts.WorkerChanCap = n
 	}
 }

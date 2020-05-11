@@ -109,6 +109,10 @@ func NewPool(size int, options ...Option) (*Pool, error) {
 		opts.Logger = defaultLogger
 	}
 
+	if n := opts.WorkerChanCap; n <= 0 {
+		opts.WorkerChanCap = workerChanCap
+	}
+
 	p := &Pool{
 		capacity: int32(size),
 		lock:     internal.NewSpinLock(),
@@ -117,7 +121,7 @@ func NewPool(size int, options ...Option) (*Pool, error) {
 	p.workerCache.New = func() interface{} {
 		return &goWorker{
 			pool: p,
-			task: make(chan func(), workerChanCap),
+			task: make(chan func(), opts.WorkerChanCap),
 		}
 	}
 	if size <= 0 {
