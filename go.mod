@@ -1,6 +1,6 @@
 module github.com/panjf2000/ants/v2
 
-go 1.13
+go 1.14
 
 require (
 	github.com/davecgh/go-spew v1.1.1 // indirect
