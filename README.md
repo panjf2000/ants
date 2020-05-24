@@ -37,11 +37,23 @@ Library `ants` implements a goroutine pool with fixed capacity, managing and rec
 - 1.12.x
 - 1.13.x
 
-## 💡 `ants` works as the flowing flowchart
+## 💡 How `ants` works
+
+### Flow Diagram
 
 <p align="center">
 <img width="1011" alt="ants-flowchart-en" src="https://user-images.githubusercontent.com/7496278/66396509-7b42e700-ea0c-11e9-8612-b71a4b734683.png">
 </p>
+
+### Activity Diagrams
+
+![](https://raw.githubusercontent.com/panjf2000/illustrations/master/go/ants-pool-1.png)
+
+![](https://raw.githubusercontent.com/panjf2000/illustrations/master/go/ants-pool-2.png)
+
+![](https://raw.githubusercontent.com/panjf2000/illustrations/master/go/ants-pool-3.png)
+
+![](https://raw.githubusercontent.com/panjf2000/illustrations/master/go/ants-pool-4.png)
 
 ## 🧰 How to install
 

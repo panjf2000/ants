@@ -37,11 +37,23 @@
 - 1.12.x
 - 1.13.x
 
-## 💡 `ants` 运行时的流程图如下
+## 💡 `ants` 是如何运行的
+
+### 流程图
 
 <p align="center">
 <img width="845" alt="ants-flowchart-cn" src="https://user-images.githubusercontent.com/7496278/66396519-7ed66e00-ea0c-11e9-9c1a-5ca54bbd61eb.png">
 </p>
+
+### 动态图
+
+![](https://raw.githubusercontent.com/panjf2000/illustrations/master/go/ants-pool-1.png)
+
+![](https://raw.githubusercontent.com/panjf2000/illustrations/master/go/ants-pool-2.png)
+
+![](https://raw.githubusercontent.com/panjf2000/illustrations/master/go/ants-pool-3.png)
+
+![](https://raw.githubusercontent.com/panjf2000/illustrations/master/go/ants-pool-4.png)
 
 ## 🧰 安装
 
