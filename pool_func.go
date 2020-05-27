@@ -185,7 +185,7 @@ func (p *PoolWithFunc) Cap() int {
 
 // Tune changes the capacity of this pool.
 func (p *PoolWithFunc) Tune(size int) {
-	if size < 0 || p.Cap() == size || p.options.PreAlloc {
+	if size <= 0 || size == p.Cap() || p.options.PreAlloc {
 		return
 	}
 	atomic.StoreInt32(&p.capacity, int32(size))

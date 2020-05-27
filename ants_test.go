@@ -547,6 +547,15 @@ func TestInfinitePool(t *testing.T) {
 	if n := p.Running(); n != 2 {
 		t.Errorf("expect 2 workers running, but got %d", n)
 	}
+	p.Tune(10)
+	if capacity := p.Cap(); capacity != -1 {
+		t.Fatalf("expect capacity: -1 but got %d", capacity)
+	}
+	var err error
+	p, err = NewPool(-1, WithPreAlloc(true))
+	if err != ErrInvalidPreAllocSize {
+		t.Errorf("expect ErrInvalidPreAllocSize but got %v", err)
+	}
 }
 
 func TestRestCodeCoverage(t *testing.T) {

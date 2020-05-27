@@ -51,7 +51,8 @@ var (
 	// Error types for the Ants API.
 	//---------------------------------------------------------------------------
 
-	// ErrInvalidPoolSize will be returned when setting a negative number as pool capacity.
+	// ErrInvalidPoolSize will be returned when setting a negative number as pool capacity, this error will be only used
+	// by pool with func because pool without func can be infinite by setting up a negative capacity.
 	ErrInvalidPoolSize = errors.New("invalid size for pool")
 
 	// ErrLackPoolFunc will be returned when invokers don't provide function for pool.
@@ -65,6 +66,10 @@ var (
 
 	// ErrPoolOverload will be returned when the pool is full and no workers available.
 	ErrPoolOverload = errors.New("too many goroutines blocked on submit or Nonblocking is set")
+
+	// ErrInvalidPreAllocSize will be returned when trying to set up a negative capacity under PreAlloc mode.
+	ErrInvalidPreAllocSize = errors.New("can not set up a negative capacity under PreAlloc mode")
+
 	//---------------------------------------------------------------------------
 
 	// workerChanCap determines whether the channel of a worker should be a buffered channel
