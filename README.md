@@ -367,13 +367,16 @@ Source code in `ants` is available under the MIT [License](/LICENSE).
 ## 📚 Relevant Articles
 
 -  [Goroutine 并发调度模型深度解析之手撸一个高性能 goroutine 池](https://taohuawu.club/high-performance-implementation-of-goroutine-pool)
+-  [Handling 1 Million Requests per Minute with Golang](https://medium.com/smsjunk/handling-1-million-requests-per-minute-with-golang-f70ac505fcaa)
 
-## 👨‍👨‍👧‍👦 Users of ants (please feel free to add your projects here ~~)
+## 🖥 User cases
+
+Please feel free to add your projects here~~
 
 <a href="https://github.com/panjf2000/gnet" target="_blank"><img src="https://raw.githubusercontent.com/panjf2000/logos/master/gnet/logo.png" width="150" align="middle"/></a>&nbsp;&nbsp;
 <a href="https://www.tencent.com"><img src="https://www.tencent.com/img/index/tencent_logo.png" width="250" align="middle"/></a>&nbsp;&nbsp;
 
-## JetBrains OS licenses
+## 🔋 JetBrains OS licenses
 
 `ants` had been being developed with GoLand under the **free JetBrains Open Source license(s)** granted by JetBrains s.r.o., hence I would like to express my thanks here.
 
