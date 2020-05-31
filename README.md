@@ -367,7 +367,9 @@ Source code in `ants` is available under the MIT [License](/LICENSE).
 ## 📚 Relevant Articles
 
 -  [Goroutine 并发调度模型深度解析之手撸一个高性能 goroutine 池](https://taohuawu.club/high-performance-implementation-of-goroutine-pool)
--  [Handling 1 Million Requests per Minute with Golang](https://medium.com/smsjunk/handling-1-million-requests-per-minute-with-golang-f70ac505fcaa)
+-  [Visually Understanding Worker Pool](https://medium.com/coinmonks/visually-understanding-worker-pool-48a83b7fc1f5)
+-  [The Case For A Go Worker Pool](https://brandur.org/go-worker-pool)
+-  [Go Concurrency - GoRoutines, Worker Pools and Throttling Made Simple](https://twinnation.org/articles/39/go-concurrency-goroutines-worker-pools-and-throttling-made-simple)
 
 ## 🖥 User cases
 
