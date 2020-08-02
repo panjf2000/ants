@@ -363,7 +363,7 @@ Please read our [Contributing Guidelines](CONTRIBUTING.md) before opening a PR a
 
 ## 📄 License
 
-Source code in `ants` is available under the MIT [License](/LICENSE).
+Source code in `ants` is available under the [MIT License](/LICENSE).
 
 ## 📚 Relevant Articles
 
