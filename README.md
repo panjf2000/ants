@@ -359,7 +359,7 @@ In above benchmark result, the first and second benchmarks performed test cases 
 
 Please read our [Contributing Guidelines](CONTRIBUTING.md) before opening a PR and thank you to all the developers who already made contributions to `ants`!
 
-[![](https://opencollective.com/ants/contributors.svg?width=890&button=false)](https://github.com/panjf2000/ants/graphs/contributors)
+[![](https://opencollective.com/ants/contributors.svg?width=890&button=false)](https://github.com/panjf2000/ants/graphs/contributors) [![Join the chat at https://gitter.im/ants-pool/ants](https://badges.gitter.im/ants-pool/ants.svg)](https://gitter.im/ants-pool/ants?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
 ## 📄 License
 
