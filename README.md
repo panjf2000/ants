@@ -1,17 +1,17 @@
 <p align="center">
-<img src="https://raw.githubusercontent.com/panjf2000/logos/master/ants/logo.png"/>
-<b>A goroutine pool in Go</b>
+<img src="https://raw.githubusercontent.com/panjf2000/logos/master/ants/logo.png" />
+<b>A goroutine pool for Go</b>
 <br/><br/>
-<a title="Build Status" target="_blank" href="https://travis-ci.com/panjf2000/ants"><img src="https://img.shields.io/travis/com/panjf2000/ants?style=flat-square&logo=travis"></a>
-<a title="Codecov" target="_blank" href="https://codecov.io/gh/panjf2000/ants"><img src="https://img.shields.io/codecov/c/github/panjf2000/ants?style=flat-square&logo=codecov"></a>
-<a title="Release" target="_blank" href="https://github.com/panjf2000/ants/releases"><img src="https://img.shields.io/github/v/release/panjf2000/ants.svg?color=161823&style=flat-square&logo=smartthings"></a>
-<a title="Tag" target="_blank" href="https://github.com/panjf2000/ants/tags"><img src="https://img.shields.io/github/v/tag/panjf2000/ants?color=%23ff8936&logo=fitbit&style=flat-square"></a>
+<a title="Build Status" target="_blank" href="https://travis-ci.com/panjf2000/ants"><img src="https://img.shields.io/travis/com/panjf2000/ants?style=flat-square&logo=travis" /></a>
+<a title="Codecov" target="_blank" href="https://codecov.io/gh/panjf2000/ants"><img src="https://img.shields.io/codecov/c/github/panjf2000/ants?style=flat-square&logo=codecov" /></a>
+<a title="Release" target="_blank" href="https://github.com/panjf2000/ants/releases"><img src="https://img.shields.io/github/v/release/panjf2000/ants.svg?color=161823&style=flat-square&logo=smartthings" /></a>
+<a title="Tag" target="_blank" href="https://github.com/panjf2000/ants/tags"><img src="https://img.shields.io/github/v/tag/panjf2000/ants?color=%23ff8936&logo=fitbit&style=flat-square" /></a>
 <br/>
-<a title="Chat Room" target="_blank" href="https://gitter.im/ants-pool/ants?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=body_badge"><img src="https://badges.gitter.im/ants-pool/ants.svg"></a>
-<a title="Go Report Card" target="_blank" href="https://goreportcard.com/report/github.com/panjf2000/ants"><img src="https://goreportcard.com/badge/github.com/panjf2000/ants?style=flat-square"></a>
-<a title="Doc for ants" target="_blank" href="https://pkg.go.dev/github.com/panjf2000/ants/v2?tab=doc"><img src="https://img.shields.io/badge/go.dev-doc-007d9c?style=flat-square&logo=read-the-docs"></a>
-<a title="Ants on Sourcegraph" target="_blank" href="https://sourcegraph.com/github.com/panjf2000/ants?badge"><img src="https://sourcegraph.com/github.com/panjf2000/ants/-/badge.svg?style=flat-square"></a>
-<a title="Mentioned in Awesome Go" target="_blank" href="https://github.com/avelino/awesome-go#goroutines"><img src="https://awesome.re/mentioned-badge-flat.svg"></a>
+<a title="Chat Room" target="_blank" href="https://gitter.im/ants-pool/ants?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=body_badge"><img src="https://badges.gitter.im/ants-pool/ants.svg" /></a>
+<a title="Go Report Card" target="_blank" href="https://goreportcard.com/report/github.com/panjf2000/ants"><img src="https://goreportcard.com/badge/github.com/panjf2000/ants?style=flat-square" /></a>
+<a title="Doc for ants" target="_blank" href="https://pkg.go.dev/github.com/panjf2000/ants/v2?tab=doc"><img src="https://img.shields.io/badge/go.dev-doc-007d9c?style=flat-square&logo=read-the-docs" /></a>
+<a title="Ants on Sourcegraph" target="_blank" href="https://sourcegraph.com/github.com/panjf2000/ants?badge"><img src="https://sourcegraph.com/github.com/panjf2000/ants/-/badge.svg?style=flat-square" /></a>
+<a title="Mentioned in Awesome Go" target="_blank" href="https://github.com/avelino/awesome-go#goroutines"><img src="https://awesome.re/mentioned-badge-flat.svg" /></a>
 </p>
 
 English | [🇨🇳中文](README_ZH.md)
@@ -136,61 +136,6 @@ func main() {
 }
 ```
 
-### Integrate with http server
-```go
-package main
-
-import (
-	"io/ioutil"
-	"net/http"
-
-	"github.com/panjf2000/ants/v2"
-)
-
-type Request struct {
-	Param  []byte
-	Result chan []byte
-}
-
-func main() {
-	pool, _ := ants.NewPoolWithFunc(100000, func(payload interface{}) {
-		request, ok := payload.(*Request)
-		if !ok {
-			return
-		}
-		reverseParam := func(s []byte) []byte {
-			for i, j := 0, len(s)-1; i < j; i, j = i+1, j-1 {
-				s[i], s[j] = s[j], s[i]
-			}
-			return s
-		}(request.Param)
-
-		request.Result <- reverseParam
-	})
-	defer pool.Release()
-
-	http.HandleFunc("/reverse", func(w http.ResponseWriter, r *http.Request) {
-		param, err := ioutil.ReadAll(r.Body)
-		if err != nil {
-			http.Error(w, "request error", http.StatusInternalServerError)
-		}
-		defer r.Body.Close()
-
-		request := &Request{Param: param, Result: make(chan []byte)}
-
-		// Throttle the requests traffic with ants pool. This process is asynchronous and
-		// you can receive a result from the channel defined outside.
-		if err := pool.Invoke(request); err != nil {
-			http.Error(w, "throttle limit error", http.StatusInternalServerError)
-		}
-
-		w.Write(<-request.Result)
-	})
-
-	http.ListenAndServe(":8080", nil)
-}
-```
-
 ###  Functional options for ants pool
 
 ```go
@@ -199,7 +144,9 @@ type Option func(opts *Options)
 
 // Options contains all options which will be applied when instantiating a ants pool.
 type Options struct {
-	// ExpiryDuration sets the expired time (second) of every worker.
+	// ExpiryDuration is a period for the scavenger goroutine to clean up those expired workers,
+	// the scavenger scans all workers every `ExpiryDuration` and clean up those workers that haven't been
+	// used for more than `ExpiryDuration`.
 	ExpiryDuration time.Duration
 
 	// PreAlloc indicates whether to make memory pre-allocation when initializing Pool.
@@ -217,6 +164,10 @@ type Options struct {
 	// PanicHandler is used to handle panics from each worker goroutine.
 	// if nil, panics will be thrown out again from worker goroutines.
 	PanicHandler func(interface{})
+
+	// Logger is the customized logger for logging info, if it is not set,
+	// default standard logger from log package is used.
+	Logger Logger
 }
 
 // WithOptions accepts the whole options config.
@@ -258,6 +209,13 @@ func WithNonblocking(nonblocking bool) Option {
 func WithPanicHandler(panicHandler func(interface{})) Option {
 	return func(opts *Options) {
 		opts.PanicHandler = panicHandler
+	}
+}
+
+// WithLogger sets up a customized logger.
+func WithLogger(logger Logger) Option {
+	return func(opts *Options) {
+		opts.Logger = logger
 	}
 }
 ```

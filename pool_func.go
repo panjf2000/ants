@@ -63,8 +63,8 @@ type PoolWithFunc struct {
 	options *Options
 }
 
-// periodicallyPurge clears expired workers periodically.
-func (p *PoolWithFunc) periodicallyPurge() {
+// purgePeriodically clears expired workers periodically which runs in an individual goroutine, as a scavenger.
+func (p *PoolWithFunc) purgePeriodically() {
 	heartbeat := time.NewTicker(p.options.ExpiryDuration)
 	defer heartbeat.Stop()
 
@@ -148,7 +148,7 @@ func NewPoolWithFunc(size int, pf func(interface{}), options ...Option) (*PoolWi
 	p.cond = sync.NewCond(p.lock)
 
 	// Start a goroutine to clean up expired workers periodically.
-	go p.periodicallyPurge()
+	go p.purgePeriodically()
 
 	return p, nil
 }
@@ -206,7 +206,7 @@ func (p *PoolWithFunc) Release() {
 // Reboot reboots a released pool.
 func (p *PoolWithFunc) Reboot() {
 	if atomic.CompareAndSwapInt32(&p.state, CLOSED, OPENED) {
-		go p.periodicallyPurge()
+		go p.purgePeriodically()
 	}
 }
 
