@@ -68,6 +68,7 @@ func (wq *loopQueue) detach() *goWorker {
 	}
 
 	w := wq.items[wq.head]
+	wq.items[wq.head] = nil
 	wq.head++
 	if wq.head == wq.size {
 		wq.head = 0
@@ -90,6 +91,7 @@ func (wq *loopQueue) retrieveExpiry(duration time.Duration) []*goWorker {
 			break
 		}
 		wq.expiry = append(wq.expiry, wq.items[wq.head])
+		wq.items[wq.head] = nil
 		wq.head++
 		if wq.head == wq.size {
 			wq.head = 0
