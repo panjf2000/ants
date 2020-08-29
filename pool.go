@@ -81,6 +81,7 @@ func (p *Pool) purgePeriodically() {
 		// are located on non-local CPUs.
 		for i := range expiredWorkers {
 			expiredWorkers[i].task <- nil
+			expiredWorkers[i] = nil
 		}
 
 		// There might be a situation that all workers have been cleaned up(no any worker is running)

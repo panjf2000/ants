@@ -35,6 +35,7 @@ func (wq *workerStack) detach() *goWorker {
 	}
 
 	w := wq.items[l-1]
+	wq.items[l-1] = nil // avoid memory leaks
 	wq.items = wq.items[:l-1]
 
 	return w
@@ -53,6 +54,9 @@ func (wq *workerStack) retrieveExpiry(duration time.Duration) []*goWorker {
 	if index != -1 {
 		wq.expiry = append(wq.expiry, wq.items[:index+1]...)
 		m := copy(wq.items, wq.items[index+1:])
+		for i := m; i < n; i++ {
+			wq.items[i] = nil
+		}
 		wq.items = wq.items[:m]
 	}
 	return wq.expiry
@@ -74,6 +78,7 @@ func (wq *workerStack) binarySearch(l, r int, expiryTime time.Time) int {
 func (wq *workerStack) reset() {
 	for i := 0; i < wq.len(); i++ {
 		wq.items[i].task <- nil
+		wq.items[i] = nil
 	}
 	wq.items = wq.items[:0]
 }
