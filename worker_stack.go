@@ -53,11 +53,11 @@ func (wq *workerStack) retrieveExpiry(duration time.Duration) []*goWorker {
 	wq.expiry = wq.expiry[:0]
 	if index != -1 {
 		wq.expiry = append(wq.expiry, wq.items[:index+1]...)
-		for i, j := 0, index+1; j < len(wq.items); i, j = i+1, j+1 {
-			wq.items[i] = wq.items[j]
-			wq.items[j] = nil
+		m := copy(wq.items, wq.items[index+1:])
+		for i := m; i < n; i++ {
+			wq.items[i] = nil
 		}
-		wq.items = wq.items[:n-index-1]
+		wq.items = wq.items[:m]
 	}
 	return wq.expiry
 }
