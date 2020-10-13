@@ -253,11 +253,16 @@ func (p *Pool) retrieveWorker() (w *goWorker) {
 
 // revertWorker puts a worker back into free pool, recycling the goroutines.
 func (p *Pool) revertWorker(worker *goWorker) bool {
-	if capacity := p.Cap(); (capacity > 0 && p.Running() > capacity) || atomic.LoadInt32(&p.state) == CLOSED {
+	if capacity := p.Cap(); capacity > 0 && p.Running() > capacity {
 		return false
 	}
 	worker.recycleTime = time.Now()
 	p.lock.Lock()
+
+	if atomic.LoadInt32(&p.state) == CLOSED {
+		p.lock.Unlock()
+		return false
+	}
 
 	err := p.workers.insert(worker)
 	if err != nil {
