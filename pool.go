@@ -253,12 +253,14 @@ func (p *Pool) retrieveWorker() (w *goWorker) {
 
 // revertWorker puts a worker back into free pool, recycling the goroutines.
 func (p *Pool) revertWorker(worker *goWorker) bool {
-	if capacity := p.Cap(); capacity > 0 && p.Running() > capacity {
+	if capacity := p.Cap(); (capacity > 0 && p.Running() > capacity) || atomic.LoadInt32(&p.state) == CLOSED {
 		return false
 	}
 	worker.recycleTime = time.Now()
 	p.lock.Lock()
 
+	// To avoid memory leaks, add a double check in the lock scope.
+	// Issue: https://github.com/panjf2000/ants/issues/113
 	if atomic.LoadInt32(&p.state) == CLOSED {
 		p.lock.Unlock()
 		return false
