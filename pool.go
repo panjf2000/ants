@@ -259,6 +259,13 @@ func (p *Pool) revertWorker(worker *goWorker) bool {
 	worker.recycleTime = time.Now()
 	p.lock.Lock()
 
+	// To avoid memory leaks, add a double check in the lock scope.
+	// Issue: https://github.com/panjf2000/ants/issues/113
+	if atomic.LoadInt32(&p.state) == CLOSED {
+		p.lock.Unlock()
+		return false
+	}
+
 	err := p.workers.insert(worker)
 	if err != nil {
 		p.lock.Unlock()

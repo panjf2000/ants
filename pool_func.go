@@ -277,6 +277,14 @@ func (p *PoolWithFunc) revertWorker(worker *goWorkerWithFunc) bool {
 	}
 	worker.recycleTime = time.Now()
 	p.lock.Lock()
+
+	// To avoid memory leaks, add a double check in the lock scope.
+	// Issue: https://github.com/panjf2000/ants/issues/113
+	if atomic.LoadInt32(&p.state) == CLOSED {
+		p.lock.Unlock()
+		return false
+	}
+
 	p.workers = append(p.workers, worker)
 
 	// Notify the invoker stuck in 'retrieveWorker()' of there is an available worker in the worker queue.
