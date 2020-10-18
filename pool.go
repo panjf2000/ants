@@ -123,7 +123,7 @@ func NewPool(size int, options ...Option) (*Pool, error) {
 		}
 	}
 	if p.options.PreAlloc {
-		if size == -1 {
+		if size < 0 {
 			return nil, ErrInvalidPreAllocSize
 		}
 		p.workers = newWorkerArray(loopQueueType, size)
