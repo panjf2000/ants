@@ -38,6 +38,7 @@ Library `ants` implements a goroutine pool with fixed capacity, managing and rec
 - 1.12.x
 - 1.13.x
 - 1.14.x
+- 1.15.x
 
 ## 💡 How `ants` works
 
