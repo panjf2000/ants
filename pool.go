@@ -266,12 +266,11 @@ func (p *Pool) revertWorker(worker *goWorker) bool {
 		return false
 	}
 
-	err := p.workers.insert(worker)
-	if err != nil {
+	if err := p.workers.insert(worker);err!=nil{
 		p.lock.Unlock()
 		return false
 	}
-
+	
 	// Notify the invoker stuck in 'retrieveWorker()' of there is an available worker in the worker queue.
 	p.cond.Signal()
 	p.lock.Unlock()
