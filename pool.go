@@ -98,7 +98,7 @@ func NewPool(size int, options ...Option) (*Pool, error) {
 	opts := loadOptions(options...)
 
 	if size <= 0 {
-		size = -1
+		return nil, ErrInvalidPreAllocSize
 	}
 
 	if expiry := opts.ExpiryDuration; expiry < 0 {
@@ -123,9 +123,6 @@ func NewPool(size int, options ...Option) (*Pool, error) {
 		}
 	}
 	if p.options.PreAlloc {
-		if size == -1 {
-			return nil, ErrInvalidPreAllocSize
-		}
 		p.workers = newWorkerArray(loopQueueType, size)
 	} else {
 		p.workers = newWorkerArray(stackType, 0)
