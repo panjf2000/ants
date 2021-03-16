@@ -70,7 +70,7 @@ func (p *PoolWithFunc) purgePeriodically() {
 
 	var expiredWorkers []*goWorkerWithFunc
 	for range heartbeat.C {
-		if atomic.LoadInt32(&p.state) == CLOSED {
+		if p.IsClosed() {
 			break
 		}
 		currentTime := time.Now()
@@ -157,7 +157,7 @@ func NewPoolWithFunc(size int, pf func(interface{}), options ...Option) (*PoolWi
 
 // Invoke submits a task to pool.
 func (p *PoolWithFunc) Invoke(args interface{}) error {
-	if atomic.LoadInt32(&p.state) == CLOSED {
+	if p.IsClosed() {
 		return ErrPoolClosed
 	}
 	var w *goWorkerWithFunc
@@ -191,6 +191,11 @@ func (p *PoolWithFunc) Tune(size int) {
 	atomic.StoreInt32(&p.capacity, int32(size))
 }
 
+// IsClosed indicates whether the pool is closed.
+func (p *PoolWithFunc) IsClosed() bool {
+	return atomic.LoadInt32(&p.state) == CLOSED
+}
+
 // Release Closes this pool.
 func (p *PoolWithFunc) Release() {
 	atomic.StoreInt32(&p.state, CLOSED)
@@ -201,6 +206,9 @@ func (p *PoolWithFunc) Release() {
 	}
 	p.workers = nil
 	p.lock.Unlock()
+	// There might be some callers waiting in retrieveWorker(), so we need to wake them up to prevent
+	// those callers blocking infinitely.
+	p.cond.Broadcast()
 }
 
 // Reboot reboots a released pool.
@@ -254,8 +262,10 @@ func (p *PoolWithFunc) retrieveWorker() (w *goWorkerWithFunc) {
 		p.cond.Wait()
 		p.blockingNum--
 		if p.Running() == 0 {
-			p.lock.Unlock()
-			spawnWorker()
+			if !p.IsClosed() {
+				p.lock.Unlock()
+				spawnWorker()
+			}
 			return
 		}
 		l := len(p.workers) - 1
@@ -272,7 +282,7 @@ func (p *PoolWithFunc) retrieveWorker() (w *goWorkerWithFunc) {
 
 // revertWorker puts a worker back into free pool, recycling the goroutines.
 func (p *PoolWithFunc) revertWorker(worker *goWorkerWithFunc) bool {
-	if atomic.LoadInt32(&p.state) == CLOSED || p.Running() > p.Cap() {
+	if capacity := p.Cap(); (capacity > 0 && p.Running() > capacity) || p.IsClosed() {
 		return false
 	}
 	worker.recycleTime = time.Now()
@@ -280,7 +290,7 @@ func (p *PoolWithFunc) revertWorker(worker *goWorkerWithFunc) bool {
 
 	// To avoid memory leaks, add a double check in the lock scope.
 	// Issue: https://github.com/panjf2000/ants/issues/113
-	if atomic.LoadInt32(&p.state) == CLOSED {
+	if p.IsClosed() {
 		p.lock.Unlock()
 		return false
 	}

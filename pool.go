@@ -67,7 +67,7 @@ func (p *Pool) purgePeriodically() {
 	defer heartbeat.Stop()
 
 	for range heartbeat.C {
-		if atomic.LoadInt32(&p.state) == CLOSED {
+		if p.IsClosed() {
 			break
 		}
 
@@ -143,7 +143,7 @@ func NewPool(size int, options ...Option) (*Pool, error) {
 
 // Submit submits a task to this pool.
 func (p *Pool) Submit(task func()) error {
-	if atomic.LoadInt32(&p.state) == CLOSED {
+	if p.IsClosed() {
 		return ErrPoolClosed
 	}
 	var w *goWorker
@@ -177,12 +177,20 @@ func (p *Pool) Tune(size int) {
 	atomic.StoreInt32(&p.capacity, int32(size))
 }
 
+// IsClosed indicates whether the pool is closed.
+func (p *Pool) IsClosed() bool {
+	return atomic.LoadInt32(&p.state) == CLOSED
+}
+
 // Release Closes this pool.
 func (p *Pool) Release() {
 	atomic.StoreInt32(&p.state, CLOSED)
 	p.lock.Lock()
 	p.workers.reset()
 	p.lock.Unlock()
+	// There might be some callers waiting in retrieveWorker(), so we need to wake them up to prevent
+	// those callers blocking infinitely.
+	p.cond.Broadcast()
 }
 
 // Reboot reboots a released pool.
@@ -236,8 +244,10 @@ func (p *Pool) retrieveWorker() (w *goWorker) {
 		p.cond.Wait()
 		p.blockingNum--
 		if p.Running() == 0 {
-			p.lock.Unlock()
-			spawnWorker()
+			if !p.IsClosed() {
+				p.lock.Unlock()
+				spawnWorker()
+			}
 			return
 		}
 
@@ -253,7 +263,7 @@ func (p *Pool) retrieveWorker() (w *goWorker) {
 
 // revertWorker puts a worker back into free pool, recycling the goroutines.
 func (p *Pool) revertWorker(worker *goWorker) bool {
-	if capacity := p.Cap(); (capacity > 0 && p.Running() > capacity) || atomic.LoadInt32(&p.state) == CLOSED {
+	if capacity := p.Cap(); (capacity > 0 && p.Running() > capacity) || p.IsClosed() {
 		return false
 	}
 	worker.recycleTime = time.Now()
@@ -261,7 +271,7 @@ func (p *Pool) revertWorker(worker *goWorker) bool {
 
 	// To avoid memory leaks, add a double check in the lock scope.
 	// Issue: https://github.com/panjf2000/ants/issues/113
-	if atomic.LoadInt32(&p.state) == CLOSED {
+	if p.IsClosed() {
 		p.lock.Unlock()
 		return false
 	}
