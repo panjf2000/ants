@@ -337,7 +337,7 @@ The following companies/organizations use `ants` in production.
 
 <a href="https://www.tencent.com"><img src="https://img.taohuawu.club/gallery/tencent_logo.png" width="250" align="middle"/></a>&nbsp;&nbsp;<a href="https://www.sina.com.cn/" target="_blank"><img src="https://img.taohuawu.club/gallery/sina-logo.png" width="150" align="middle"/></a>&nbsp;&nbsp;<a href="https://www.163.com/" target="_blank"><img src="https://img.taohuawu.club/gallery/netease-logo.png" width="150" align="middle"/></a>&nbsp;&nbsp;<a href="https://tieba.baidu.com/" target="_blank"><img src="https://img.taohuawu.club/gallery/baidu-tieba-logo.png" width="250" align="middle"/></a>
 
-If your project is also using `ants`, feel free to open a pull request to refresh this list of user cases.
+If your projects are also using `ants`, feel free to open a pull request to refresh this list of user cases.
 
 ## 🔋 JetBrains OS licenses
 
