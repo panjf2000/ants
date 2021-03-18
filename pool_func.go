@@ -262,8 +262,8 @@ func (p *PoolWithFunc) retrieveWorker() (w *goWorkerWithFunc) {
 		p.cond.Wait()
 		p.blockingNum--
 		if p.Running() == 0 {
+			p.lock.Unlock()
 			if !p.IsClosed() {
-				p.lock.Unlock()
 				spawnWorker()
 			}
 			return
