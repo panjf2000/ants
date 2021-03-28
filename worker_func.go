@@ -59,6 +59,8 @@ func (w *goWorkerWithFunc) run() {
 					w.pool.options.Logger.Printf("worker with func exits from panic: %s\n", string(buf[:n]))
 				}
 			}
+			// Call Signal() here in case there are goroutines waiting for available workers.
+			w.pool.cond.Signal()
 		}()
 
 		for args := range w.args {

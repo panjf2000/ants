@@ -243,16 +243,20 @@ func (p *Pool) retrieveWorker() (w *goWorker) {
 		p.blockingNum++
 		p.cond.Wait()
 		p.blockingNum--
-		if p.Running() == 0 {
+		var nw int
+		if nw = p.Running(); nw == 0 {
 			p.lock.Unlock()
 			if !p.IsClosed() {
 				spawnWorker()
 			}
 			return
 		}
-
-		w = p.workers.detach()
-		if w == nil {
+		if w = p.workers.detach(); w == nil {
+			if nw < capacity {
+				p.lock.Unlock()
+				spawnWorker()
+				return
+			}
 			goto Reentry
 		}
 

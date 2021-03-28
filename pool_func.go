@@ -270,6 +270,11 @@ func (p *PoolWithFunc) retrieveWorker() (w *goWorkerWithFunc) {
 		}
 		l := len(p.workers) - 1
 		if l < 0 {
+			if p.Running() < p.Cap() {
+				p.lock.Unlock()
+				spawnWorker()
+				return
+			}
 			goto Reentry
 		}
 		w = p.workers[l]
