@@ -568,6 +568,10 @@ func TestRestCodeCoverage(t *testing.T) {
 	t.Log(err)
 	_, err = NewPoolWithFunc(1, demoPoolFunc, WithExpiryDuration(-1))
 	t.Log(err)
+	_, err = NewPoolList(-1, nil, demoListFunc, WithExpiryDuration(-1))
+	t.Log(err)
+	_, err = NewPoolList(1, nil, demoListFunc, WithExpiryDuration(-1))
+	t.Log(err)
 
 	options := Options{}
 	options.ExpiryDuration = time.Duration(10) * time.Second
@@ -638,4 +642,41 @@ func TestRestCodeCoverage(t *testing.T) {
 	ppremWithFunc.Tune(TestSize / 10)
 	t.Logf("pre-malloc pool with func, after tuning capacity, capacity:%d, running:%d", ppremWithFunc.Cap(),
 		ppremWithFunc.Running())
+
+	output := make(chan interface{}, 100)
+	go func() {
+		for i := range output {
+			if i == nil {
+				break
+			}
+		}
+	}()
+
+	pl, _ := NewPoolList(TestSize, output, demoListFunc)
+	for i := 0; i < n; i++ {
+		_ = pl.Invoke(Param)
+	}
+	pl.Release()
+	_ = pl.Invoke(Param)
+
+	time.Sleep(DefaultCleanIntervalTime)
+	t.Logf("pool list, capacity:%d", pl.Cap())
+	t.Logf("pool list, running workers number:%d", pl.Running())
+	t.Logf("pool list, free workers number:%d", pl.Free())
+	pl.Tune(TestSize)
+	pl.Tune(TestSize / 10)
+	t.Logf("pool list, after tuning capacity, capacity:%d, running:%d", pl.Cap(), pl.Running())
+
+	ppremList, _ := NewPoolList(TestSize, output, demoListFunc, WithPreAlloc(true))
+	for i := 0; i < n; i++ {
+		_ = ppremList.Invoke(Param)
+	}
+	time.Sleep(DefaultCleanIntervalTime)
+	t.Logf("pre-malloc pool list, capacity:%d", ppremList.Cap())
+	t.Logf("pre-malloc pool list, running workers number:%d", ppremList.Running())
+	t.Logf("pre-malloc pool list, free workers number:%d", ppremList.Free())
+	ppremList.Tune(TestSize)
+	ppremList.Tune(TestSize / 10)
+	t.Logf("pre-malloc pool list, after tuning capacity, capacity:%d, running:%d", ppremList.Cap(),
+		ppremList.Running())
 }

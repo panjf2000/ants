@@ -79,6 +79,7 @@ package main
 
 import (
 	"fmt"
+	"math/rand"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -97,6 +98,11 @@ func myFunc(i interface{}) {
 func demoFunc() {
 	time.Sleep(10 * time.Millisecond)
 	fmt.Println("Hello World!")
+}
+
+func execFunc(i interface{}) interface{} {
+	time.Sleep(time.Duration(rand.Intn(10)+5) * time.Millisecond)
+	return fmt.Sprintf("num:%d", i.(int32))
 }
 
 func main() {
@@ -118,7 +124,7 @@ func main() {
 	fmt.Printf("running goroutines: %d\n", ants.Running())
 	fmt.Printf("finish all tasks.\n")
 
-	// Use the pool with a function,
+	// Use the pool with a method,
 	// set 10 to the capacity of goroutine pool and 1 second for expired duration.
 	p, _ := ants.NewPoolWithFunc(10, func(i interface{}) {
 		myFunc(i)
@@ -133,7 +139,41 @@ func main() {
 	wg.Wait()
 	fmt.Printf("running goroutines: %d\n", p.Running())
 	fmt.Printf("finish all tasks, result is %d\n", sum)
+	if sum != 499500 {
+		panic("the final result is wrong!!!")
+	}
+
+	/************** poolList test **********************/
+
+	outer := make(chan interface{}, 100)
+	pl, _ := ants.NewPoolList(10, outer, func(i interface{}) interface{} {
+		return execFunc(i)
+	})
+
+	go func() {
+		for i := 0; i < runTimes; i++ {
+			if err := pl.Invoke(int32(i)); err != nil {
+				fmt.Println(err)
+			}
+		}
+	}()
+
+	go func() {
+		// release the poolList
+		time.Sleep(time.Millisecond * 500)
+		pl.Release()
+	}()
+
+	for i := range outer {
+		fmt.Println(i)
+		if i == nil {
+			break
+		}
+	}
+    fmt.Printf("running goroutines: %d\n", pl.Running())
+	fmt.Printf("finish all tasks.\n")
 }
+
 ```
 
 ### Pool 配置
@@ -272,7 +312,9 @@ pool.Reboot()
 
 ## ⚙️ 关于任务执行顺序
 
-`ants` 并不保证提交的任务被执行的顺序，执行的顺序也不是和提交的顺序保持一致，因为在 `ants` 是并发地处理所有提交的任务，提交的任务会被分派到正在并发运行的 workers 上去，因此那些任务将会被并发且无序地被执行。
+`ants.Pool, ants.PoolWithFunc` 并不保证提交的任务被执行的顺序，执行的顺序也不是和提交的顺序保持一致，因为在 `ants.Pool, ants.PoolWithFunc` 是并发地处理所有提交的任务，提交的任务会被分派到正在并发运行的 workers 上去，因此那些任务将会被并发且无序地被执行。
+
+`ants.PoolList` 支持执行的顺序和提交的顺序一致, 底层调用 `ants.PoolWithFunc` 并发地处理所有提交的任务。虽然提交的任务无序地被执行，已经完成的任务会根据提交顺序返回结果
 
 ## 🧲 Benchmarks
 

@@ -79,6 +79,7 @@ package main
 
 import (
 	"fmt"
+	"math/rand"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -97,6 +98,11 @@ func myFunc(i interface{}) {
 func demoFunc() {
 	time.Sleep(10 * time.Millisecond)
 	fmt.Println("Hello World!")
+}
+
+func execFunc(i interface{}) interface{} {
+	time.Sleep(time.Duration(rand.Intn(10)+5) * time.Millisecond)
+	return fmt.Sprintf("num:%d", i.(int32))
 }
 
 func main() {
@@ -118,7 +124,7 @@ func main() {
 	fmt.Printf("running goroutines: %d\n", ants.Running())
 	fmt.Printf("finish all tasks.\n")
 
-	// Use the pool with a function,
+	// Use the pool with a method,
 	// set 10 to the capacity of goroutine pool and 1 second for expired duration.
 	p, _ := ants.NewPoolWithFunc(10, func(i interface{}) {
 		myFunc(i)
@@ -133,7 +139,41 @@ func main() {
 	wg.Wait()
 	fmt.Printf("running goroutines: %d\n", p.Running())
 	fmt.Printf("finish all tasks, result is %d\n", sum)
+	if sum != 499500 {
+		panic("the final result is wrong!!!")
+	}
+
+	/************** poolList test **********************/
+
+	outer := make(chan interface{}, 100)
+	pl, _ := ants.NewPoolList(10, outer, func(i interface{}) interface{} {
+		return execFunc(i)
+	})
+
+	go func() {
+		for i := 0; i < runTimes; i++ {
+			if err := pl.Invoke(int32(i)); err != nil {
+				fmt.Println(err)
+			}
+		}
+	}()
+
+	go func() {
+		// release the poolList
+		time.Sleep(time.Millisecond * 500)
+		pl.Release()
+	}()
+
+	for i := range outer {
+		fmt.Println(i)
+		if i == nil {
+			break
+		}
+	}
+    fmt.Printf("running goroutines: %d\n", pl.Running())
+	fmt.Printf("finish all tasks.\n")
 }
+
 ```
 
 ###  Functional options for ants pool
@@ -272,6 +312,9 @@ pool.Reboot()
 ## ⚙️ About sequence
 
 All tasks submitted to `ants` pool will not be guaranteed to be addressed in order, because those tasks scatter among a series of concurrent workers, thus those tasks would be executed concurrently.
+
+`ants.poolList` supports the same order of execution as the order of submission, and the underlying call to `ants.poolWithFunc` processes all the submitted tasks concurrently.
+Although committed tasks are executed unordered, completed tasks return results in the order in which they were committed
 
 ## 🧲 Benchmarks
 

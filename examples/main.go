@@ -24,6 +24,7 @@ package main
 
 import (
 	"fmt"
+	"math/rand"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -42,6 +43,11 @@ func myFunc(i interface{}) {
 func demoFunc() {
 	time.Sleep(10 * time.Millisecond)
 	fmt.Println("Hello World!")
+}
+
+func execFunc(i interface{}) interface{} {
+	time.Sleep(time.Duration(rand.Intn(10)+5) * time.Millisecond)
+	return fmt.Sprintf("num:%d", i.(int32))
 }
 
 func main() {
@@ -81,4 +87,34 @@ func main() {
 	if sum != 499500 {
 		panic("the final result is wrong!!!")
 	}
+
+	/************** poolList test **********************/
+
+	outer := make(chan interface{}, 100)
+	pl, _ := ants.NewPoolList(10, outer, func(i interface{}) interface{} {
+		return execFunc(i)
+	})
+
+	go func() {
+		for i := 0; i < runTimes; i++ {
+			if err := pl.Invoke(int32(i)); err != nil {
+				fmt.Println(err)
+			}
+		}
+	}()
+
+	go func() {
+		// release the poolList
+		time.Sleep(time.Millisecond * 500)
+		pl.Release()
+	}()
+
+	for i := range outer {
+		fmt.Println(i)
+		if i == nil {
+			break
+		}
+	}
+	fmt.Printf("running goroutines: %d\n", pl.Running())
+	fmt.Printf("finish all tasks.\n")
 }

@@ -23,6 +23,8 @@
 package ants
 
 import (
+	"fmt"
+	"math/rand"
 	"runtime"
 	"sync"
 	"testing"
@@ -43,6 +45,11 @@ func demoFunc() {
 func demoPoolFunc(args interface{}) {
 	n := args.(int)
 	time.Sleep(time.Duration(n) * time.Millisecond)
+}
+
+func demoListFunc(i interface{}) interface{} {
+	time.Sleep(time.Duration(rand.Intn(10)+5) * time.Millisecond)
+	return fmt.Sprintf("num:%d", i.(int))
 }
 
 func longRunningFunc() {
