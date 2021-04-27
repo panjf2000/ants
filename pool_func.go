@@ -111,7 +111,7 @@ func (p *PoolWithFunc) purgePeriodically() {
 // NewPoolWithFunc generates an instance of ants pool with a specific function.
 func NewPoolWithFunc(size int, pf func(interface{}), options ...Option) (*PoolWithFunc, error) {
 	if size <= 0 {
-		return nil, ErrInvalidPoolSize
+		size = -1
 	}
 
 	if pf == nil {
@@ -143,6 +143,9 @@ func NewPoolWithFunc(size int, pf func(interface{}), options ...Option) (*PoolWi
 		}
 	}
 	if p.options.PreAlloc {
+		if size == -1 {
+			return nil, ErrInvalidPreAllocSize
+		}
 		p.workers = make([]*goWorkerWithFunc, 0, size)
 	}
 	p.cond = sync.NewCond(p.lock)
@@ -173,9 +176,13 @@ func (p *PoolWithFunc) Running() int {
 	return int(atomic.LoadInt32(&p.running))
 }
 
-// Free returns a available goroutines to work.
+// Free returns a available goroutines to work, -1 indicates this pool is unlimited.
 func (p *PoolWithFunc) Free() int {
-	return p.Cap() - p.Running()
+	c := p.Cap()
+	if c < 0 {
+		return -1
+	}
+	return c - p.Running()
 }
 
 // Cap returns the capacity of this pool.
@@ -185,7 +192,7 @@ func (p *PoolWithFunc) Cap() int {
 
 // Tune changes the capacity of this pool.
 func (p *PoolWithFunc) Tune(size int) {
-	if size <= 0 || size == p.Cap() || p.options.PreAlloc {
+	if capacity := p.Cap(); capacity == -1 || size <= 0 || size == capacity || p.options.PreAlloc {
 		return
 	}
 	atomic.StoreInt32(&p.capacity, int32(size))
@@ -245,7 +252,7 @@ func (p *PoolWithFunc) retrieveWorker() (w *goWorkerWithFunc) {
 		idleWorkers[n] = nil
 		p.workers = idleWorkers[:n]
 		p.lock.Unlock()
-	} else if p.Running() < p.Cap() {
+	} else if capacity := p.Cap(); capacity == -1 || capacity > p.Running() {
 		p.lock.Unlock()
 		spawnWorker()
 	} else {
@@ -261,7 +268,8 @@ func (p *PoolWithFunc) retrieveWorker() (w *goWorkerWithFunc) {
 		p.blockingNum++
 		p.cond.Wait()
 		p.blockingNum--
-		if p.Running() == 0 {
+		var nw int
+		if nw = p.Running(); nw == 0 {
 			p.lock.Unlock()
 			if !p.IsClosed() {
 				spawnWorker()
@@ -270,7 +278,7 @@ func (p *PoolWithFunc) retrieveWorker() (w *goWorkerWithFunc) {
 		}
 		l := len(p.workers) - 1
 		if l < 0 {
-			if p.Running() < p.Cap() {
+			if nw < capacity {
 				p.lock.Unlock()
 				spawnWorker()
 				return

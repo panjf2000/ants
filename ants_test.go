@@ -548,12 +548,42 @@ func TestInfinitePool(t *testing.T) {
 	if n := p.Running(); n != 2 {
 		t.Errorf("expect 2 workers running, but got %d", n)
 	}
+	if n := p.Free(); n != -1 {
+		t.Errorf("expect -1 of free workers by unlimited pool, but got %d", n)
+	}
 	p.Tune(10)
 	if capacity := p.Cap(); capacity != -1 {
 		t.Fatalf("expect capacity: -1 but got %d", capacity)
 	}
 	var err error
-	p, err = NewPool(-1, WithPreAlloc(true))
+	_, err = NewPool(-1, WithPreAlloc(true))
+	if err != ErrInvalidPreAllocSize {
+		t.Errorf("expect ErrInvalidPreAllocSize but got %v", err)
+	}
+}
+
+func TestInfinitePoolWithFunc(t *testing.T) {
+	c := make(chan struct{})
+	p, _ := NewPoolWithFunc(-1, func(i interface{}) {
+		demoPoolFunc(i)
+		<-c
+	})
+	_ = p.Invoke(10)
+	_ = p.Invoke(10)
+	c <- struct{}{}
+	c <- struct{}{}
+	if n := p.Running(); n != 2 {
+		t.Errorf("expect 2 workers running, but got %d", n)
+	}
+	if n := p.Free(); n != -1 {
+		t.Errorf("expect -1 of free workers by unlimited pool, but got %d", n)
+	}
+	p.Tune(10)
+	if capacity := p.Cap(); capacity != -1 {
+		t.Fatalf("expect capacity: -1 but got %d", capacity)
+	}
+	var err error
+	_, err = NewPoolWithFunc(-1, demoPoolFunc, WithPreAlloc(true))
 	if err != ErrInvalidPreAllocSize {
 		t.Errorf("expect ErrInvalidPreAllocSize but got %v", err)
 	}

@@ -159,9 +159,13 @@ func (p *Pool) Running() int {
 	return int(atomic.LoadInt32(&p.running))
 }
 
-// Free returns the available goroutines to work.
+// Free returns the available goroutines to work, -1 indicates this pool is unlimited.
 func (p *Pool) Free() int {
-	return p.Cap() - p.Running()
+	c := p.Cap()
+	if c < 0 {
+		return -1
+	}
+	return c - p.Running()
 }
 
 // Cap returns the capacity of this pool.
@@ -224,10 +228,7 @@ func (p *Pool) retrieveWorker() (w *goWorker) {
 	w = p.workers.detach()
 	if w != nil {
 		p.lock.Unlock()
-	} else if capacity := p.Cap(); capacity == -1 {
-		p.lock.Unlock()
-		spawnWorker()
-	} else if p.Running() < capacity {
+	} else if capacity := p.Cap(); capacity == -1 || capacity > p.Running() {
 		p.lock.Unlock()
 		spawnWorker()
 	} else {
