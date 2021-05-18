@@ -1,4 +1,4 @@
-// Copyright 2019 Andy Pan. All rights reserved.
+// Copyright 2019 Andy Pan & Dietoad. All rights reserved.
 // Use of this source code is governed by an MIT-style
 // license that can be found in the LICENSE file.
 
@@ -13,8 +13,12 @@ import (
 type spinLock uint32
 
 func (sl *spinLock) Lock() {
+	backoff := 1
 	for !atomic.CompareAndSwapUint32((*uint32)(sl), 0, 1) {
-		runtime.Gosched()
+		for i := 0; i < backoff; i++ {
+			runtime.Gosched()
+		}
+		backoff <<= 1
 	}
 }
 
