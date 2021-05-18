@@ -52,6 +52,7 @@ func BenchmarkMutex(b *testing.B) {
 	b.RunParallel(func(pb *testing.PB) {
 		for pb.Next() {
 			m.Lock()
+			//nolint:staticcheck
 			m.Unlock()
 		}
 	})
@@ -62,6 +63,7 @@ func BenchmarkSpinLock(b *testing.B) {
 	b.RunParallel(func(pb *testing.PB) {
 		for pb.Next() {
 			spin.Lock()
+			//nolint:staticcheck
 			spin.Unlock()
 		}
 	})
@@ -72,6 +74,7 @@ func BenchmarkBackOffSpinLock(b *testing.B) {
 	b.RunParallel(func(pb *testing.PB) {
 		for pb.Next() {
 			spin.Lock()
+			//nolint:staticcheck
 			spin.Unlock()
 		}
 	})
