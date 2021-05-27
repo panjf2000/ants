@@ -154,6 +154,16 @@ func (p *Pool) Submit(task func()) error {
 	return nil
 }
 
+// SubmitWithArgs submits a task with arguments to this pool.
+func (p *Pool) SubmitWithArgs(task func(args ...interface{}), args ...interface{}) error {
+	f := func(args ...interface{}) func() {
+		return func() {
+			task(args...)
+		}
+	}
+	return p.Submit(f(args...))
+}
+
 // Running returns the number of the currently running goroutines.
 func (p *Pool) Running() int {
 	return int(atomic.LoadInt32(&p.running))

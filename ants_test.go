@@ -669,3 +669,28 @@ func TestRestCodeCoverage(t *testing.T) {
 	t.Logf("pre-malloc pool with func, after tuning capacity, capacity:%d, running:%d", ppremWithFunc.Cap(),
 		ppremWithFunc.Running())
 }
+
+func TestPool_SubmitWithArgs(t *testing.T) {
+	var wg sync.WaitGroup
+	p, _ := NewPool(AntsSize)
+	defer p.Release()
+
+	var syncSum, asyncSum int
+	var mux sync.Mutex
+	for i := 0; i < Param; i++ {
+		syncSum += i
+		wg.Add(1)
+
+		_ = p.SubmitWithArgs(func(args ...interface{}) {
+			mux.Lock()
+			defer mux.Unlock()
+			asyncSum += args[0].(int)
+			wg.Done()
+		},
+			i)
+	}
+	wg.Wait()
+	if syncSum != asyncSum {
+		t.Fatalf("sum mismatch: %d != %d", syncSum, asyncSum)
+	}
+}
