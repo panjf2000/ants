@@ -226,9 +226,10 @@ p, _ := ants.NewPool(10000)
 ```
 
 ### Submit tasks
-Tasks can be submitted by calling `ants.Submit(func())`
+Tasks can be submitted by calling `ants.Submit(func())` or `ants.SubmitWithArgs(func(args...))`
 ```go
 ants.Submit(func(){})
+ants.SubmitWithArgs(func(args...))
 ```
 
 ### Tune pool capacity in runtime
