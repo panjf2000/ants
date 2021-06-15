@@ -64,7 +64,7 @@ func (w *goWorkerWithFunc) run() {
 		}()
 
 		for args := range w.args {
-			if args == nil {
+			if args == stopArg {
 				return
 			}
 			w.pool.poolFunc(args)

@@ -55,6 +55,25 @@ const (
 
 var curMem uint64
 
+// TestAntsPoolWithFuncWaitToGetWorker is used to test waiting to get worker.
+func TestAntsPoolWithFuncNilParam(t *testing.T) {
+	var wg sync.WaitGroup
+	var isNil bool
+	p, _ := NewPoolWithFunc(1, func(i interface{}) {
+		isNil = i == nil
+		wg.Done()
+	})
+	defer p.Release()
+
+	wg.Add(1)
+	_ = p.Invoke(nil)
+
+	wg.Wait()
+
+	assert.True(t, isNil)
+	t.Logf("pool with func, running workers number:%d", p.Running())
+}
+
 // TestAntsPoolWaitToGetWorker is used to test waiting to get worker.
 func TestAntsPoolWaitToGetWorker(t *testing.T) {
 	var wg sync.WaitGroup

@@ -99,10 +99,24 @@ type Logger interface {
 	// Printf must have the same semantics as log.Printf.
 	Printf(format string, args ...interface{})
 }
+type Task interface {
+	Do()
+}
+
+type TaskFn func()
+
+func (fn TaskFn) Do() {
+	fn()
+}
 
 // Submit submits a task to pool.
 func Submit(task func()) error {
 	return defaultAntsPool.Submit(task)
+}
+
+// SubmitTask submits a task to pool.
+func SubmitTask(task Task) error {
+	return defaultAntsPool.SubmitTask(task)
 }
 
 // Running returns the number of the currently running goroutines.
