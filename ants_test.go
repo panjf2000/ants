@@ -58,15 +58,16 @@ var curMem uint64
 
 // TestAntsPoolWithFuncWaitToGetWorker is used to test waiting to get worker.
 func TestAntsPoolWithFuncNilParam(t *testing.T) {
-	var old1 interface{} = &struct{}{}
-	var old2 interface{} = &struct{}{}
-	assert.True(t, old1 == old2)
+	var old1 interface{} = &struct{ a byte }{}
+	var old2 interface{} = &struct{ a byte }{}
+	assert.True(t, old1 != old2)
 
 	isStopArg := func(v interface{}) bool { return v == stopArg }
 
-	var a1 interface{} = &struct{ _ struct{} }{}
-	var a2 interface{} = &struct{ _ struct{} }{}
-	var a3 interface{} = &struct{ _ struct{} }{}
+	var a1 interface{} = &struct{ a byte }{}
+	var a2 interface{} = &struct{ a byte }{}
+	var a3 interface{} = &struct{ a byte }{}
+	assert.False(t, a1 == a2)
 	assert.False(t, isStopArg(a1))
 	assert.False(t, isStopArg(a2))
 	assert.False(t, isStopArg(a3))
