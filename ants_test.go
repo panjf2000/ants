@@ -25,6 +25,7 @@ package ants
 import (
 	"log"
 	"os"
+	"reflect"
 	"runtime"
 	"sync"
 	"sync/atomic"
@@ -57,20 +58,37 @@ var curMem uint64
 
 // TestAntsPoolWithFuncWaitToGetWorker is used to test waiting to get worker.
 func TestAntsPoolWithFuncNilParam(t *testing.T) {
+	var old1 interface{} = &struct{}{}
+	var old2 interface{} = &struct{}{}
+	assert.True(t, old1 == old2)
+
+	isStopArg := func(v interface{}) bool { return v == stopArg }
+
+	var a1 interface{} = &struct{ _ struct{} }{}
+	var a2 interface{} = &struct{ _ struct{} }{}
+	var a3 interface{} = &struct{ _ struct{} }{}
+	assert.False(t, isStopArg(a1))
+	assert.False(t, isStopArg(a2))
+	assert.False(t, isStopArg(a3))
+	assert.True(t, isStopArg(stopArg))
+
 	var wg sync.WaitGroup
-	var isNil bool
+	var isNilCount int
 	p, _ := NewPoolWithFunc(1, func(i interface{}) {
-		isNil = i == nil
+		if i == nil || reflect.ValueOf(i).IsNil() {
+			isNilCount++
+		}
 		wg.Done()
 	})
 	defer p.Release()
 
-	wg.Add(1)
+	wg.Add(2)
 	_ = p.Invoke(nil)
+	_ = p.Invoke((*PoolWithFunc)(nil))
 
 	wg.Wait()
 
-	assert.True(t, isNil)
+	assert.Equal(t, 2, isNilCount)
 	t.Logf("pool with func, running workers number:%d", p.Running())
 }
 

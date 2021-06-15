@@ -63,7 +63,7 @@ type PoolWithFunc struct {
 	options *Options
 }
 
-var stopArg interface{} = &struct{}{}
+var stopArg interface{} = &struct{ _ struct{} }{}
 
 // purgePeriodically clears expired workers periodically which runs in an individual goroutine, as a scavenger.
 func (p *PoolWithFunc) purgePeriodically() {
