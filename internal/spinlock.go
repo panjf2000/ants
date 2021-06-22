@@ -12,13 +12,18 @@ import (
 
 type spinLock uint32
 
+const maxBackoff = 64
+
 func (sl *spinLock) Lock() {
 	backoff := 1
 	for !atomic.CompareAndSwapUint32((*uint32)(sl), 0, 1) {
+		// Leverage the exponential backoff algorithm, see https://en.wikipedia.org/wiki/Exponential_backoff.
 		for i := 0; i < backoff; i++ {
 			runtime.Gosched()
 		}
-		backoff <<= 1
+		if backoff < maxBackoff {
+			backoff <<= 1
+		}
 	}
 }
 

@@ -11,6 +11,17 @@ import (
 	"testing"
 )
 
+/*
+Benchmark result for three types of locks:
+	goos: darwin
+	goarch: amd64
+	pkg: github.com/panjf2000/ants/v2/internal
+	cpu: Intel(R) Core(TM) i7-9750H CPU @ 2.60GHz
+	BenchmarkMutex-12              	20549502	        71.84 ns/op	       0 B/op	       0 allocs/op
+	BenchmarkSpinLock-12           	58629697	        20.02 ns/op	       0 B/op	       0 allocs/op
+	BenchmarkBackOffSpinLock-12    	72523454	        15.74 ns/op	       0 B/op	       0 allocs/op
+*/
+
 type originSpinLock uint32
 
 func (sl *originSpinLock) Lock() {
