@@ -427,24 +427,26 @@ func TestMaxBlockingSubmit(t *testing.T) {
 
 func TestNonblockingSubmitWithFunc(t *testing.T) {
 	poolSize := 10
-	ch1 := make(chan struct{})
+	var wg sync.WaitGroup
 	p, err := NewPoolWithFunc(poolSize, func(i interface{}) {
 		longRunningPoolFunc(i)
-		close(ch1)
+		wg.Done()
 	}, WithNonblocking(true))
 	assert.NoError(t, err, "create TimingPool failed: %v", err)
 	defer p.Release()
-	for i := 0; i < poolSize-1; i++ {
-		assert.NoError(t, p.Invoke(nil), "nonblocking submit when pool is not full shouldn't return error")
-	}
 	ch := make(chan struct{})
+	for i := 0; i < poolSize-1; i++ {
+	        wg.Add(1)
+		assert.NoError(t, p.Invoke(ch), "nonblocking submit when pool is not full shouldn't return error")
+	}
 	// p is full now.
+	wg.Add(1)
 	assert.NoError(t, p.Invoke(ch), "nonblocking submit when pool is not full shouldn't return error")
 	assert.EqualError(t, p.Invoke(nil), ErrPoolOverload.Error(),
 		"nonblocking submit when pool is full should get an ErrPoolOverload")
 	// interrupt f to get an available worker
 	close(ch)
-	<-ch1
+	wg.Wait()
 	assert.NoError(t, p.Invoke(nil), "nonblocking submit when pool is not full shouldn't return error")
 }
 
