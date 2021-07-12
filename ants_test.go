@@ -435,12 +435,11 @@ func TestNonblockingSubmitWithFunc(t *testing.T) {
 	assert.NoError(t, err, "create TimingPool failed: %v", err)
 	defer p.Release()
 	ch := make(chan struct{})
-	wg.Add(poolSize-1)
+	wg.Add(poolSize)
 	for i := 0; i < poolSize-1; i++ {
 		assert.NoError(t, p.Invoke(ch), "nonblocking submit when pool is not full shouldn't return error")
 	}
 	// p is full now.
-	wg.Add(1)
 	assert.NoError(t, p.Invoke(ch), "nonblocking submit when pool is not full shouldn't return error")
 	assert.EqualError(t, p.Invoke(nil), ErrPoolOverload.Error(),
 		"nonblocking submit when pool is full should get an ErrPoolOverload")
