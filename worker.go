@@ -35,7 +35,7 @@ type goWorker struct {
 	pool *Pool
 
 	// task is a job should be done.
-	task chan func()
+	task chan Task
 
 	// recycleTime will be update when putting a worker back into queue.
 	recycleTime time.Time
@@ -67,7 +67,8 @@ func (w *goWorker) run() {
 			if f == nil {
 				return
 			}
-			f()
+
+			f.Do()
 			if ok := w.pool.revertWorker(w); !ok {
 				return
 			}
