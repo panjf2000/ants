@@ -61,6 +61,7 @@ type PoolWithFunc struct {
 	blockingNum int
 
 	options *Options
+	done    chan struct{}
 }
 
 // purgePeriodically clears expired workers periodically which runs in an individual goroutine, as a scavenger.
@@ -69,41 +70,47 @@ func (p *PoolWithFunc) purgePeriodically() {
 	defer heartbeat.Stop()
 
 	var expiredWorkers []*goWorkerWithFunc
-	for range heartbeat.C {
-		if p.IsClosed() {
-			break
-		}
-		currentTime := time.Now()
-		p.lock.Lock()
-		idleWorkers := p.workers
-		n := len(idleWorkers)
-		var i int
-		for i = 0; i < n && currentTime.Sub(idleWorkers[i].recycleTime) > p.options.ExpiryDuration; i++ {
-		}
-		expiredWorkers = append(expiredWorkers[:0], idleWorkers[:i]...)
-		if i > 0 {
-			m := copy(idleWorkers, idleWorkers[i:])
-			for i = m; i < n; i++ {
-				idleWorkers[i] = nil
+loop:
+	for {
+		select {
+		case <-p.done:
+			return
+		case <-heartbeat.C:
+			if p.IsClosed() {
+				break loop
 			}
-			p.workers = idleWorkers[:m]
-		}
-		p.lock.Unlock()
+			currentTime := time.Now()
+			p.lock.Lock()
+			idleWorkers := p.workers
+			n := len(idleWorkers)
+			var i int
+			for i = 0; i < n && currentTime.Sub(idleWorkers[i].recycleTime) > p.options.ExpiryDuration; i++ {
+			}
+			expiredWorkers = append(expiredWorkers[:0], idleWorkers[:i]...)
+			if i > 0 {
+				m := copy(idleWorkers, idleWorkers[i:])
+				for i = m; i < n; i++ {
+					idleWorkers[i] = nil
+				}
+				p.workers = idleWorkers[:m]
+			}
+			p.lock.Unlock()
 
-		// Notify obsolete workers to stop.
-		// This notification must be outside the p.lock, since w.task
-		// may be blocking and may consume a lot of time if many workers
-		// are located on non-local CPUs.
-		for i, w := range expiredWorkers {
-			w.args <- nil
-			expiredWorkers[i] = nil
-		}
+			// Notify obsolete workers to stop.
+			// This notification must be outside the p.lock, since w.task
+			// may be blocking and may consume a lot of time if many workers
+			// are located on non-local CPUs.
+			for i, w := range expiredWorkers {
+				w.args <- nil
+				expiredWorkers[i] = nil
+			}
 
-		// There might be a situation that all workers have been cleaned up(no any worker is running)
-		// while some invokers still get stuck in "p.cond.Wait()",
-		// then it ought to wake all those invokers.
-		if p.Running() == 0 {
-			p.cond.Broadcast()
+			// There might be a situation that all workers have been cleaned up(no any worker is running)
+			// while some invokers still get stuck in "p.cond.Wait()",
+			// then it ought to wake all those invokers.
+			if p.Running() == 0 {
+				p.cond.Broadcast()
+			}
 		}
 	}
 }
@@ -135,6 +142,7 @@ func NewPoolWithFunc(size int, pf func(interface{}), options ...Option) (*PoolWi
 		poolFunc: pf,
 		lock:     internal.NewSpinLock(),
 		options:  opts,
+		done:     make(chan struct{}),
 	}
 	p.workerCache.New = func() interface{} {
 		return &goWorkerWithFunc{
@@ -212,6 +220,7 @@ func (p *PoolWithFunc) Release() {
 		w.args <- nil
 	}
 	p.workers = nil
+	close(p.done)
 	p.lock.Unlock()
 	// There might be some callers waiting in retrieveWorker(), so we need to wake them up to prevent
 	// those callers blocking infinitely.
@@ -221,6 +230,7 @@ func (p *PoolWithFunc) Release() {
 // Reboot reboots a closed pool.
 func (p *PoolWithFunc) Reboot() {
 	if atomic.CompareAndSwapInt32(&p.state, CLOSED, OPENED) {
+		p.done = make(chan struct{})
 		go p.purgePeriodically()
 	}
 }
