@@ -28,6 +28,7 @@ import (
 	"math"
 	"os"
 	"runtime"
+	"sync"
 	"time"
 )
 
@@ -91,7 +92,13 @@ var (
 	defaultLogger = Logger(log.New(os.Stderr, "", log.LstdFlags))
 
 	// Init a instance pool when importing ants.
-	defaultAntsPool, _ = NewPool(DefaultAntsPoolSize)
+	defaultAntsPool *Pool
+
+	onceInitDefaultPool sync.Once
+
+	initDefaultPoolFn = func() {
+		defaultAntsPool, _ = NewPool(DefaultAntsPoolSize)
+	}
 )
 
 // Logger is used for logging formatted messages.
@@ -102,30 +109,36 @@ type Logger interface {
 
 // Submit submits a task to pool.
 func Submit(task func()) error {
+	onceInitDefaultPool.Do(initDefaultPoolFn)
 	return defaultAntsPool.Submit(task)
 }
 
 // Running returns the number of the currently running goroutines.
 func Running() int {
+	onceInitDefaultPool.Do(initDefaultPoolFn)
 	return defaultAntsPool.Running()
 }
 
 // Cap returns the capacity of this default pool.
 func Cap() int {
+	onceInitDefaultPool.Do(initDefaultPoolFn)
 	return defaultAntsPool.Cap()
 }
 
 // Free returns the available goroutines to work.
 func Free() int {
+	onceInitDefaultPool.Do(initDefaultPoolFn)
 	return defaultAntsPool.Free()
 }
 
 // Release Closes the default pool.
 func Release() {
+	onceInitDefaultPool.Do(initDefaultPoolFn)
 	defaultAntsPool.Release()
 }
 
 // Reboot reboots the default pool.
 func Reboot() {
+	onceInitDefaultPool.Do(initDefaultPoolFn)
 	defaultAntsPool.Reboot()
 }

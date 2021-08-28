@@ -32,6 +32,7 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/assert"
+	"go.uber.org/goleak"
 )
 
 const (
@@ -57,6 +58,8 @@ var curMem uint64
 
 // TestAntsPoolWaitToGetWorker is used to test waiting to get worker.
 func TestAntsPoolWaitToGetWorker(t *testing.T) {
+	defer goleak.VerifyNone(t)
+
 	var wg sync.WaitGroup
 	p, _ := NewPool(AntsSize)
 	defer p.Release()
@@ -77,6 +80,7 @@ func TestAntsPoolWaitToGetWorker(t *testing.T) {
 }
 
 func TestAntsPoolWaitToGetWorkerPreMalloc(t *testing.T) {
+	defer goleak.VerifyNone(t)
 	var wg sync.WaitGroup
 	p, _ := NewPool(AntsSize, WithPreAlloc(true))
 	defer p.Release()
@@ -98,6 +102,7 @@ func TestAntsPoolWaitToGetWorkerPreMalloc(t *testing.T) {
 
 // TestAntsPoolWithFuncWaitToGetWorker is used to test waiting to get worker.
 func TestAntsPoolWithFuncWaitToGetWorker(t *testing.T) {
+	defer goleak.VerifyNone(t)
 	var wg sync.WaitGroup
 	p, _ := NewPoolWithFunc(AntsSize, func(i interface{}) {
 		demoPoolFunc(i)
@@ -118,6 +123,7 @@ func TestAntsPoolWithFuncWaitToGetWorker(t *testing.T) {
 }
 
 func TestAntsPoolWithFuncWaitToGetWorkerPreMalloc(t *testing.T) {
+	defer goleak.VerifyNone(t)
 	var wg sync.WaitGroup
 	p, _ := NewPoolWithFunc(AntsSize, func(i interface{}) {
 		demoPoolFunc(i)
@@ -139,6 +145,7 @@ func TestAntsPoolWithFuncWaitToGetWorkerPreMalloc(t *testing.T) {
 
 // TestAntsPoolGetWorkerFromCache is used to test getting worker from sync.Pool.
 func TestAntsPoolGetWorkerFromCache(t *testing.T) {
+	defer goleak.VerifyNone(t)
 	p, _ := NewPool(TestSize)
 	defer p.Release()
 
@@ -156,6 +163,7 @@ func TestAntsPoolGetWorkerFromCache(t *testing.T) {
 
 // TestAntsPoolWithFuncGetWorkerFromCache is used to test getting worker from sync.Pool.
 func TestAntsPoolWithFuncGetWorkerFromCache(t *testing.T) {
+	defer goleak.VerifyNone(t)
 	dur := 10
 	p, _ := NewPoolWithFunc(TestSize, demoPoolFunc)
 	defer p.Release()
@@ -173,6 +181,7 @@ func TestAntsPoolWithFuncGetWorkerFromCache(t *testing.T) {
 }
 
 func TestAntsPoolWithFuncGetWorkerFromCachePreMalloc(t *testing.T) {
+	defer goleak.VerifyNone(t)
 	dur := 10
 	p, _ := NewPoolWithFunc(TestSize, demoPoolFunc, WithPreAlloc(true))
 	defer p.Release()
@@ -194,6 +203,7 @@ func TestAntsPoolWithFuncGetWorkerFromCachePreMalloc(t *testing.T) {
 //-------------------------------------------------------------------------------------------
 
 func TestNoPool(t *testing.T) {
+	defer goleak.VerifyNone(t)
 	var wg sync.WaitGroup
 	for i := 0; i < n; i++ {
 		wg.Add(1)
@@ -211,6 +221,7 @@ func TestNoPool(t *testing.T) {
 }
 
 func TestAntsPool(t *testing.T) {
+	defer goleak.VerifyNone(t)
 	defer Release()
 	var wg sync.WaitGroup
 	for i := 0; i < n; i++ {
@@ -236,6 +247,7 @@ func TestAntsPool(t *testing.T) {
 //-------------------------------------------------------------------------------------------
 
 func TestPanicHandler(t *testing.T) {
+	defer goleak.VerifyNone(t)
 	var panicCounter int64
 	var wg sync.WaitGroup
 	p0, err := NewPool(10, WithPanicHandler(func(p interface{}) {
@@ -268,6 +280,7 @@ func TestPanicHandler(t *testing.T) {
 }
 
 func TestPanicHandlerPreMalloc(t *testing.T) {
+	defer goleak.VerifyNone(t)
 	var panicCounter int64
 	var wg sync.WaitGroup
 	p0, err := NewPool(10, WithPreAlloc(true), WithPanicHandler(func(p interface{}) {
@@ -300,6 +313,7 @@ func TestPanicHandlerPreMalloc(t *testing.T) {
 }
 
 func TestPoolPanicWithoutHandler(t *testing.T) {
+	defer goleak.VerifyNone(t)
 	p0, err := NewPool(10)
 	assert.NoErrorf(t, err, "create new pool failed: %v", err)
 	defer p0.Release()
@@ -316,6 +330,7 @@ func TestPoolPanicWithoutHandler(t *testing.T) {
 }
 
 func TestPoolPanicWithoutHandlerPreMalloc(t *testing.T) {
+	defer goleak.VerifyNone(t)
 	p0, err := NewPool(10, WithPreAlloc(true))
 	assert.NoErrorf(t, err, "create new pool failed: %v", err)
 	defer p0.Release()
@@ -334,6 +349,7 @@ func TestPoolPanicWithoutHandlerPreMalloc(t *testing.T) {
 }
 
 func TestPurge(t *testing.T) {
+	defer goleak.VerifyNone(t)
 	p, err := NewPool(10)
 	assert.NoErrorf(t, err, "create TimingPool failed: %v", err)
 	defer p.Release()
@@ -349,6 +365,7 @@ func TestPurge(t *testing.T) {
 }
 
 func TestPurgePreMalloc(t *testing.T) {
+	defer goleak.VerifyNone(t)
 	p, err := NewPool(10, WithPreAlloc(true))
 	assert.NoErrorf(t, err, "create TimingPool failed: %v", err)
 	defer p.Release()
@@ -364,6 +381,7 @@ func TestPurgePreMalloc(t *testing.T) {
 }
 
 func TestNonblockingSubmit(t *testing.T) {
+	defer goleak.VerifyNone(t)
 	poolSize := 10
 	p, err := NewPool(poolSize, WithNonblocking(true))
 	assert.NoErrorf(t, err, "create TimingPool failed: %v", err)
@@ -388,6 +406,7 @@ func TestNonblockingSubmit(t *testing.T) {
 }
 
 func TestMaxBlockingSubmit(t *testing.T) {
+	defer goleak.VerifyNone(t)
 	poolSize := 10
 	p, err := NewPool(poolSize, WithMaxBlockingTasks(1))
 	assert.NoErrorf(t, err, "create TimingPool failed: %v", err)
@@ -426,6 +445,7 @@ func TestMaxBlockingSubmit(t *testing.T) {
 }
 
 func TestNonblockingSubmitWithFunc(t *testing.T) {
+	defer goleak.VerifyNone(t)
 	poolSize := 10
 	var wg sync.WaitGroup
 	p, err := NewPoolWithFunc(poolSize, func(i interface{}) {
@@ -450,6 +470,7 @@ func TestNonblockingSubmitWithFunc(t *testing.T) {
 }
 
 func TestMaxBlockingSubmitWithFunc(t *testing.T) {
+	defer goleak.VerifyNone(t)
 	poolSize := 10
 	p, err := NewPoolWithFunc(poolSize, longRunningPoolFunc, WithMaxBlockingTasks(1))
 	assert.NoError(t, err, "create TimingPool failed: %v", err)
@@ -485,6 +506,7 @@ func TestMaxBlockingSubmitWithFunc(t *testing.T) {
 }
 
 func TestRebootDefaultPool(t *testing.T) {
+	defer goleak.VerifyNone(t)
 	defer Release()
 	Reboot()
 	var wg sync.WaitGroup
@@ -503,6 +525,7 @@ func TestRebootDefaultPool(t *testing.T) {
 }
 
 func TestRebootNewPool(t *testing.T) {
+	defer goleak.VerifyNone(t)
 	var wg sync.WaitGroup
 	p, err := NewPool(10)
 	assert.NoErrorf(t, err, "create Pool failed: %v", err)
@@ -538,6 +561,7 @@ func TestRebootNewPool(t *testing.T) {
 }
 
 func TestInfinitePool(t *testing.T) {
+	defer goleak.VerifyNone(t)
 	c := make(chan struct{})
 	p, _ := NewPool(-1)
 	_ = p.Submit(func() {
@@ -564,6 +588,7 @@ func TestInfinitePool(t *testing.T) {
 }
 
 func TestInfinitePoolWithFunc(t *testing.T) {
+	defer goleak.VerifyNone(t)
 	c := make(chan struct{})
 	p, _ := NewPoolWithFunc(-1, func(i interface{}) {
 		demoPoolFunc(i)
@@ -591,6 +616,7 @@ func TestInfinitePoolWithFunc(t *testing.T) {
 }
 
 func TestRestCodeCoverage(t *testing.T) {
+	defer goleak.VerifyNone(t)
 	_, err := NewPool(-1, WithExpiryDuration(-1))
 	t.Log(err)
 	_, err = NewPool(1, WithExpiryDuration(-1))

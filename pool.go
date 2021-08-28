@@ -59,6 +59,8 @@ type Pool struct {
 	blockingNum int
 
 	options *Options
+
+	done chan struct{}
 }
 
 // purgePeriodically clears expired workers periodically which runs in an individual goroutine, as a scavenger.
@@ -66,29 +68,35 @@ func (p *Pool) purgePeriodically() {
 	heartbeat := time.NewTicker(p.options.ExpiryDuration)
 	defer heartbeat.Stop()
 
-	for range heartbeat.C {
-		if p.IsClosed() {
-			break
-		}
+loop:
+	for {
+		select {
+		case <-p.done:
+			return
+		case <-heartbeat.C:
+			if p.IsClosed() {
+				break loop
+			}
 
-		p.lock.Lock()
-		expiredWorkers := p.workers.retrieveExpiry(p.options.ExpiryDuration)
-		p.lock.Unlock()
+			p.lock.Lock()
+			expiredWorkers := p.workers.retrieveExpiry(p.options.ExpiryDuration)
+			p.lock.Unlock()
 
-		// Notify obsolete workers to stop.
-		// This notification must be outside the p.lock, since w.task
-		// may be blocking and may consume a lot of time if many workers
-		// are located on non-local CPUs.
-		for i := range expiredWorkers {
-			expiredWorkers[i].task <- nil
-			expiredWorkers[i] = nil
-		}
+			// Notify obsolete workers to stop.
+			// This notification must be outside the p.lock, since w.task
+			// may be blocking and may consume a lot of time if many workers
+			// are located on non-local CPUs.
+			for i := range expiredWorkers {
+				expiredWorkers[i].task <- nil
+				expiredWorkers[i] = nil
+			}
 
-		// There might be a situation that all workers have been cleaned up(no any worker is running)
-		// while some invokers still get stuck in "p.cond.Wait()",
-		// then it ought to wake all those invokers.
-		if p.Running() == 0 {
-			p.cond.Broadcast()
+			// There might be a situation that all workers have been cleaned up(no any worker is running)
+			// while some invokers still get stuck in "p.cond.Wait()",
+			// then it ought to wake all those invokers.
+			if p.Running() == 0 {
+				p.cond.Broadcast()
+			}
 		}
 	}
 }
@@ -115,6 +123,7 @@ func NewPool(size int, options ...Option) (*Pool, error) {
 		capacity: int32(size),
 		lock:     internal.NewSpinLock(),
 		options:  opts,
+		done:     make(chan struct{}),
 	}
 	p.workerCache.New = func() interface{} {
 		return &goWorker{
@@ -191,6 +200,7 @@ func (p *Pool) Release() {
 	atomic.StoreInt32(&p.state, CLOSED)
 	p.lock.Lock()
 	p.workers.reset()
+	close(p.done)
 	p.lock.Unlock()
 	// There might be some callers waiting in retrieveWorker(), so we need to wake them up to prevent
 	// those callers blocking infinitely.
@@ -200,6 +210,7 @@ func (p *Pool) Release() {
 // Reboot reboots a closed pool.
 func (p *Pool) Reboot() {
 	if atomic.CompareAndSwapInt32(&p.state, CLOSED, OPENED) {
+		p.done = make(chan struct{})
 		go p.purgePeriodically()
 	}
 }
