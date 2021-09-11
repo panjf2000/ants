@@ -37,7 +37,7 @@ type goWorkerWithFunc struct {
 	// args is a job should be done.
 	args chan interface{}
 
-	// recycleTime will be update when putting a worker back into queue.
+	// recycleTime will be updated when putting a worker back into queue.
 	recycleTime time.Time
 }
 

@@ -353,7 +353,7 @@ pool.Reboot()
 
 ## ☕️ 打赏
 
-> 当您通过以下方式进行捐赠时，请务必留下姓名、Github账号或其他社交媒体账号，以便我将其添加到捐赠者名单中，以表谢意。
+> 当您通过以下方式进行捐赠时，请务必留下姓名、GitHub账号或其他社交媒体账号，以便我将其添加到捐赠者名单中，以表谢意。
 
 <img src="https://raw.githubusercontent.com/panjf2000/illustrations/master/payments/WeChatPay.JPG" width="250" align="middle"/>&nbsp;&nbsp;
 <img src="https://raw.githubusercontent.com/panjf2000/illustrations/master/payments/AliPay.JPG" width="250" align="middle"/>&nbsp;&nbsp;

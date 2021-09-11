@@ -90,7 +90,7 @@ var (
 
 	defaultLogger = Logger(log.New(os.Stderr, "", log.LstdFlags))
 
-	// Init a instance pool when importing ants.
+	// Init an instance pool when importing ants.
 	defaultAntsPool, _ = NewPool(DefaultAntsPoolSize)
 )
 

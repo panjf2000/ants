@@ -13,7 +13,7 @@ func loadOptions(options ...Option) *Options {
 	return opts
 }
 
-// Options contains all options which will be applied when instantiating a ants pool.
+// Options contains all options which will be applied when instantiating an ants pool.
 type Options struct {
 	// ExpiryDuration is a period for the scavenger goroutine to clean up those expired workers,
 	// the scavenger scans all workers every `ExpiryDuration` and clean up those workers that haven't been

@@ -52,7 +52,7 @@ type Pool struct {
 	// cond for waiting to get a idle worker.
 	cond *sync.Cond
 
-	// workerCache speeds up the obtainment of the an usable worker in function:retrieveWorker.
+	// workerCache speeds up the obtainment of a usable worker in function:retrieveWorker.
 	workerCache sync.Pool
 
 	// blockingNum is the number of the goroutines already been blocked on pool.Submit, protected by pool.lock
@@ -216,7 +216,7 @@ func (p *Pool) decRunning() {
 	atomic.AddInt32(&p.running, -1)
 }
 
-// retrieveWorker returns a available worker to run the tasks.
+// retrieveWorker returns an available worker to run the tasks.
 func (p *Pool) retrieveWorker() (w *goWorker) {
 	spawnWorker := func() {
 		w = p.workerCache.Get().(*goWorker)

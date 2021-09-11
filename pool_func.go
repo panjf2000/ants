@@ -48,13 +48,13 @@ type PoolWithFunc struct {
 	// state is used to notice the pool to closed itself.
 	state int32
 
-	// cond for waiting to get a idle worker.
+	// cond for waiting to get an idle worker.
 	cond *sync.Cond
 
 	// poolFunc is the function for processing tasks.
 	poolFunc func(interface{})
 
-	// workerCache speeds up the obtainment of the an usable worker in function:retrieveWorker.
+	// workerCache speeds up the obtainment of a usable worker in function:retrieveWorker.
 	workerCache sync.Pool
 
 	// blockingNum is the number of the goroutines already been blocked on pool.Submit, protected by pool.lock
@@ -99,7 +99,7 @@ func (p *PoolWithFunc) purgePeriodically() {
 			expiredWorkers[i] = nil
 		}
 
-		// There might be a situation that all workers have been cleaned up(no any worker is running)
+		// There might be a situation that all workers have been cleaned up(no worker is running)
 		// while some invokers still get stuck in "p.cond.Wait()",
 		// then it ought to wake all those invokers.
 		if p.Running() == 0 {
