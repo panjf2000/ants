@@ -37,7 +37,7 @@ type goWorker struct {
 	// task is a job should be done.
 	task chan func()
 
-	// recycleTime will be update when putting a worker back into queue.
+	// recycleTime will be updated when putting a worker back into queue.
 	recycleTime time.Time
 }
 
