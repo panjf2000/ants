@@ -13,15 +13,9 @@ import (
 )
 
 const (
-	Backoff    = 64
-	RunTimes = 1000
-	SleepTime = 15
+	RunTimes   = 1000
+	SleepTime  = 15
 )
-
-func demoFunc(args interface{}) {
-	n := args.(int)
-	time.Sleep(time.Duration(n) * time.Millisecond)
-}
 
 type originSpinLock uint32
 
@@ -47,7 +41,7 @@ func (sl *backOffSpinLock) Lock() {
 		for i := 0; i < wait; i++ {
 			runtime.Gosched()
 		}
-		if wait < Backoff {
+		if wait < maxBackoff {
 			wait <<= 1
 		}
 	}
@@ -66,7 +60,7 @@ func BenchmarkMutex(b *testing.B) {
 	b.RunParallel(func(pb *testing.PB) {
 		for pb.Next() {
 			m.Lock()
-			demoFunc(SleepTime)
+			time.Sleep(time.Duration(SleepTime) * time.Millisecond)
 			m.Unlock()
 		}
 	})
@@ -77,7 +71,7 @@ func BenchmarkOriginSpinLockRunParalleWithFunc(b *testing.B) {
 	b.RunParallel(func(pb *testing.PB) {
 		for pb.Next() {
 			spin.Lock()
-			demoFunc(SleepTime)
+			time.Sleep(time.Duration(SleepTime) * time.Millisecond)
 			spin.Unlock()
 		}
 	})
@@ -88,43 +82,7 @@ func BenchmarkBackOffSpinLockRunParallelWithFunc(b *testing.B) {
 	b.RunParallel(func(pb *testing.PB) {
 		for pb.Next() {
 			spin.Lock()
-			demoFunc(SleepTime)
-			spin.Unlock()
-		}
-	})
-}
-
-func BenchmarkOriginSpinLockRunParalleWithGoroutine(b *testing.B) {
-	spin := GetOriginSpinLock()
-	var wg sync.WaitGroup
-	var f= func() {
-		time.Sleep(time.Duration(SleepTime) * time.Millisecond)
-		wg.Done()
-	}
-	b.RunParallel(func(pb *testing.PB) {
-		for pb.Next() {
-			spin.Lock()
-			wg.Add( 1)
-			go f()
-			wg.Wait()
-			spin.Unlock()
-		}
-	})
-}
-
-func BenchmarkBackOffSpinLockRunParallelWithGoroutine(b *testing.B) {
-	spin := GetBackOffSpinLock()
-	var wg sync.WaitGroup
-	var f= func() {
-		time.Sleep(time.Duration(SleepTime) * time.Millisecond)
-		wg.Done()
-	}
-	b.RunParallel(func(pb *testing.PB) {
-		for pb.Next() {
-			spin.Lock()
-			wg.Add( 1)
-			go f()
-			wg.Wait()
+			time.Sleep(time.Duration(SleepTime) * time.Millisecond)
 			spin.Unlock()
 		}
 	})
@@ -178,50 +136,3 @@ func BenchmarkBackOffSpinLockWithGoroutineLock(b *testing.B) {
 	wg.Wait()
 }
 
-func BenchmarkMutexWithGoroutine(b *testing.B) {
-	m := sync.Mutex{}
-	var wg sync.WaitGroup
-	var f= func() {
-		time.Sleep(time.Duration(SleepTime) * time.Millisecond)
-		wg.Done()
-	}
-	wg.Add(RunTimes)
-	for i:=0;i<RunTimes;i++ {
-		m.Lock()
-		go f()
-		m.Unlock()
-	}
-	wg.Wait()
-}
-
-func BenchmarkOriginSpinLockWithGoroutine(b *testing.B) {
-	spin := GetOriginSpinLock()
-	var wg sync.WaitGroup
-	var f= func() {
-		time.Sleep(time.Duration(SleepTime) * time.Millisecond)
-		wg.Done()
-	}
-	wg.Add(RunTimes)
-	for i:=0;i<RunTimes;i++ {
-		spin.Lock()
-		go f()
-		spin.Unlock()
-	}
-	wg.Wait()
-}
-
-func BenchmarkBackOffSpinLockWithGoroutine(b *testing.B) {
-	spin := GetBackOffSpinLock()
-	var wg sync.WaitGroup
-	var f= func() {
-		time.Sleep(time.Duration(SleepTime) * time.Millisecond)
-		wg.Done()
-	}
-	wg.Add(RunTimes)
-	for i:=0;i<RunTimes;i++ {
-		spin.Lock()
-		go f()
-		spin.Unlock()
-	}
-	wg.Wait()
-}
