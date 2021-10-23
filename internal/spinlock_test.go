@@ -13,8 +13,8 @@ import (
 )
 
 const (
-	RunTimes   = 1000
-	SleepTime  = 15
+	GoroutineNum   = 6000
+	SleepTime      = 10
 )
 
 type originSpinLock uint32
@@ -33,61 +33,6 @@ func GetOriginSpinLock() sync.Locker {
 	return new(originSpinLock)
 }
 
-type backOffSpinLock uint32
-
-func (sl *backOffSpinLock) Lock() {
-	wait := 1
-	for !atomic.CompareAndSwapUint32((*uint32)(sl), 0, 1) {
-		for i := 0; i < wait; i++ {
-			runtime.Gosched()
-		}
-		if wait < maxBackoff {
-			wait <<= 1
-		}
-	}
-}
-
-func (sl *backOffSpinLock) Unlock() {
-	atomic.StoreUint32((*uint32)(sl), 0)
-}
-
-func GetBackOffSpinLock() sync.Locker {
-	return new(backOffSpinLock)
-}
-
-func BenchmarkMutex(b *testing.B) {
-	m := sync.Mutex{}
-	b.RunParallel(func(pb *testing.PB) {
-		for pb.Next() {
-			m.Lock()
-			time.Sleep(time.Duration(SleepTime) * time.Millisecond)
-			m.Unlock()
-		}
-	})
-}
-
-func BenchmarkOriginSpinLockRunParalleWithFunc(b *testing.B) {
-	spin := GetOriginSpinLock()
-	b.RunParallel(func(pb *testing.PB) {
-		for pb.Next() {
-			spin.Lock()
-			time.Sleep(time.Duration(SleepTime) * time.Millisecond)
-			spin.Unlock()
-		}
-	})
-}
-
-func BenchmarkBackOffSpinLockRunParallelWithFunc(b *testing.B) {
-	spin := GetBackOffSpinLock()
-	b.RunParallel(func(pb *testing.PB) {
-		for pb.Next() {
-			spin.Lock()
-			time.Sleep(time.Duration(SleepTime) * time.Millisecond)
-			spin.Unlock()
-		}
-	})
-}
-
 func BenchmarkMutexWithGoroutineLock(b *testing.B) {
 	m := sync.Mutex{}
 	var wg sync.WaitGroup
@@ -97,8 +42,8 @@ func BenchmarkMutexWithGoroutineLock(b *testing.B) {
 		m.Unlock()
 		wg.Done()
 	}
-	wg.Add(RunTimes)
-	for i:=0;i<RunTimes;i++ {
+	wg.Add(GoroutineNum)
+	for i:=0;i<GoroutineNum;i++ {
 		go f()
 	}
 	wg.Wait()
@@ -113,15 +58,15 @@ func BenchmarkOriginSpinLockWithGoroutineLock(b *testing.B) {
 		spin.Unlock()
 		wg.Done()
 	}
-	wg.Add(RunTimes)
-	for i:=0;i<RunTimes;i++ {
+	wg.Add(GoroutineNum)
+	for i:=0;i<GoroutineNum;i++ {
 		go f()
 	}
 	wg.Wait()
 }
 
 func BenchmarkBackOffSpinLockWithGoroutineLock(b *testing.B) {
-	spin := GetBackOffSpinLock()
+	spin := NewSpinLock()
 	var wg sync.WaitGroup
 	var f= func() {
 		spin.Lock()
@@ -129,10 +74,9 @@ func BenchmarkBackOffSpinLockWithGoroutineLock(b *testing.B) {
 		spin.Unlock()
 		wg.Done()
 	}
-	wg.Add(RunTimes)
-	for i:=0;i<RunTimes;i++ {
+	wg.Add(GoroutineNum)
+	for i:=0;i<GoroutineNum;i++ {
 		go f()
 	}
 	wg.Wait()
 }
-
