@@ -107,10 +107,12 @@ func (wq *loopQueue) reset() {
 		return
 	}
 
-Releasing:
-	if w := wq.detach(); w != nil {
+	for {
+		w := wq.detach()
+		if w == nil {
+			break
+		}
 		w.task <- nil
-		goto Releasing
 	}
 	wq.items = wq.items[:0]
 	wq.size = 0
