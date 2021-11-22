@@ -13,8 +13,8 @@ import (
 )
 
 const (
-	GoroutineNum   = 6000
-	SleepTime      = 10
+	GoroutineNum = 6000
+	SleepTime    = 10
 )
 
 type originSpinLock uint32
@@ -36,14 +36,14 @@ func GetOriginSpinLock() sync.Locker {
 func BenchmarkMutexWithGoroutineLock(b *testing.B) {
 	m := sync.Mutex{}
 	var wg sync.WaitGroup
-	var f= func() {
+	var f = func() {
 		m.Lock()
 		time.Sleep(time.Duration(SleepTime) * time.Millisecond)
 		m.Unlock()
 		wg.Done()
 	}
 	wg.Add(GoroutineNum)
-	for i:=0;i<GoroutineNum;i++ {
+	for i := 0; i < GoroutineNum; i++ {
 		go f()
 	}
 	wg.Wait()
@@ -52,14 +52,14 @@ func BenchmarkMutexWithGoroutineLock(b *testing.B) {
 func BenchmarkOriginSpinLockWithGoroutineLock(b *testing.B) {
 	spin := GetOriginSpinLock()
 	var wg sync.WaitGroup
-	var f= func() {
+	var f = func() {
 		spin.Lock()
 		time.Sleep(time.Duration(SleepTime) * time.Millisecond)
 		spin.Unlock()
 		wg.Done()
 	}
 	wg.Add(GoroutineNum)
-	for i:=0;i<GoroutineNum;i++ {
+	for i := 0; i < GoroutineNum; i++ {
 		go f()
 	}
 	wg.Wait()
@@ -68,14 +68,14 @@ func BenchmarkOriginSpinLockWithGoroutineLock(b *testing.B) {
 func BenchmarkBackOffSpinLockWithGoroutineLock(b *testing.B) {
 	spin := NewSpinLock()
 	var wg sync.WaitGroup
-	var f= func() {
+	var f = func() {
 		spin.Lock()
 		time.Sleep(time.Duration(SleepTime) * time.Millisecond)
 		spin.Unlock()
 		wg.Done()
 	}
 	wg.Add(GoroutineNum)
-	for i:=0;i<GoroutineNum;i++ {
+	for i := 0; i < GoroutineNum; i++ {
 		go f()
 	}
 	wg.Wait()
