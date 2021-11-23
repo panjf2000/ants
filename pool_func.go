@@ -176,12 +176,12 @@ func (p *PoolWithFunc) Invoke(args interface{}) error {
 	return nil
 }
 
-// Running returns the number of the currently running goroutines.
+// Running returns the amount of the currently running goroutines.
 func (p *PoolWithFunc) Running() int {
 	return int(atomic.LoadInt32(&p.running))
 }
 
-// Free returns an available goroutines to work, -1 indicates this pool is unlimited.
+// Free returns the amount of available goroutines to work, -1 indicates this pool is unlimited.
 func (p *PoolWithFunc) Free() int {
 	c := p.Cap()
 	if c < 0 {
@@ -242,7 +242,7 @@ func (p *PoolWithFunc) decRunning() {
 	atomic.AddInt32(&p.running, -1)
 }
 
-// retrieveWorker returns a available worker to run the tasks.
+// retrieveWorker returns an available worker to run the tasks.
 func (p *PoolWithFunc) retrieveWorker() (w *goWorkerWithFunc) {
 	spawnWorker := func() {
 		w = p.workerCache.Get().(*goWorkerWithFunc)

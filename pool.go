@@ -159,12 +159,12 @@ func (p *Pool) Submit(task func()) error {
 	return nil
 }
 
-// Running returns the number of the currently running goroutines.
+// Running returns the amount of the currently running goroutines.
 func (p *Pool) Running() int {
 	return int(atomic.LoadInt32(&p.running))
 }
 
-// Free returns the available goroutines to work, -1 indicates this pool is unlimited.
+// Free returns the amount of available goroutines to work, -1 indicates this pool is unlimited.
 func (p *Pool) Free() int {
 	c := p.Cap()
 	if c < 0 {
