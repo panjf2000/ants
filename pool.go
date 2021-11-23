@@ -49,7 +49,7 @@ type Pool struct {
 	// state is used to notice the pool to closed itself.
 	state int32
 
-	// cond for waiting to get a idle worker.
+	// cond for waiting to get an idle worker.
 	cond *sync.Cond
 
 	// workerCache speeds up the obtainment of a usable worker in function:retrieveWorker.
@@ -142,6 +142,11 @@ func NewPool(size int, options ...Option) (*Pool, error) {
 // ---------------------------------------------------------------------------
 
 // Submit submits a task to this pool.
+//
+// Note that you are allowed to call Pool.Submit() from the current Pool.Submit(),
+// but what calls for special attention is that you will get blocked with the latest
+// Pool.Submit() call once the current Pool runs out of its capacity, and to avoid this,
+// you should instantiate a Pool with ants.WithNonblocking(true).
 func (p *Pool) Submit(task func()) error {
 	if p.IsClosed() {
 		return ErrPoolClosed

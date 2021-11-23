@@ -159,6 +159,11 @@ func NewPoolWithFunc(size int, pf func(interface{}), options ...Option) (*PoolWi
 //---------------------------------------------------------------------------
 
 // Invoke submits a task to pool.
+//
+// Note that you are allowed to call Pool.Invoke() from the current Pool.Invoke(),
+// but what calls for special attention is that you will get blocked with the latest
+// Pool.Invoke() call once the current Pool runs out of its capacity, and to avoid this,
+// you should instantiate a PoolWithFunc with ants.WithNonblocking(true).
 func (p *PoolWithFunc) Invoke(args interface{}) error {
 	if p.IsClosed() {
 		return ErrPoolClosed
@@ -176,7 +181,7 @@ func (p *PoolWithFunc) Running() int {
 	return int(atomic.LoadInt32(&p.running))
 }
 
-// Free returns a available goroutines to work, -1 indicates this pool is unlimited.
+// Free returns an available goroutines to work, -1 indicates this pool is unlimited.
 func (p *PoolWithFunc) Free() int {
 	c := p.Cap()
 	if c < 0 {
