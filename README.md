@@ -340,9 +340,14 @@ The following companies/organizations use `ants` in production.
 - [triangula](https://github.com/RH12503/triangula): Generate high-quality triangulated and polygonal art from images.
 - [bsc](https://github.com/binance-chain/bsc): A Binance Smart Chain client based on the go-ethereum fork.
 - [jaeles](https://github.com/jaeles-project/jaeles): The Swiss Army knife for automated Web Application Testing.
-- ......
 
-If you have `ants` integrated into projects, feel free to open a pull request refreshing this list of user cases.
+#### All use cases:
+
+- [Repositories that depend on ants/v2](https://github.com/panjf2000/ants/network/dependents?package_id=UGFja2FnZS0yMjY2ODgxMjg2)
+
+- [Repositories that depend on ants/v1](https://github.com/panjf2000/ants/network/dependents?package_id=UGFja2FnZS0yMjY0ODMzNjEw)
+
+If you have `ants` integrated into projects, feel free to open a pull request refreshing this list of use cases.
 
 ## 🔋 JetBrains OS licenses
 
