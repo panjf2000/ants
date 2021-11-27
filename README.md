@@ -340,6 +340,7 @@ The following companies/organizations use `ants` in production.
 - [triangula](https://github.com/RH12503/triangula): Generate high-quality triangulated and polygonal art from images.
 - [bsc](https://github.com/binance-chain/bsc): A Binance Smart Chain client based on the go-ethereum fork.
 - [jaeles](https://github.com/jaeles-project/jaeles): The Swiss Army knife for automated Web Application Testing.
+- [lake](https://github.com/merico-dev/lake): The open source data lake & dashboard for your DevOps tools.
 
 #### All use cases:
 
