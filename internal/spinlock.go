@@ -12,7 +12,7 @@ import (
 
 type spinLock uint32
 
-const maxBackoff = 64
+const maxBackoff = 16
 
 func (sl *spinLock) Lock() {
 	backoff := 1
