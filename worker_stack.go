@@ -65,7 +65,7 @@ func (wq *workerStack) retrieveExpiry(duration time.Duration) []*goWorker {
 func (wq *workerStack) binarySearch(l, r int, expiryTime time.Time) int {
 	var mid int
 	for l <= r {
-		mid = (l + r) / 2
+		mid = l + ((r - l) >> 1)
 		if expiryTime.Before(wq.items[mid].recycleTime) {
 			r = mid - 1
 		} else {
