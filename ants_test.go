@@ -670,3 +670,80 @@ func TestRestCodeCoverage(t *testing.T) {
 	t.Logf("pre-malloc pool with func, after tuning capacity, capacity:%d, running:%d", ppremWithFunc.Cap(),
 		ppremWithFunc.Running())
 }
+
+func TestPoolTuneScaleUp(t *testing.T) {
+	c := make(chan struct{})
+	p, _ := NewPool(2)
+	for i := 0; i < 2; i++ {
+		_ = p.Submit(func() {
+			<-c
+		})
+	}
+	if n := p.Running(); n != 2 {
+		t.Errorf("expect 2 workers running, but got %d", n)
+	}
+	// test pool tune scale up one
+	p.Tune(3)
+	_ = p.Submit(func() {
+		<-c
+	})
+	if n := p.Running(); n != 3 {
+		t.Errorf("expect 3 workers running, but got %d", n)
+	}
+	// test pool tune scale up multiple
+	var wg sync.WaitGroup
+	for i := 0; i < 5; i++ {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			_ = p.Submit(func() {
+				<-c
+			})
+		}()
+	}
+	p.Tune(8)
+	wg.Wait()
+	if n := p.Running(); n != 8 {
+		t.Errorf("expect 8 workers running, but got %d", n)
+	}
+	for i := 0; i < 8; i++ {
+		c <- struct{}{}
+	}
+	p.Release()
+
+	// test PoolWithFunc
+	pf, _ := NewPoolWithFunc(2, func(i interface{}) {
+		<-c
+	})
+	for i := 0; i < 2; i++ {
+		_ = pf.Invoke(1)
+	}
+	if n := pf.Running(); n != 2 {
+		t.Errorf("expect 2 workers running, but got %d", n)
+	}
+	// test pool tune scale up one
+	pf.Tune(3)
+	_ = pf.Invoke(1)
+	if n := pf.Running(); n != 3 {
+		t.Errorf("expect 3 workers running, but got %d", n)
+	}
+	// test pool tune scale up multiple
+	var pfwg sync.WaitGroup
+	for i := 0; i < 5; i++ {
+		pfwg.Add(1)
+		go func() {
+			defer pfwg.Done()
+			_ = pf.Invoke(1)
+		}()
+	}
+	pf.Tune(8)
+	pfwg.Wait()
+	if n := pf.Running(); n != 8 {
+		t.Errorf("expect 8 workers running, but got %d", n)
+	}
+	for i := 0; i < 8; i++ {
+		c <- struct{}{}
+	}
+	close(c)
+	pf.Release()
+}
