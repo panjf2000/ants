@@ -602,7 +602,7 @@ func TestReleaseWhenRunningPool(t *testing.T) {
 		}()
 		for i := 0; i < 30; i++ {
 			j := i
-			p.Submit(func() {
+			_ = p.Submit(func() {
 				t.Log("do task", j)
 				time.Sleep(1 * time.Second)
 			})
@@ -617,7 +617,7 @@ func TestReleaseWhenRunningPool(t *testing.T) {
 		}()
 		for i := 100; i < 130; i++ {
 			j := i
-			p.Submit(func() {
+			_ = p.Submit(func() {
 				t.Log("do task", j)
 				time.Sleep(1 * time.Second)
 			})
@@ -644,7 +644,7 @@ func TestReleaseWhenRunningPoolWithFunc(t *testing.T) {
 			t.Log("stop aaa")
 		}()
 		for i := 0; i < 30; i++ {
-			p.Invoke(i)
+			_ = p.Invoke(i)
 		}
 	}()
 
@@ -655,7 +655,7 @@ func TestReleaseWhenRunningPoolWithFunc(t *testing.T) {
 			t.Log("stop bbb")
 		}()
 		for i := 100; i < 130; i++ {
-			p.Invoke(i)
+			_ = p.Invoke(i)
 		}
 	}()
 
