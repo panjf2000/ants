@@ -590,6 +590,81 @@ func TestInfinitePoolWithFunc(t *testing.T) {
 	}
 }
 
+func TestReleaseWhenRunningPool(t *testing.T) {
+	var wg sync.WaitGroup
+	p, _ := NewPool(1)
+	wg.Add(2)
+	go func() {
+		t.Log("start aaa")
+		defer func() {
+			wg.Done()
+			t.Log("stop aaa")
+		}()
+		for i := 0; i < 30; i++ {
+			j := i
+			p.Submit(func() {
+				t.Log("do task", j)
+				time.Sleep(1 * time.Second)
+			})
+		}
+	}()
+
+	go func() {
+		t.Log("start bbb")
+		defer func() {
+			wg.Done()
+			t.Log("stop bbb")
+		}()
+		for i := 100; i < 130; i++ {
+			j := i
+			p.Submit(func() {
+				t.Log("do task", j)
+				time.Sleep(1 * time.Second)
+			})
+		}
+	}()
+
+	time.Sleep(3 * time.Second)
+	p.Release()
+	t.Log("wait for all goroutines to exit...")
+	wg.Wait()
+}
+
+func TestReleaseWhenRunningPoolWithFunc(t *testing.T) {
+	var wg sync.WaitGroup
+	p, _ := NewPoolWithFunc(1, func(i interface{}) {
+		t.Log("do task", i)
+		time.Sleep(1 * time.Second)
+	})
+	wg.Add(2)
+	go func() {
+		t.Log("start aaa")
+		defer func() {
+			wg.Done()
+			t.Log("stop aaa")
+		}()
+		for i := 0; i < 30; i++ {
+			p.Invoke(i)
+		}
+	}()
+
+	go func() {
+		t.Log("start bbb")
+		defer func() {
+			wg.Done()
+			t.Log("stop bbb")
+		}()
+		for i := 100; i < 130; i++ {
+			p.Invoke(i)
+		}
+	}()
+
+	time.Sleep(3 * time.Second)
+	p.Release()
+	t.Log("wait for all goroutines to exit...")
+	wg.Wait()
+}
+
 func TestRestCodeCoverage(t *testing.T) {
 	_, err := NewPool(-1, WithExpiryDuration(-1))
 	t.Log(err)
