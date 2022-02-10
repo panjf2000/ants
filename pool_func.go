@@ -49,8 +49,6 @@ func NewPoolWithFunc(size int, pf func(interface{}), options ...Option) (*PoolWi
 		pool:     pool,
 		poolFunc: pf,
 	}
-	// Start a goroutine to clean up expired workers periodically.
-	go p.pool.purgePeriodically()
 
 	return p, nil
 }
