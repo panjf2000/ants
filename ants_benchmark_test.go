@@ -112,6 +112,25 @@ func BenchmarkAntsPool(b *testing.B) {
 	b.StopTimer()
 }
 
+func BenchmarkAntsPoolFunc(b *testing.B) {
+	var wg sync.WaitGroup
+	p, _ := NewPoolWithFunc(BenchAntsSize, func(i interface{}) {
+		demoPoolFunc(i)
+		wg.Done()
+	}, WithExpiryDuration(DefaultExpiredTime))
+	defer p.Release()
+
+	b.StartTimer()
+	for i := 0; i < b.N; i++ {
+		wg.Add(RunTimes)
+		for j := 0; j < RunTimes; j++ {
+			_ = p.Invoke(BenchParam)
+		}
+		wg.Wait()
+	}
+	b.StopTimer()
+}
+
 func BenchmarkGoroutinesThroughput(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		for j := 0; j < RunTimes; j++ {
@@ -140,6 +159,18 @@ func BenchmarkAntsPoolThroughput(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		for j := 0; j < RunTimes; j++ {
 			_ = p.Submit(demoFunc)
+		}
+	}
+	b.StopTimer()
+}
+
+func BenchmarkAntsPoolFuncThroughput(b *testing.B) {
+	p, _ := NewPoolWithFunc(BenchAntsSize, demoPoolFunc, WithExpiryDuration(DefaultExpiredTime))
+	defer p.Release()
+	b.StartTimer()
+	for i := 0; i < b.N; i++ {
+		for j := 0; j < RunTimes; j++ {
+			_ = p.Invoke(BenchParam)
 		}
 	}
 	b.StopTimer()
