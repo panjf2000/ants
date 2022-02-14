@@ -197,10 +197,18 @@ func (p *PoolWithFunc) Cap() int {
 
 // Tune changes the capacity of this pool, note that it is noneffective to the infinite or pre-allocation pool.
 func (p *PoolWithFunc) Tune(size int) {
-	if capacity := p.Cap(); capacity == -1 || size <= 0 || size == capacity || p.options.PreAlloc {
+	capacity := p.Cap()
+	if capacity == -1 || size <= 0 || size == capacity || p.options.PreAlloc {
 		return
 	}
 	atomic.StoreInt32(&p.capacity, int32(size))
+	if size > capacity {
+		if size-capacity == 1 {
+			p.cond.Signal()
+			return
+		}
+		p.cond.Broadcast()
+	}
 }
 
 // IsClosed indicates whether the pool is closed.
