@@ -23,6 +23,7 @@
 package ants
 
 import (
+	"errors"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -60,6 +61,8 @@ type PoolWithFunc struct {
 	// blockingNum is the number of the goroutines already been blocked on pool.Submit, protected by pool.lock
 	blockingNum int
 
+	stopHeartbeat chan struct{}
+
 	options *Options
 }
 
@@ -69,7 +72,14 @@ func (p *PoolWithFunc) purgePeriodically() {
 	defer heartbeat.Stop()
 
 	var expiredWorkers []*goWorkerWithFunc
-	for range heartbeat.C {
+	for {
+		select {
+		case <-heartbeat.C:
+		case <-p.stopHeartbeat:
+			p.stopHeartbeat <- struct{}{}
+			return
+		}
+
 		if p.IsClosed() {
 			break
 		}
@@ -131,10 +141,11 @@ func NewPoolWithFunc(size int, pf func(interface{}), options ...Option) (*PoolWi
 	}
 
 	p := &PoolWithFunc{
-		capacity: int32(size),
-		poolFunc: pf,
-		lock:     internal.NewSpinLock(),
-		options:  opts,
+		capacity:      int32(size),
+		poolFunc:      pf,
+		lock:          internal.NewSpinLock(),
+		stopHeartbeat: make(chan struct{}, 1),
+		options:       opts,
 	}
 	p.workerCache.New = func() interface{} {
 		return &goWorkerWithFunc{
@@ -218,7 +229,9 @@ func (p *PoolWithFunc) IsClosed() bool {
 
 // Release closes this pool and releases the worker queue.
 func (p *PoolWithFunc) Release() {
-	atomic.StoreInt32(&p.state, CLOSED)
+	if !atomic.CompareAndSwapInt32(&p.state, OPENED, CLOSED) {
+		return
+	}
 	p.lock.Lock()
 	idleWorkers := p.workers
 	for _, w := range idleWorkers {
@@ -229,6 +242,27 @@ func (p *PoolWithFunc) Release() {
 	// There might be some callers waiting in retrieveWorker(), so we need to wake them up to prevent
 	// those callers blocking infinitely.
 	p.cond.Broadcast()
+}
+
+// ReleaseTimeout is like Release but with a timeout, it waits all workers to exit before timing out.
+func (p *PoolWithFunc) ReleaseTimeout(timeout time.Duration) error {
+	if p.IsClosed() {
+		return errors.New("pool is already closed")
+	}
+	select {
+	case p.stopHeartbeat <- struct{}{}:
+		<-p.stopHeartbeat
+	default:
+	}
+	p.Release()
+	endTime := time.Now().Add(timeout)
+	for time.Now().Before(endTime) {
+		if p.Running() == 0 {
+			return nil
+		}
+		time.Sleep(10 * time.Millisecond)
+	}
+	return ErrTimeout
 }
 
 // Reboot reboots a closed pool.

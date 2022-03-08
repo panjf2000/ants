@@ -822,3 +822,27 @@ func TestPoolTuneScaleUp(t *testing.T) {
 	close(c)
 	pf.Release()
 }
+
+func TestReleaseTimeout(t *testing.T) {
+	p, _ := NewPool(10)
+	for i := 0; i < 5; i++ {
+		_ = p.Submit(func() {
+			time.Sleep(time.Second)
+		})
+	}
+	assert.NotZero(t, p.Running())
+	err := p.ReleaseTimeout(2 * time.Second)
+	assert.NoError(t, err)
+
+	var pf *PoolWithFunc
+	pf, _ = NewPoolWithFunc(10, func(i interface{}) {
+		dur := i.(time.Duration)
+		time.Sleep(dur)
+	})
+	for i := 0; i < 5; i++ {
+		_ = pf.Invoke(time.Second)
+	}
+	assert.NotZero(t, pf.Running())
+	err = pf.ReleaseTimeout(2 * time.Second)
+	assert.NoError(t, err)
+}

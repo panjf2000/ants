@@ -66,6 +66,9 @@ var (
 	// ErrInvalidPreAllocSize will be returned when trying to set up a negative capacity under PreAlloc mode.
 	ErrInvalidPreAllocSize = errors.New("can not set up a negative capacity under PreAlloc mode")
 
+	// ErrTimeout will be returned after the operations timed out.
+	ErrTimeout = errors.New("operation timed out")
+
 	//---------------------------------------------------------------------------
 
 	// workerChanCap determines whether the channel of a worker should be a buffered channel
