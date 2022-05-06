@@ -23,7 +23,7 @@
 package ants
 
 import (
-	"errors"
+	"context"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -61,22 +61,25 @@ type PoolWithFunc struct {
 	// blockingNum is the number of the goroutines already been blocked on pool.Submit, protected by pool.lock
 	blockingNum int
 
-	stopHeartbeat chan struct{}
+	heartbeatDone int32
+	stopHeartbeat context.CancelFunc
 
 	options *Options
 }
 
 // purgePeriodically clears expired workers periodically which runs in an individual goroutine, as a scavenger.
-func (p *PoolWithFunc) purgePeriodically() {
+func (p *PoolWithFunc) purgePeriodically(ctx context.Context) {
 	heartbeat := time.NewTicker(p.options.ExpiryDuration)
-	defer heartbeat.Stop()
+	defer func() {
+		heartbeat.Stop()
+		atomic.StoreInt32(&p.heartbeatDone, 1)
+	}()
 
 	var expiredWorkers []*goWorkerWithFunc
 	for {
 		select {
 		case <-heartbeat.C:
-		case <-p.stopHeartbeat:
-			p.stopHeartbeat <- struct{}{}
+		case <-ctx.Done():
 			return
 		}
 
@@ -141,11 +144,10 @@ func NewPoolWithFunc(size int, pf func(interface{}), options ...Option) (*PoolWi
 	}
 
 	p := &PoolWithFunc{
-		capacity:      int32(size),
-		poolFunc:      pf,
-		lock:          internal.NewSpinLock(),
-		stopHeartbeat: make(chan struct{}, 1),
-		options:       opts,
+		capacity: int32(size),
+		poolFunc: pf,
+		lock:     internal.NewSpinLock(),
+		options:  opts,
 	}
 	p.workerCache.New = func() interface{} {
 		return &goWorkerWithFunc{
@@ -162,7 +164,9 @@ func NewPoolWithFunc(size int, pf func(interface{}), options ...Option) (*PoolWi
 	p.cond = sync.NewCond(p.lock)
 
 	// Start a goroutine to clean up expired workers periodically.
-	go p.purgePeriodically()
+	var ctx context.Context
+	ctx, p.stopHeartbeat = context.WithCancel(context.Background())
+	go p.purgePeriodically(ctx)
 
 	return p, nil
 }
@@ -246,18 +250,17 @@ func (p *PoolWithFunc) Release() {
 
 // ReleaseTimeout is like Release but with a timeout, it waits all workers to exit before timing out.
 func (p *PoolWithFunc) ReleaseTimeout(timeout time.Duration) error {
-	if p.IsClosed() {
-		return errors.New("pool is already closed")
+	if p.IsClosed() || p.stopHeartbeat == nil {
+		return ErrPoolClosed
 	}
-	select {
-	case p.stopHeartbeat <- struct{}{}:
-		<-p.stopHeartbeat
-	default:
-	}
+
+	p.stopHeartbeat()
+	p.stopHeartbeat = nil
 	p.Release()
+
 	endTime := time.Now().Add(timeout)
 	for time.Now().Before(endTime) {
-		if p.Running() == 0 {
+		if p.Running() == 0 && atomic.LoadInt32(&p.heartbeatDone) == 1 {
 			return nil
 		}
 		time.Sleep(10 * time.Millisecond)
@@ -268,7 +271,10 @@ func (p *PoolWithFunc) ReleaseTimeout(timeout time.Duration) error {
 // Reboot reboots a closed pool.
 func (p *PoolWithFunc) Reboot() {
 	if atomic.CompareAndSwapInt32(&p.state, CLOSED, OPENED) {
-		go p.purgePeriodically()
+		atomic.StoreInt32(&p.heartbeatDone, 0)
+		var ctx context.Context
+		ctx, p.stopHeartbeat = context.WithCancel(context.Background())
+		go p.purgePeriodically(ctx)
 	}
 }
 
