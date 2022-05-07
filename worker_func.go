@@ -44,10 +44,10 @@ type goWorkerWithFunc struct {
 // run starts a goroutine to repeat the process
 // that performs the function calls.
 func (w *goWorkerWithFunc) run() {
-	w.pool.incRunning()
+	w.pool.addRunning(1)
 	go func() {
 		defer func() {
-			w.pool.decRunning()
+			w.pool.addRunning(-1)
 			w.pool.workerCache.Put(w)
 			if p := recover(); p != nil {
 				if ph := w.pool.options.PanicHandler; ph != nil {

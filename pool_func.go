@@ -58,8 +58,8 @@ type PoolWithFunc struct {
 	// workerCache speeds up the obtainment of a usable worker in function:retrieveWorker.
 	workerCache sync.Pool
 
-	// blockingNum is the number of the goroutines already been blocked on pool.Submit, protected by pool.lock
-	blockingNum int
+	// waiting is the number of the goroutines already been blocked on pool.Invoke(), protected by pool.lock
+	waiting int32
 
 	heartbeatDone int32
 	stopHeartbeat context.CancelFunc
@@ -112,10 +112,11 @@ func (p *PoolWithFunc) purgePeriodically(ctx context.Context) {
 			expiredWorkers[i] = nil
 		}
 
-		// There might be a situation that all workers have been cleaned up(no worker is running)
+		// There might be a situation where all workers have been cleaned up(no worker is running),
+		// or another case where the pool capacity has been Tuned up,
 		// while some invokers still get stuck in "p.cond.Wait()",
 		// then it ought to wake all those invokers.
-		if p.Running() == 0 {
+		if p.Running() == 0 || (p.Waiting() > 0 && p.Free() > 0) {
 			p.cond.Broadcast()
 		}
 	}
@@ -191,18 +192,23 @@ func (p *PoolWithFunc) Invoke(args interface{}) error {
 	return nil
 }
 
-// Running returns the amount of the currently running goroutines.
+// Running returns the number of workers currently running.
 func (p *PoolWithFunc) Running() int {
 	return int(atomic.LoadInt32(&p.running))
 }
 
-// Free returns the amount of available goroutines to work, -1 indicates this pool is unlimited.
+// Free returns the number of available goroutines to work, -1 indicates this pool is unlimited.
 func (p *PoolWithFunc) Free() int {
 	c := p.Cap()
 	if c < 0 {
 		return -1
 	}
 	return c - p.Running()
+}
+
+// Waiting returns the number of tasks which are waiting be executed.
+func (p *PoolWithFunc) Waiting() int {
+	return int(atomic.LoadInt32(&p.waiting))
 }
 
 // Cap returns the capacity of this pool.
@@ -280,14 +286,12 @@ func (p *PoolWithFunc) Reboot() {
 
 //---------------------------------------------------------------------------
 
-// incRunning increases the number of the currently running goroutines.
-func (p *PoolWithFunc) incRunning() {
-	atomic.AddInt32(&p.running, 1)
+func (p *PoolWithFunc) addRunning(delta int) {
+	atomic.AddInt32(&p.running, int32(delta))
 }
 
-// decRunning decreases the number of the currently running goroutines.
-func (p *PoolWithFunc) decRunning() {
-	atomic.AddInt32(&p.running, -1)
+func (p *PoolWithFunc) addWaiting(delta int) {
+	atomic.AddInt32(&p.waiting, int32(delta))
 }
 
 // retrieveWorker returns an available worker to run the tasks.
@@ -316,24 +320,28 @@ func (p *PoolWithFunc) retrieveWorker() (w *goWorkerWithFunc) {
 			return
 		}
 	retry:
-		if p.options.MaxBlockingTasks != 0 && p.blockingNum >= p.options.MaxBlockingTasks {
+		if p.options.MaxBlockingTasks != 0 && p.Waiting() >= p.options.MaxBlockingTasks {
 			p.lock.Unlock()
 			return
 		}
-		p.blockingNum++
+		p.addWaiting(1)
 		p.cond.Wait() // block and wait for an available worker
-		p.blockingNum--
+		p.addWaiting(-1)
+
+		if p.IsClosed() {
+			p.lock.Unlock()
+			return
+		}
+
 		var nw int
 		if nw = p.Running(); nw == 0 { // awakened by the scavenger
 			p.lock.Unlock()
-			if !p.IsClosed() {
-				spawnWorker()
-			}
+			spawnWorker()
 			return
 		}
 		l := len(p.workers) - 1
 		if l < 0 {
-			if nw < capacity {
+			if nw < p.Cap() {
 				p.lock.Unlock()
 				spawnWorker()
 				return
