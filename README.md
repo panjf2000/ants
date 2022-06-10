@@ -30,7 +30,7 @@ Library `ants` implements a goroutine pool with fixed capacity, managing and rec
 
 ## ⚔️ Tested in the following Golang releases:
 
-All releases from **Go1.8.x** to **Go1.16.x**.
+All releases from **Go1.8.x** to **Go1.18.x**.
 
 ## 💡 How `ants` works
 
