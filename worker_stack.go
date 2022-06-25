@@ -5,13 +5,11 @@ import "time"
 type workerStack struct {
 	items  []*goWorker
 	expiry []*goWorker
-	size   int
 }
 
 func newWorkerStack(size int) *workerStack {
 	return &workerStack{
 		items: make([]*goWorker, 0, size),
-		size:  size,
 	}
 }
 
