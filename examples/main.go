@@ -34,7 +34,7 @@ import (
 var sum int32
 
 func myFunc(i interface{}) {
-	n := i.(int32)
+	n, _ := i.(int32)
 	atomic.AddInt32(&sum, n)
 	fmt.Printf("run with %d\n", n)
 }
