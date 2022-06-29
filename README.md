@@ -81,10 +81,14 @@ import (
 
 var sum int32
 
+func myAdd(i int32) {
+	atomic.AddInt32(&sum, i)
+	fmt.Printf("run with %d\n", i)
+}
+
 func myFunc(i interface{}) {
 	n := i.(int32)
-	atomic.AddInt32(&sum, n)
-	fmt.Printf("run with %d\n", n)
+	myAdd(n)
 }
 
 func demoFunc() {
@@ -111,7 +115,25 @@ func main() {
 	fmt.Printf("running goroutines: %d\n", ants.Running())
 	fmt.Printf("finish all tasks.\n")
 
-	// Use the pool with a function,
+	// Use the common pool, with args.
+	calcFunc := func(args ...any) {
+		i := args[0].(int32)
+		myAdd(i)
+		wg.Done()
+	}
+	for i := 0; i < runTimes; i++ {
+		wg.Add(1)
+		_ = ants.SubmitWithArgs(calcFunc, int32(i))
+	}
+	wg.Wait()
+	fmt.Printf("running goroutines: %d\n", ants.Running())
+	fmt.Printf("finish all tasks, result is %d\n", sum)
+	if sum != 499500 {
+		panic("the final result is wrong!!!")
+	}
+	atomic.SwapInt32(&sum, 0)
+
+	// Use the pool with a method,
 	// set 10 to the capacity of goroutine pool and 1 second for expired duration.
 	p, _ := ants.NewPoolWithFunc(10, func(i interface{}) {
 		myFunc(i)
@@ -126,6 +148,9 @@ func main() {
 	wg.Wait()
 	fmt.Printf("running goroutines: %d\n", p.Running())
 	fmt.Printf("finish all tasks, result is %d\n", sum)
+	if sum != 499500 {
+		panic("the final result is wrong!!!")
+	}
 }
 ```
 

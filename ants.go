@@ -104,6 +104,11 @@ func Submit(task func()) error {
 	return defaultAntsPool.Submit(task)
 }
 
+// Submit submits a task with arguments to pool.
+func SubmitWithArgs(task func(args ...any), args ...any) error {
+	return defaultAntsPool.SubmitWithArgs(task, args...)
+}
+
 // Running returns the number of the currently running goroutines.
 func Running() int {
 	return defaultAntsPool.Running()
