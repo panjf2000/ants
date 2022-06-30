@@ -105,7 +105,7 @@ func Submit(task func()) error {
 }
 
 // Submit submits a task with arguments to pool.
-func SubmitWithArgs(task func(args ...any), args ...any) error {
+func SubmitWithArgs(task func(args ...interface{}), args ...interface{}) error {
 	return defaultAntsPool.SubmitWithArgs(task, args...)
 }
 

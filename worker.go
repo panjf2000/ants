@@ -29,8 +29,8 @@ import (
 
 // goTask is the task with a function and arguments
 type goTask struct {
-	task func(args ...any)
-	args []any
+	task func(args ...interface{})
+	args []interface{}
 }
 
 // goWorker is the actual executor who runs the tasks,

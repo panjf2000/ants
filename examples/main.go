@@ -68,7 +68,7 @@ func main() {
 	fmt.Printf("finish all tasks.\n")
 
 	// Use the common pool, with args.
-	calcFunc := func(args ...any) {
+	calcFunc := func(args ...interface{}) {
 		i := args[0].(int32)
 		myAdd(i)
 		wg.Done()
