@@ -222,6 +222,13 @@ func WithLogger(logger Logger) Option {
 ``` go
 // Set 10000 the size of goroutine pool
 p, _ := ants.NewPool(10000)
+// 池子预热小技巧，先预热20个池子，让冷启动之后，预备20个worker，让应用更快进入状态
+for i := 0; i < 20; i++ {
+	tp := i
+	_ = constants.AntsPool.Submit(func() {
+		fmt.Println("预热antsPool: %d", tp)
+	})
+}
 ```
 
 ### 任务提交
