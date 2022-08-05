@@ -92,6 +92,16 @@ func demoFunc() {
 	fmt.Println("Hello World!")
 }
 
+type run struct {
+    i int32
+	wg  *sync.WaitGroup
+}
+
+func (r *run) Run(ctx context.Context) {
+    myFunc(r.i)
+    r.wg.Done()
+}
+
 func main() {
 	defer ants.Release()
 
@@ -122,6 +132,19 @@ func main() {
 	for i := 0; i < runTimes; i++ {
 		wg.Add(1)
 		_ = p.Invoke(int32(i))
+	}
+	wg.Wait()
+	fmt.Printf("running goroutines: %d\n", p.Running())
+	fmt.Printf("finish all tasks, result is %d\n", sum)
+	
+	// Use the pool with runner,
+	// set 10 to the capacity of goroutine pool and 1 second for expired duration.
+	pr, _ := ants.NewPoolWithRunner(10)
+	defer pr.Release()
+	// Submit tasks one by one.
+	for i := 0; i < runTimes; i++ {
+		wg.Add(1)
+		_ = pr.Invoke(&run{i:i,wg:&wg})
 	}
 	wg.Wait()
 	fmt.Printf("running goroutines: %d\n", p.Running())
