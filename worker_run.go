@@ -23,6 +23,7 @@
 package ants
 
 import (
+	"context"
 	"runtime"
 	"time"
 )
@@ -31,11 +32,12 @@ import (
 // it starts a goroutine that accepts tasks and
 // performs function calls.
 type goWorkerWithRunner struct {
+	ctx context.Context
 	// pool who owns this worker.
 	pool *PoolWithRunner
 
-	// args is a job should be done.
-	args chan interface{}
+	// r is a job should be done.
+	r chan Runner
 
 	// recycleTime will be updated when putting a worker back into queue.
 	recycleTime time.Time
@@ -63,11 +65,11 @@ func (w *goWorkerWithRunner) run() {
 			w.pool.cond.Signal()
 		}()
 
-		for args := range w.args {
-			if args == nil {
+		for r := range w.r {
+			if r == nil {
 				return
 			}
-			w.pool.poolRunner(args)
+			r.Run(w.ctx)
 			if ok := w.pool.revertWorker(w); !ok {
 				return
 			}

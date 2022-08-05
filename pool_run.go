@@ -52,9 +52,6 @@ type PoolWithRunner struct {
 	// cond for waiting to get an idle worker.
 	cond *sync.Cond
 
-	// poolRunner is the function for processing tasks.
-	poolRunner Runner
-
 	// workerCache speeds up the obtainment of a usable worker in function:retrieveWorker.
 	workerCache sync.Pool
 
@@ -108,7 +105,7 @@ func (p *PoolWithRunner) purgePeriodically(ctx context.Context) {
 		// may be blocking and may consume a lot of time if many workers
 		// are located on non-local CPUs.
 		for i, w := range expiredWorkers {
-			w.args <- nil
+			w.r <- nil
 			expiredWorkers[i] = nil
 		}
 
@@ -122,14 +119,28 @@ func (p *PoolWithRunner) purgePeriodically(ctx context.Context) {
 	}
 }
 
+// Submit submits a task to this pool.
+//
+// Note that you are allowed to call Pool.Submit() from the current Pool.Submit(),
+// but what calls for special attention is that you will get blocked with the latest
+// Pool.Submit() call once the current Pool runs out of its capacity, and to avoid this,
+// you should instantiate a Pool with ants.WithNonblocking(true).
+func (p *PoolWithRunner) Submit(r Runner) error {
+	if p.IsClosed() {
+		return ErrPoolClosed
+	}
+	var w *goWorkerWithRunner
+	if w = p.retrieveWorker(); w == nil {
+		return ErrPoolOverload
+	}
+	w.r <- r
+	return nil
+}
+
 // NewPoolWithRunner generates an instance of ants pool with a specific function.
-func NewPoolWithRunner(size int, pr Runner, options ...Option) (*PoolWithRunner, error) {
+func NewPoolWithRunner(size int, options ...Option) (*PoolWithRunner, error) {
 	if size <= 0 {
 		size = -1
-	}
-
-	if pr == nil {
-		return nil, ErrLackPoolFunc
 	}
 
 	opts := loadOptions(options...)
@@ -145,15 +156,18 @@ func NewPoolWithRunner(size int, pr Runner, options ...Option) (*PoolWithRunner,
 	}
 
 	p := &PoolWithRunner{
-		capacity:   int32(size),
-		poolRunner: pr,
-		lock:       internal.NewSpinLock(),
-		options:    opts,
+		capacity: int32(size),
+		lock:     internal.NewSpinLock(),
+		options:  opts,
 	}
+	// Start a goroutine to clean up expired workers periodically.
+	var ctx context.Context
+	ctx, p.stopHeartbeat = context.WithCancel(context.Background())
 	p.workerCache.New = func() interface{} {
 		return &goWorkerWithRunner{
+			ctx:  ctx,
 			pool: p,
-			args: make(chan interface{}, workerChanCap),
+			r:    make(chan Runner, workerChanCap),
 		}
 	}
 	if p.options.PreAlloc {
@@ -164,9 +178,6 @@ func NewPoolWithRunner(size int, pr Runner, options ...Option) (*PoolWithRunner,
 	}
 	p.cond = sync.NewCond(p.lock)
 
-	// Start a goroutine to clean up expired workers periodically.
-	var ctx context.Context
-	ctx, p.stopHeartbeat = context.WithCancel(context.Background())
 	go p.purgePeriodically(ctx)
 
 	return p, nil
@@ -180,7 +191,7 @@ func NewPoolWithRunner(size int, pr Runner, options ...Option) (*PoolWithRunner,
 // but what calls for special attention is that you will get blocked with the latest
 // Pool.Invoke() call once the current Pool runs out of its capacity, and to avoid this,
 // you should instantiate a PoolWithRunner with ants.WithNonblocking(true).
-func (p *PoolWithRunner) Invoke(args interface{}) error {
+func (p *PoolWithRunner) Invoke(r Runner) error {
 	if p.IsClosed() {
 		return ErrPoolClosed
 	}
@@ -188,7 +199,7 @@ func (p *PoolWithRunner) Invoke(args interface{}) error {
 	if w = p.retrieveWorker(); w == nil {
 		return ErrPoolOverload
 	}
-	w.args <- args
+	w.r <- r
 	return nil
 }
 
@@ -245,7 +256,7 @@ func (p *PoolWithRunner) Release() {
 	p.lock.Lock()
 	idleWorkers := p.workers
 	for _, w := range idleWorkers {
-		w.args <- nil
+		w.r <- nil
 	}
 	p.workers = nil
 	p.lock.Unlock()

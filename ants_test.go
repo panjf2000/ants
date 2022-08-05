@@ -23,6 +23,7 @@
 package ants
 
 import (
+	"context"
 	"log"
 	"os"
 	"runtime"
@@ -117,6 +118,53 @@ func TestAntsPoolWithFuncWaitToGetWorker(t *testing.T) {
 	t.Logf("memory usage:%d MB", curMem)
 }
 
+type run struct {
+	i   interface{}
+	wg  *sync.WaitGroup
+	c   chan struct{}
+	log *testing.T
+}
+
+func (r *run) Run(ctx context.Context) {
+	demoPoolFunc(r.i)
+	if r.wg != nil {
+		r.wg.Done()
+	}
+	if r.c != nil {
+		<-r.c
+	}
+	if r.log != nil {
+		r.log.Log("do task", r.i)
+		time.Sleep(1 * time.Second)
+	}
+
+	return
+}
+
+var _ Runner = &run{}
+
+// TestAntsPoolWithRunnerWaitToGetWorker is used to test waiting to get worker.
+func TestAntsPoolWithRunnerWaitToGetWorker(t *testing.T) {
+	var wg sync.WaitGroup
+	r := &run{
+		i:  0,
+		wg: &wg,
+	}
+	p, _ := NewPoolWithRunner(AntsSize)
+	defer p.Release()
+
+	for i := 0; i < n; i++ {
+		wg.Add(1)
+		_ = p.Invoke(r)
+	}
+	wg.Wait()
+	t.Logf("pool with runner, running workers number:%d", p.Running())
+	mem := runtime.MemStats{}
+	runtime.ReadMemStats(&mem)
+	curMem = mem.TotalAlloc/MiB - curMem
+	t.Logf("memory usage:%d MB", curMem)
+}
+
 func TestAntsPoolWithFuncWaitToGetWorkerPreMalloc(t *testing.T) {
 	var wg sync.WaitGroup
 	p, _ := NewPoolWithFunc(AntsSize, func(i interface{}) {
@@ -131,6 +179,27 @@ func TestAntsPoolWithFuncWaitToGetWorkerPreMalloc(t *testing.T) {
 	}
 	wg.Wait()
 	t.Logf("pool with func, running workers number:%d", p.Running())
+	mem := runtime.MemStats{}
+	runtime.ReadMemStats(&mem)
+	curMem = mem.TotalAlloc/MiB - curMem
+	t.Logf("memory usage:%d MB", curMem)
+}
+
+func TestAntsPoolWithRunnerWaitToGetWorkerPreMalloc(t *testing.T) {
+	var wg sync.WaitGroup
+	r := &run{
+		i:  0,
+		wg: &wg,
+	}
+	p, _ := NewPoolWithRunner(AntsSize, WithPreAlloc(true))
+	defer p.Release()
+
+	for i := 0; i < n; i++ {
+		wg.Add(1)
+		_ = p.Invoke(r)
+	}
+	wg.Wait()
+	t.Logf("pool with runner, running workers number:%d", p.Running())
 	mem := runtime.MemStats{}
 	runtime.ReadMemStats(&mem)
 	curMem = mem.TotalAlloc/MiB - curMem
@@ -172,6 +241,26 @@ func TestAntsPoolWithFuncGetWorkerFromCache(t *testing.T) {
 	t.Logf("memory usage:%d MB", curMem)
 }
 
+// TestAntsPoolWithFuncGetWorkerFromCache is used to test getting worker from sync.Pool.
+func TestAntsPoolWithRunnerGetWorkerFromCache(t *testing.T) {
+	r := &run{
+		i: 1,
+	}
+	p, _ := NewPoolWithRunner(TestSize)
+	defer p.Release()
+
+	for i := 0; i < AntsSize; i++ {
+		_ = p.Invoke(r)
+	}
+	time.Sleep(2 * DefaultCleanIntervalTime)
+	_ = p.Invoke(r)
+	t.Logf("pool with runner, running workers number:%d", p.Running())
+	mem := runtime.MemStats{}
+	runtime.ReadMemStats(&mem)
+	curMem = mem.TotalAlloc/MiB - curMem
+	t.Logf("memory usage:%d MB", curMem)
+}
+
 func TestAntsPoolWithFuncGetWorkerFromCachePreMalloc(t *testing.T) {
 	dur := 10
 	p, _ := NewPoolWithFunc(TestSize, demoPoolFunc, WithPreAlloc(true))
@@ -182,6 +271,25 @@ func TestAntsPoolWithFuncGetWorkerFromCachePreMalloc(t *testing.T) {
 	}
 	time.Sleep(2 * DefaultCleanIntervalTime)
 	_ = p.Invoke(dur)
+	t.Logf("pool with func, running workers number:%d", p.Running())
+	mem := runtime.MemStats{}
+	runtime.ReadMemStats(&mem)
+	curMem = mem.TotalAlloc/MiB - curMem
+	t.Logf("memory usage:%d MB", curMem)
+}
+
+func TestAntsPoolWithRunnerGetWorkerFromCachePreMalloc(t *testing.T) {
+	r := &run{
+		i: 10,
+	}
+	p, _ := NewPoolWithRunner(TestSize, WithPreAlloc(true))
+	defer p.Release()
+
+	for i := 0; i < AntsSize; i++ {
+		_ = p.Invoke(r)
+	}
+	time.Sleep(2 * DefaultCleanIntervalTime)
+	_ = p.Invoke(r)
 	t.Logf("pool with func, running workers number:%d", p.Running())
 	mem := runtime.MemStats{}
 	runtime.ReadMemStats(&mem)
@@ -267,6 +375,15 @@ func TestPanicHandler(t *testing.T) {
 	assert.EqualValues(t, 0, p1.Running(), "pool should be empty after panic")
 }
 
+type runPanic struct {
+}
+
+func (r *runPanic) Run(ctx context.Context) {
+	panic("Oops!")
+}
+
+var _ Runner = &runPanic{}
+
 func TestPanicHandlerPreMalloc(t *testing.T) {
 	var panicCounter int64
 	var wg sync.WaitGroup
@@ -297,6 +414,19 @@ func TestPanicHandlerPreMalloc(t *testing.T) {
 	c = atomic.LoadInt64(&panicCounter)
 	assert.EqualValuesf(t, 2, c, "panic handler didn't work, panicCounter: %d", c)
 	assert.EqualValues(t, 0, p1.Running(), "pool should be empty after panic")
+	r := &runPanic{}
+	p2, err := NewPoolWithRunner(10, WithPanicHandler(func(p interface{}) {
+		defer wg.Done()
+		atomic.AddInt64(&panicCounter, 1)
+	}))
+	assert.NoErrorf(t, err, "create new pool with runner failed: %v", err)
+	defer p2.Release()
+	wg.Add(1)
+	_ = p2.Invoke(r)
+	wg.Wait()
+	c = atomic.LoadInt64(&panicCounter)
+	assert.EqualValuesf(t, 3, c, "panic handler didn't work, panicCounter: %d", c)
+	assert.EqualValues(t, 0, p1.Running(), "pool should be empty after panic")
 }
 
 func TestPoolPanicWithoutHandler(t *testing.T) {
@@ -313,6 +443,11 @@ func TestPoolPanicWithoutHandler(t *testing.T) {
 	assert.NoErrorf(t, err, "create new pool with func failed: %v", err)
 	defer p1.Release()
 	_ = p1.Invoke("Oops!")
+	r := &runPanic{}
+	p2, err := NewPoolWithRunner(10)
+	assert.NoErrorf(t, err, "create new pool with runner failed: %v", err)
+	defer p2.Release()
+	_ = p2.Invoke(r)
 }
 
 func TestPoolPanicWithoutHandlerPreMalloc(t *testing.T) {
@@ -331,6 +466,12 @@ func TestPoolPanicWithoutHandlerPreMalloc(t *testing.T) {
 
 	defer p1.Release()
 	_ = p1.Invoke("Oops!")
+
+	r := &runPanic{}
+	p2, err := NewPoolWithRunner(10)
+	assert.NoErrorf(t, err, "create new pool with runner failed: %v", err)
+	defer p2.Release()
+	_ = p2.Invoke(r)
 }
 
 func TestPurge(t *testing.T) {
@@ -346,6 +487,14 @@ func TestPurge(t *testing.T) {
 	_ = p1.Invoke(1)
 	time.Sleep(3 * DefaultCleanIntervalTime)
 	assert.EqualValues(t, 0, p.Running(), "all p should be purged")
+
+	r := &run{i: 10}
+	p2, err := NewPoolWithRunner(10)
+	assert.NoErrorf(t, err, "create TimingPoolWithRunner failed: %v", err)
+	defer p2.Release()
+	_ = p2.Invoke(r)
+	time.Sleep(3 * DefaultCleanIntervalTime)
+	assert.EqualValues(t, 0, p.Running(), "all p should be purged")
 }
 
 func TestPurgePreMalloc(t *testing.T) {
@@ -359,6 +508,13 @@ func TestPurgePreMalloc(t *testing.T) {
 	assert.NoErrorf(t, err, "create TimingPoolWithFunc failed: %v", err)
 	defer p1.Release()
 	_ = p1.Invoke(1)
+	time.Sleep(3 * DefaultCleanIntervalTime)
+	assert.EqualValues(t, 0, p.Running(), "all p should be purged")
+	r := &run{i: 10}
+	p2, err := NewPoolWithRunner(10, WithPreAlloc(true))
+	assert.NoErrorf(t, err, "create TimingPoolWithRunner failed: %v", err)
+	defer p2.Release()
+	_ = p2.Invoke(r)
 	time.Sleep(3 * DefaultCleanIntervalTime)
 	assert.EqualValues(t, 0, p.Running(), "all p should be purged")
 }
@@ -590,6 +746,30 @@ func TestInfinitePoolWithFunc(t *testing.T) {
 	}
 }
 
+func TestInfinitePoolWithRunner(t *testing.T) {
+	r := &run{i: 10, c: make(chan struct{})}
+	p, _ := NewPoolWithRunner(-1)
+	_ = p.Invoke(r)
+	_ = p.Invoke(r)
+	r.c <- struct{}{}
+	r.c <- struct{}{}
+	if n := p.Running(); n != 2 {
+		t.Errorf("expect 2 workers running, but got %d", n)
+	}
+	if n := p.Free(); n != -1 {
+		t.Errorf("expect -1 of free workers by unlimited pool, but got %d", n)
+	}
+	p.Tune(10)
+	if capacity := p.Cap(); capacity != -1 {
+		t.Fatalf("expect capacity: -1 but got %d", capacity)
+	}
+	var err error
+	_, err = NewPoolWithRunner(-1, WithPreAlloc(true))
+	if err != ErrInvalidPreAllocSize {
+		t.Errorf("expect ErrInvalidPreAllocSize but got %v", err)
+	}
+}
+
 func TestReleaseWhenRunningPool(t *testing.T) {
 	var wg sync.WaitGroup
 	p, _ := NewPool(1)
@@ -656,6 +836,41 @@ func TestReleaseWhenRunningPoolWithFunc(t *testing.T) {
 		}()
 		for i := 100; i < 130; i++ {
 			_ = p.Invoke(i)
+		}
+	}()
+
+	time.Sleep(3 * time.Second)
+	p.Release()
+	t.Log("wait for all goroutines to exit...")
+	wg.Wait()
+}
+
+func TestReleaseWhenRunningPoolWithRunner(t *testing.T) {
+	var wg sync.WaitGroup
+
+	p, _ := NewPoolWithRunner(1)
+	wg.Add(2)
+	go func() {
+		t.Log("start aaa")
+		defer func() {
+			wg.Done()
+			t.Log("stop aaa")
+		}()
+		for i := 0; i < 30; i++ {
+			r := &run{i: i, log: t}
+			_ = p.Invoke(r)
+		}
+	}()
+
+	go func() {
+		t.Log("start bbb")
+		defer func() {
+			wg.Done()
+			t.Log("stop bbb")
+		}()
+		for i := 100; i < 130; i++ {
+			r := &run{i: i, log: t}
+			_ = p.Invoke(r)
 		}
 	}()
 
