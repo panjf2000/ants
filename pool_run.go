@@ -119,7 +119,7 @@ func (p *PoolWithRunner) purgePeriodically(ctx context.Context) {
 	}
 }
 
-// Submit submits a task to this pool.
+// Submit submits a struct implements Runner to this pool.
 //
 // Note that you are allowed to call Pool.Submit() from the current Pool.Submit(),
 // but what calls for special attention is that you will get blocked with the latest
@@ -137,7 +137,7 @@ func (p *PoolWithRunner) Submit(r Runner) error {
 	return nil
 }
 
-// NewPoolWithRunner generates an instance of ants pool with a specific function.
+// NewPoolWithRunner generates an instance of ants pool with an interface Runner.
 func NewPoolWithRunner(size int, options ...Option) (*PoolWithRunner, error) {
 	if size <= 0 {
 		size = -1
