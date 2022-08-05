@@ -253,6 +253,24 @@ func (p *Pool) ReleaseTimeout(timeout time.Duration) error {
 	return ErrTimeout
 }
 
+// ReleaseWaitAllWorkersExit is like Release, but it will wait all workers to exit.
+func (p *Pool) ReleaseWaitAllWorkersExit() {
+	if p.IsClosed() || p.stopHeartbeat == nil {
+		return
+	}
+
+	p.stopHeartbeat()
+	p.stopHeartbeat = nil
+	p.Release()
+
+	for {
+		if p.Running() == 0 && atomic.LoadInt32(&p.heartbeatDone) == 1 {
+			return
+		}
+		time.Sleep(10 * time.Millisecond)
+	}
+}
+
 // Reboot reboots a closed pool.
 func (p *Pool) Reboot() {
 	if atomic.CompareAndSwapInt32(&p.state, CLOSED, OPENED) {

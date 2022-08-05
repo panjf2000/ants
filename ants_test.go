@@ -846,3 +846,28 @@ func TestReleaseTimeout(t *testing.T) {
 	err = pf.ReleaseTimeout(2 * time.Second)
 	assert.NoError(t, err)
 }
+
+func TestReleaseWaitAllWorkersExit(t *testing.T) {
+	p, _ := NewPool(10)
+	for i := 0; i < 5; i++ {
+		_ = p.Submit(func() {
+			time.Sleep(time.Second)
+		})
+	}
+	assert.NotZero(t, p.Running())
+	p.ReleaseWaitAllWorkersExit()
+	assert.Zero(t, p.running)
+}
+
+func TestReleaseWaitAllWorkersExitDefaultPool(t *testing.T) {
+
+	beforeGoNum := runtime.NumGoroutine()
+	defaultAntsPool, _ = NewPool(DefaultAntsPoolSize)
+	afterGoNum := runtime.NumGoroutine()
+	assert.Equal(t, beforeGoNum+1, afterGoNum)
+
+	ReleaseWaitAllWorkersExit()
+	endGoNum := runtime.NumGoroutine()
+	assert.Equal(t, beforeGoNum, endGoNum)
+
+}
