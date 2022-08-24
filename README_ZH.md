@@ -13,7 +13,7 @@
 <a title="Mentioned in Awesome Go" target="_blank" href="https://github.com/avelino/awesome-go#goroutines"><img src="https://awesome.re/mentioned-badge-flat.svg" /></a>
 </p>
 
-[英文](README.md) | 🇨🇳中文
+[英文](README.md) | 中文
 
 ## 📖 简介
 
