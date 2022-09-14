@@ -94,7 +94,7 @@ func demoFunc() {
 
 type run struct {
     i int32
-	wg  *sync.WaitGroup
+    wg  *sync.WaitGroup
 }
 
 func (r *run) Run(ctx context.Context) {
