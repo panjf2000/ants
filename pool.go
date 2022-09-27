@@ -68,6 +68,7 @@ type Pool struct {
 // purgePeriodically clears expired workers periodically which runs in an individual goroutine, as a scavenger.
 func (p *Pool) purgePeriodically(ctx context.Context) {
 	heartbeat := time.NewTicker(p.options.ExpiryDuration)
+
 	defer func() {
 		heartbeat.Stop()
 		atomic.StoreInt32(&p.heartbeatDone, 1)
@@ -83,7 +84,6 @@ func (p *Pool) purgePeriodically(ctx context.Context) {
 		if p.IsClosed() {
 			break
 		}
-
 		p.lock.Lock()
 		expiredWorkers := p.workers.retrieveExpiry(p.options.ExpiryDuration)
 		p.lock.Unlock()
@@ -115,10 +115,12 @@ func NewPool(size int, options ...Option) (*Pool, error) {
 		size = -1
 	}
 
-	if expiry := opts.ExpiryDuration; expiry < 0 {
-		return nil, ErrInvalidPoolExpiry
-	} else if expiry == 0 {
-		opts.ExpiryDuration = DefaultCleanIntervalTime
+	if !opts.DisablePurge {
+		if expiry := opts.ExpiryDuration; expiry < 0 {
+			return nil, ErrInvalidPoolExpiry
+		} else if expiry == 0 {
+			opts.ExpiryDuration = DefaultCleanIntervalTime
+		}
 	}
 
 	if opts.Logger == nil {
@@ -150,8 +152,9 @@ func NewPool(size int, options ...Option) (*Pool, error) {
 	// Start a goroutine to clean up expired workers periodically.
 	var ctx context.Context
 	ctx, p.stopHeartbeat = context.WithCancel(context.Background())
-	go p.purgePeriodically(ctx)
-
+	if !p.options.DisablePurge {
+		go p.purgePeriodically(ctx)
+	}
 	return p, nil
 }
 
@@ -259,7 +262,9 @@ func (p *Pool) Reboot() {
 		atomic.StoreInt32(&p.heartbeatDone, 0)
 		var ctx context.Context
 		ctx, p.stopHeartbeat = context.WithCancel(context.Background())
-		go p.purgePeriodically(ctx)
+		if !p.options.DisablePurge {
+			go p.purgePeriodically(ctx)
+		}
 	}
 }
 

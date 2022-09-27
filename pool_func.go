@@ -134,10 +134,12 @@ func NewPoolWithFunc(size int, pf func(interface{}), options ...Option) (*PoolWi
 
 	opts := loadOptions(options...)
 
-	if expiry := opts.ExpiryDuration; expiry < 0 {
-		return nil, ErrInvalidPoolExpiry
-	} else if expiry == 0 {
-		opts.ExpiryDuration = DefaultCleanIntervalTime
+	if !opts.DisablePurge {
+		if expiry := opts.ExpiryDuration; expiry < 0 {
+			return nil, ErrInvalidPoolExpiry
+		} else if expiry == 0 {
+			opts.ExpiryDuration = DefaultCleanIntervalTime
+		}
 	}
 
 	if opts.Logger == nil {
@@ -167,8 +169,9 @@ func NewPoolWithFunc(size int, pf func(interface{}), options ...Option) (*PoolWi
 	// Start a goroutine to clean up expired workers periodically.
 	var ctx context.Context
 	ctx, p.stopHeartbeat = context.WithCancel(context.Background())
-	go p.purgePeriodically(ctx)
-
+	if !p.options.DisablePurge {
+		go p.purgePeriodically(ctx)
+	}
 	return p, nil
 }
 
@@ -280,7 +283,9 @@ func (p *PoolWithFunc) Reboot() {
 		atomic.StoreInt32(&p.heartbeatDone, 0)
 		var ctx context.Context
 		ctx, p.stopHeartbeat = context.WithCancel(context.Background())
-		go p.purgePeriodically(ctx)
+		if !p.options.DisablePurge {
+			go p.purgePeriodically(ctx)
+		}
 	}
 }
 
