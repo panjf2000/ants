@@ -846,3 +846,34 @@ func TestReleaseTimeout(t *testing.T) {
 	err = pf.ReleaseTimeout(2 * time.Second)
 	assert.NoError(t, err)
 }
+
+func TestPool_Working(t *testing.T) {
+	capacity := 10
+	p, _ := NewPool(capacity, WithExpiryDuration(time.Second*1000))
+	assert.Equal(t, 0, p.Running())
+	assert.Equal(t, capacity, p.Cap())
+	assert.Equal(t, capacity, p.Free())
+
+	sig := make(chan struct{})
+	wg := sync.WaitGroup{}
+	taskNum := 5
+	wg.Add(taskNum)
+	for i := 0; i < taskNum; i++ {
+		p.Submit(func() {
+			wg.Done()
+			<-sig
+		})
+	}
+	wg.Wait()
+
+	assert.Equal(t, taskNum, p.Running())
+	assert.Equal(t, capacity-taskNum, p.Free())
+	assert.Equal(t, taskNum, p.Working())
+	assert.Equal(t, 0, p.Idle())
+
+	close(sig)
+	time.Sleep(time.Second)
+
+	assert.Equal(t, 0, p.Working())
+	assert.Equal(t, p.Running(), p.Idle())
+}

@@ -41,6 +41,9 @@ type Pool struct {
 	// running is the number of the currently running goroutines.
 	running int32
 
+	// working is the number of the currently goroutines which is executing task function.
+	working int32
+
 	// lock for protecting the worker queue.
 	lock sync.Locker
 
@@ -189,6 +192,16 @@ func (p *Pool) Free() int {
 	return c - p.Running()
 }
 
+// Working returns the number of goroutines which are executing task functions.
+func (p *Pool) Working() int {
+	return int(atomic.LoadInt32(&p.working))
+}
+
+// Idle returns the number of goroutines which are idle.
+func (p *Pool) Idle() int {
+	return p.Running() - p.Working()
+}
+
 // Waiting returns the number of tasks which are waiting be executed.
 func (p *Pool) Waiting() int {
 	return int(atomic.LoadInt32(&p.waiting))
@@ -264,6 +277,10 @@ func (p *Pool) Reboot() {
 }
 
 // ---------------------------------------------------------------------------
+
+func (p *Pool) addWorking(delta int) {
+	atomic.AddInt32(&p.working, int32(delta))
+}
 
 func (p *Pool) addRunning(delta int) {
 	atomic.AddInt32(&p.running, int32(delta))

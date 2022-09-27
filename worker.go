@@ -46,8 +46,12 @@ type goWorker struct {
 func (w *goWorker) run() {
 	w.pool.addRunning(1)
 	go func() {
+		decWorking := false
 		defer func() {
 			w.pool.addRunning(-1)
+			if decWorking {
+				w.pool.addWorking(-1)
+			}
 			w.pool.workerCache.Put(w)
 			if p := recover(); p != nil {
 				if ph := w.pool.options.PanicHandler; ph != nil {
@@ -67,7 +71,11 @@ func (w *goWorker) run() {
 			if f == nil {
 				return
 			}
+			w.pool.addWorking(1)
+			decWorking = true
 			f()
+			decWorking = false
+			w.pool.addWorking(-1)
 			if ok := w.pool.revertWorker(w); !ok {
 				return
 			}
