@@ -563,6 +563,131 @@ func TestInfinitePool(t *testing.T) {
 	}
 }
 
+func testPoolWithDisablePurge(t *testing.T, p *Pool, numWorker int) {
+	sig := make(chan struct{})
+	wg := sync.WaitGroup{}
+
+	wg.Add(numWorker)
+	for i := 0; i < numWorker; i++ {
+		_ = p.Submit(func() {
+			wg.Done()
+			sig <- struct{}{}
+		})
+	}
+	wg.Wait()
+	runCnt := p.Running()
+	assert.EqualValuesf(t, numWorker, runCnt, "expect %d workers running, but got %d", numWorker, runCnt)
+
+	freeCnt := p.Free()
+	assert.EqualValuesf(t, 0, freeCnt, "expect % free workers, but got %d", 0, freeCnt)
+
+	newCap := 10
+
+	p.Tune(newCap)
+	capacity := p.Cap()
+	assert.EqualValuesf(t, newCap, capacity, "expect capacity: %d but got %d", newCap, capacity)
+	<-sig
+	time.Sleep(time.Millisecond * 10)
+
+	wg.Add(1)
+	_ = p.Submit(func() {
+		wg.Done()
+		sig <- struct{}{}
+	})
+	wg.Wait()
+
+	runCnt = p.Running()
+	assert.EqualValuesf(t, numWorker, runCnt, "expect %d workers running, but got %d", numWorker, runCnt)
+
+	<-sig
+	<-sig
+
+	freeCnt = p.Free()
+	assert.EqualValuesf(t, newCap-numWorker, freeCnt, "expect % free workers, but got %d", newCap-numWorker, freeCnt)
+
+	p.Release()
+	p.Reboot()
+
+	runCnt = p.Running()
+	assert.EqualValuesf(t, numWorker, runCnt, "expect %d workers running, but got %d", numWorker, runCnt)
+}
+
+func TestWithDisablePurge(t *testing.T) {
+	numWorker := 2
+	p, _ := NewPool(numWorker, WithDisablePurge(true))
+	testPoolWithDisablePurge(t, p, numWorker)
+}
+
+func TestWithDisablePurgeAndWithExpiration(t *testing.T) {
+	numWorker := 2
+	p, _ := NewPool(numWorker, WithDisablePurge(true), WithExpiryDuration(time.Millisecond*100))
+	testPoolWithDisablePurge(t, p, numWorker)
+}
+
+func testPoolFuncWithDisablePurge(t *testing.T, p *PoolWithFunc, numWorker int, wg *sync.WaitGroup, sig chan struct{}) {
+	wg.Add(numWorker)
+	for i := 0; i < numWorker; i++ {
+		_ = p.Invoke(i)
+	}
+	wg.Wait()
+	runCnt := p.Running()
+	assert.EqualValuesf(t, numWorker, runCnt, "expect %d workers running, but got %d", numWorker, runCnt)
+
+	freeCnt := p.Free()
+	assert.EqualValuesf(t, 0, freeCnt, "expect % free workers, but got %d", 0, freeCnt)
+
+	newCap := 10
+	p.Tune(newCap)
+	capacity := p.Cap()
+	assert.EqualValuesf(t, newCap, capacity, "expect capacity: %d but got %d", newCap, capacity)
+	<-sig
+
+	time.Sleep(time.Millisecond * 200)
+
+	wg.Add(1)
+	_ = p.Invoke(10)
+	wg.Wait()
+
+	runCnt = p.Running()
+	assert.EqualValuesf(t, numWorker, runCnt, "expect %d workers running, but got %d", numWorker, runCnt)
+
+	<-sig
+	<-sig
+
+	freeCnt = p.Free()
+	assert.EqualValuesf(t, newCap-numWorker, freeCnt, "expect % free workers, but got %d", newCap-numWorker, freeCnt)
+
+	p.Release()
+	p.Reboot()
+
+	runCnt = p.Running()
+	assert.EqualValuesf(t, numWorker, runCnt, "expect %d workers running, but got %d", numWorker, runCnt)
+}
+
+func TestPoolFuncWithDisablePurge(t *testing.T) {
+	numWorker := 2
+	sig := make(chan struct{})
+	wg := sync.WaitGroup{}
+
+	p, _ := NewPoolWithFunc(numWorker, func(i interface{}) {
+		wg.Done()
+		sig <- struct{}{}
+	}, WithDisablePurge(true))
+	testPoolFuncWithDisablePurge(t, p, numWorker, &wg, sig)
+}
+
+func TestPoolFuncWithDisablePurgeAndWithExpiration(t *testing.T) {
+	numWorker := 2
+	sig := make(chan struct{})
+	wg := sync.WaitGroup{}
+
+	p, _ := NewPoolWithFunc(numWorker, func(i interface{}) {
+		wg.Done()
+		sig <- struct{}{}
+	}, WithDisablePurge(true), WithExpiryDuration(time.Millisecond*100))
+	testPoolFuncWithDisablePurge(t, p, numWorker, &wg, sig)
+}
+
 func TestInfinitePoolWithFunc(t *testing.T) {
 	c := make(chan struct{})
 	p, _ := NewPoolWithFunc(-1, func(i interface{}) {
