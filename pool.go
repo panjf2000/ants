@@ -84,6 +84,7 @@ func (p *Pool) purgePeriodically(ctx context.Context) {
 		if p.IsClosed() {
 			break
 		}
+
 		p.lock.Lock()
 		expiredWorkers := p.workers.retrieveExpiry(p.options.ExpiryDuration)
 		p.lock.Unlock()
@@ -248,7 +249,7 @@ func (p *Pool) ReleaseTimeout(timeout time.Duration) error {
 
 	endTime := time.Now().Add(timeout)
 	for time.Now().Before(endTime) {
-		if p.Running() == 0 && atomic.LoadInt32(&p.heartbeatDone) == 1 {
+		if p.Running() == 0 && (p.options.DisablePurge || atomic.LoadInt32(&p.heartbeatDone) == 1) {
 			return nil
 		}
 		time.Sleep(10 * time.Millisecond)

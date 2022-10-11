@@ -29,8 +29,7 @@ func TestLoopQueue(t *testing.T) {
 		}
 	}
 	assert.EqualValues(t, 5, q.len(), "Len error")
-	v := q.detach()
-	t.Log(v)
+	_ = q.detach()
 	assert.EqualValues(t, 4, q.len(), "Len error")
 
 	time.Sleep(time.Second)

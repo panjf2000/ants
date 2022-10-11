@@ -86,6 +86,7 @@ func (p *PoolWithFunc) purgePeriodically(ctx context.Context) {
 		if p.IsClosed() {
 			break
 		}
+
 		currentTime := time.Now()
 		p.lock.Lock()
 		idleWorkers := p.workers
@@ -269,7 +270,7 @@ func (p *PoolWithFunc) ReleaseTimeout(timeout time.Duration) error {
 
 	endTime := time.Now().Add(timeout)
 	for time.Now().Before(endTime) {
-		if p.Running() == 0 && atomic.LoadInt32(&p.heartbeatDone) == 1 {
+		if p.Running() == 0 && (p.options.DisablePurge || atomic.LoadInt32(&p.heartbeatDone) == 1) {
 			return nil
 		}
 		time.Sleep(10 * time.Millisecond)
