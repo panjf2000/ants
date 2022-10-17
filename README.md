@@ -67,7 +67,7 @@ go get -u github.com/panjf2000/ants/v2
 ## 🛠 How to use
 Just take a imagination that your program starts a massive number of goroutines, resulting in a huge consumption of memory. To mitigate that kind of situation, all you need to do is to import `ants` package and submit all your tasks to a default pool with fixed capacity, activated when package `ants` is imported:
 
-``` go
+```go
 package main
 
 import (
@@ -81,11 +81,12 @@ import (
 
 var sum int32
 
-func myFunc(i interface{}) {
-	n := i.(int32)
+func myFunc(i int32, s string) {
+	n := i
 	atomic.AddInt32(&sum, n)
-	fmt.Printf("run with %d\n", n)
+	fmt.Printf("run with %d: %s\n", n, s)
 }
+
 
 func demoFunc() {
 	time.Sleep(10 * time.Millisecond)
@@ -113,15 +114,15 @@ func main() {
 
 	// Use the pool with a function,
 	// set 10 to the capacity of goroutine pool and 1 second for expired duration.
-	p, _ := ants.NewPoolWithFunc(10, func(i interface{}) {
-		myFunc(i)
+	p, _ := ants.NewPoolWithFunc(10, func(args ...interface{}) {
+		myFunc(args[0].(int32), args[1].(string))
 		wg.Done()
 	})
 	defer p.Release()
 	// Submit tasks one by one.
 	for i := 0; i < runTimes; i++ {
 		wg.Add(1)
-		_ = p.Invoke(int32(i))
+		_ = p.Invoke(int32(i), fmt.Sprintf("hello %d", i))
 	}
 	wg.Wait()
 	fmt.Printf("running goroutines: %d\n", p.Running())

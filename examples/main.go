@@ -33,10 +33,10 @@ import (
 
 var sum int32
 
-func myFunc(i interface{}) {
-	n := i.(int32)
+func myFunc(i int32, s string) {
+	n := i
 	atomic.AddInt32(&sum, n)
-	fmt.Printf("run with %d\n", n)
+	fmt.Printf("run with %d: %s\n", n, s)
 }
 
 func demoFunc() {
@@ -66,14 +66,14 @@ func main() {
 	// Use the pool with a method,
 	// set 10 to the capacity of goroutine pool and 1 second for expired duration.
 	p, _ := ants.NewPoolWithFunc(10, func(args ...interface{}) {
-		myFunc(args[0])
+		myFunc(args[0].(int32), args[1].(string))
 		wg.Done()
 	})
 	defer p.Release()
 	// Submit tasks one by one.
 	for i := 0; i < runTimes; i++ {
 		wg.Add(1)
-		_ = p.Invoke(int32(i))
+		_ = p.Invoke(int32(i), fmt.Sprintf("hello %d", i))
 	}
 	wg.Wait()
 	fmt.Printf("running goroutines: %d\n", p.Running())
