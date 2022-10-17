@@ -53,7 +53,7 @@ type PoolWithFunc struct {
 	cond *sync.Cond
 
 	// poolFunc is the function for processing tasks.
-	poolFunc func(interface{})
+	poolFunc func(...interface{})
 
 	// workerCache speeds up the obtainment of a usable worker in function:retrieveWorker.
 	workerCache sync.Pool
@@ -124,7 +124,7 @@ func (p *PoolWithFunc) purgePeriodically(ctx context.Context) {
 }
 
 // NewPoolWithFunc generates an instance of ants pool with a specific function.
-func NewPoolWithFunc(size int, pf func(interface{}), options ...Option) (*PoolWithFunc, error) {
+func NewPoolWithFunc(size int, pf func(...interface{}), options ...Option) (*PoolWithFunc, error) {
 	if size <= 0 {
 		size = -1
 	}
@@ -184,7 +184,7 @@ func NewPoolWithFunc(size int, pf func(interface{}), options ...Option) (*PoolWi
 // but what calls for special attention is that you will get blocked with the latest
 // Pool.Invoke() call once the current Pool runs out of its capacity, and to avoid this,
 // you should instantiate a PoolWithFunc with ants.WithNonblocking(true).
-func (p *PoolWithFunc) Invoke(args interface{}) error {
+func (p *PoolWithFunc) Invoke(args ...interface{}) error {
 	if p.IsClosed() {
 		return ErrPoolClosed
 	}

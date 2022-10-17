@@ -47,10 +47,11 @@ const (
 )
 
 const (
-	Param    = 100
-	AntsSize = 1000
-	TestSize = 10000
-	n        = 100000
+	Param       = 100
+	AntsSize    = 1000
+	TestSize    = 10000
+	n           = 100000
+	StringParam = "test_string"
 )
 
 var curMem uint64
@@ -99,8 +100,8 @@ func TestAntsPoolWaitToGetWorkerPreMalloc(t *testing.T) {
 // TestAntsPoolWithFuncWaitToGetWorker is used to test waiting to get worker.
 func TestAntsPoolWithFuncWaitToGetWorker(t *testing.T) {
 	var wg sync.WaitGroup
-	p, _ := NewPoolWithFunc(AntsSize, func(i interface{}) {
-		demoPoolFunc(i)
+	p, _ := NewPoolWithFunc(AntsSize, func(args ...interface{}) {
+		demoPoolFunc(args[0])
 		wg.Done()
 	})
 	defer p.Release()
@@ -117,10 +118,31 @@ func TestAntsPoolWithFuncWaitToGetWorker(t *testing.T) {
 	t.Logf("memory usage:%d MB", curMem)
 }
 
+func TestAntsPoolWithFuncMultipleArgsWaitToGetWorker(t *testing.T) {
+	var wg sync.WaitGroup
+	p, _ := NewPoolWithFunc(AntsSize, func(args ...interface{}) {
+		str := demoPoolMultipleArgsFunc(args[0].(int), args[1].(string))
+		if str != StringParam {
+			t.Errorf("return value %s is not correct, expected %s", str, StringParam)
+		}
+		wg.Done()
+	})
+	defer p.Release()
+
+	wg.Add(1)
+	_ = p.Invoke(4, StringParam)
+	wg.Wait()
+	t.Logf("pool with func, running workers number:%d", p.Running())
+	mem := runtime.MemStats{}
+	runtime.ReadMemStats(&mem)
+	curMem = mem.TotalAlloc/MiB - curMem
+	t.Logf("memory usage:%d MB", curMem)
+}
+
 func TestAntsPoolWithFuncWaitToGetWorkerPreMalloc(t *testing.T) {
 	var wg sync.WaitGroup
-	p, _ := NewPoolWithFunc(AntsSize, func(i interface{}) {
-		demoPoolFunc(i)
+	p, _ := NewPoolWithFunc(AntsSize, func(args ...interface{}) {
+		demoPoolFunc(args[0])
 		wg.Done()
 	}, WithPreAlloc(true))
 	defer p.Release()
@@ -253,7 +275,7 @@ func TestPanicHandler(t *testing.T) {
 	c := atomic.LoadInt64(&panicCounter)
 	assert.EqualValuesf(t, 1, c, "panic handler didn't work, panicCounter: %d", c)
 	assert.EqualValues(t, 0, p0.Running(), "pool should be empty after panic")
-	p1, err := NewPoolWithFunc(10, func(p interface{}) { panic(p) }, WithPanicHandler(func(p interface{}) {
+	p1, err := NewPoolWithFunc(10, func(args ...interface{}) { panic(args[0]) }, WithPanicHandler(func(p interface{}) {
 		defer wg.Done()
 		atomic.AddInt64(&panicCounter, 1)
 	}))
@@ -285,7 +307,7 @@ func TestPanicHandlerPreMalloc(t *testing.T) {
 	c := atomic.LoadInt64(&panicCounter)
 	assert.EqualValuesf(t, 1, c, "panic handler didn't work, panicCounter: %d", c)
 	assert.EqualValues(t, 0, p0.Running(), "pool should be empty after panic")
-	p1, err := NewPoolWithFunc(10, func(p interface{}) { panic(p) }, WithPanicHandler(func(p interface{}) {
+	p1, err := NewPoolWithFunc(10, func(args ...interface{}) { panic(args[0]) }, WithPanicHandler(func(p interface{}) {
 		defer wg.Done()
 		atomic.AddInt64(&panicCounter, 1)
 	}))
@@ -307,8 +329,8 @@ func TestPoolPanicWithoutHandler(t *testing.T) {
 		panic("Oops!")
 	})
 
-	p1, err := NewPoolWithFunc(10, func(p interface{}) {
-		panic(p)
+	p1, err := NewPoolWithFunc(10, func(p ...interface{}) {
+		panic(p[0])
 	})
 	assert.NoErrorf(t, err, "create new pool with func failed: %v", err)
 	defer p1.Release()
@@ -323,8 +345,8 @@ func TestPoolPanicWithoutHandlerPreMalloc(t *testing.T) {
 		panic("Oops!")
 	})
 
-	p1, err := NewPoolWithFunc(10, func(p interface{}) {
-		panic(p)
+	p1, err := NewPoolWithFunc(10, func(p ...interface{}) {
+		panic(p[0])
 	})
 
 	assert.NoErrorf(t, err, "create new pool with func failed: %v", err)
@@ -428,8 +450,8 @@ func TestMaxBlockingSubmit(t *testing.T) {
 func TestNonblockingSubmitWithFunc(t *testing.T) {
 	poolSize := 10
 	var wg sync.WaitGroup
-	p, err := NewPoolWithFunc(poolSize, func(i interface{}) {
-		longRunningPoolFunc(i)
+	p, err := NewPoolWithFunc(poolSize, func(args ...interface{}) {
+		longRunningPoolFunc(args[0])
 		wg.Done()
 	}, WithNonblocking(true))
 	assert.NoError(t, err, "create TimingPool failed: %v", err)
@@ -520,8 +542,8 @@ func TestRebootNewPool(t *testing.T) {
 	assert.NoError(t, p.Submit(func() { wg.Done() }), "pool should be rebooted")
 	wg.Wait()
 
-	p1, err := NewPoolWithFunc(10, func(i interface{}) {
-		demoPoolFunc(i)
+	p1, err := NewPoolWithFunc(10, func(args ...interface{}) {
+		demoPoolFunc(args[0])
 		wg.Done()
 	})
 	assert.NoErrorf(t, err, "create TimingPoolWithFunc failed: %v", err)
@@ -652,7 +674,7 @@ func TestWithDisablePurgePoolFunc(t *testing.T) {
 	var wg1, wg2 sync.WaitGroup
 	wg1.Add(numWorker)
 	wg2.Add(numWorker)
-	p, _ := NewPoolWithFunc(numWorker, func(i interface{}) {
+	p, _ := NewPoolWithFunc(numWorker, func(args ...interface{}) {
 		wg1.Done()
 		<-sig
 		wg2.Done()
@@ -667,7 +689,7 @@ func TestWithDisablePurgeAndWithExpirationPoolFunc(t *testing.T) {
 	wg1.Add(numWorker)
 	wg2.Add(numWorker)
 	expiredDuration := time.Millisecond * 100
-	p, _ := NewPoolWithFunc(numWorker, func(i interface{}) {
+	p, _ := NewPoolWithFunc(numWorker, func(args ...interface{}) {
 		wg1.Done()
 		<-sig
 		wg2.Done()
@@ -677,8 +699,8 @@ func TestWithDisablePurgeAndWithExpirationPoolFunc(t *testing.T) {
 
 func TestInfinitePoolWithFunc(t *testing.T) {
 	c := make(chan struct{})
-	p, _ := NewPoolWithFunc(-1, func(i interface{}) {
-		demoPoolFunc(i)
+	p, _ := NewPoolWithFunc(-1, func(args ...interface{}) {
+		demoPoolFunc(args[0])
 		<-c
 	})
 	_ = p.Invoke(10)
@@ -744,8 +766,8 @@ func TestReleaseWhenRunningPool(t *testing.T) {
 
 func TestReleaseWhenRunningPoolWithFunc(t *testing.T) {
 	var wg sync.WaitGroup
-	p, _ := NewPoolWithFunc(1, func(i interface{}) {
-		t.Log("do task", i)
+	p, _ := NewPoolWithFunc(1, func(args ...interface{}) {
+		t.Log("do task", args[0])
 		time.Sleep(1 * time.Second)
 	})
 	wg.Add(2)
@@ -899,7 +921,7 @@ func TestPoolTuneScaleUp(t *testing.T) {
 	p.Release()
 
 	// test PoolWithFunc
-	pf, _ := NewPoolWithFunc(2, func(i interface{}) {
+	pf, _ := NewPoolWithFunc(2, func(args ...interface{}) {
 		<-c
 	})
 	for i := 0; i < 2; i++ {
@@ -947,8 +969,8 @@ func TestReleaseTimeout(t *testing.T) {
 	assert.NoError(t, err)
 
 	var pf *PoolWithFunc
-	pf, _ = NewPoolWithFunc(10, func(i interface{}) {
-		dur := i.(time.Duration)
+	pf, _ = NewPoolWithFunc(10, func(args ...interface{}) {
+		dur := args[0].(time.Duration)
 		time.Sleep(dur)
 	})
 	for i := 0; i < 5; i++ {

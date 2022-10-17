@@ -65,8 +65,8 @@ func main() {
 
 	// Use the pool with a method,
 	// set 10 to the capacity of goroutine pool and 1 second for expired duration.
-	p, _ := ants.NewPoolWithFunc(10, func(i interface{}) {
-		myFunc(i)
+	p, _ := ants.NewPoolWithFunc(10, func(args ...interface{}) {
+		myFunc(args[0])
 		wg.Done()
 	})
 	defer p.Release()

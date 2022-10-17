@@ -67,7 +67,7 @@ func (w *goWorkerWithFunc) run() {
 			if args == nil {
 				return
 			}
-			w.pool.poolFunc(args)
+			w.pool.poolFunc(args.([]interface{})...)
 			if ok := w.pool.revertWorker(w); !ok {
 				return
 			}
