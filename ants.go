@@ -48,9 +48,6 @@ const (
 )
 
 var (
-	//
-	//--------------------------Error types for the Ants API------------------------------
-
 	// ErrLackPoolFunc will be returned when invokers don't provide function for pool.
 	ErrLackPoolFunc = errors.New("must provide function for pool")
 
@@ -68,8 +65,6 @@ var (
 
 	// ErrTimeout will be returned after the operations timed out.
 	ErrTimeout = errors.New("operation timed out")
-
-	//---------------------------------------------------------------------------
 
 	// workerChanCap determines whether the channel of a worker should be a buffered channel
 	// to get the best performance. Inspired by fasthttp at
