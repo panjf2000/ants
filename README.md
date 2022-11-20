@@ -28,10 +28,6 @@ Library `ants` implements a goroutine pool with fixed capacity, managing and rec
 - Efficient in memory usage and it even achieves [higher performance](#-performance-summary) than unlimited goroutines in Golang
 - Nonblocking mechanism
 
-## ⚔️ Tested in the following Golang releases:
-
-All releases from **Go1.8.x** to **Go1.18.x**.
-
 ## 💡 How `ants` works
 
 ### Flow Diagram
