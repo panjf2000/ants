@@ -1,0 +1,60 @@
+name: Feature Request
+description: Propose an idea to make ants even better.
+title: "[Feature]: "
+labels: ["proposal", "enhancement"]
+assignees:
+  - panjf2000
+body:
+  - type: markdown
+    id: tips
+    attributes:
+      value: |
+        ## Before you go any further
+        - Please read [<u>*How To Ask Questions The Smart Way*</u>](http://www.catb.org/~esr/faqs/smart-questions.html) ( Chinese translation: [《提问的智慧》](https://github.com/ryanhanwu/How-To-Ask-Questions-The-Smart-Way/blob/main/README-zh_CN.md)) before you file an issue formally.
+        - Keep in mind that there is always welcome to ask questions on [Gitter](https://gitter.im/ants-pool/ants).
+  - type: textarea
+    id: feature-request
+    attributes:
+      label: Description of new feature
+      description: Make a concise but clear description about this new feature.
+      placeholder: Describe this new feature with critical details.
+    validations:
+      required: true
+  - type: textarea
+    id: feature-scenario
+    attributes:
+      label: Scenarios for new feature
+      description: Explain why you need this feature and what scenarios can benefit from it.
+      placeholder: Please try to convince us that this new feature makes sense, also it will improve ants.
+    validations:
+      required: true
+  - type: dropdown
+    id: breaking-changes
+    attributes:
+      label: Breaking changes or not?
+      description: Is this new feature going to break the backward compatibility of the existing APIs?
+      options:
+        - "Yes"
+        - "No"
+    validations:
+      required: true
+  - type: textarea
+    id: code
+    attributes:
+      label: Code snippets (optional)
+      description: Illustrate this new feature with source code, what it looks like in code.
+      render: go
+  - type: textarea
+    id: feature-alternative
+    attributes:
+      label: Alternatives for new feature
+      description: Alternatives in your mind in case that the feature can't be done for some reasons.
+      placeholder: A concise but clear description of any alternative solutions or features you had in mind.
+      value: None.
+  - type: textarea
+    id: additional-context
+    attributes:
+      label: Additional context (optional)
+      description: Any additional context about this new feature we should know.
+      placeholder: What else should we know before we start discussing this new feature?
+      value: None.

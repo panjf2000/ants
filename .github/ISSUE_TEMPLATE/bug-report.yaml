@@ -1,0 +1,105 @@
+name: Bug Report
+description: Oops!..., it's a bug.
+title: "[Bug]: "
+labels: ["bug"]
+assignees:
+  - panjf2000
+body:
+  - type: markdown
+    id: tips
+    attributes:
+      value: |
+        ## Before you go any further
+        - Please read [<u>*How To Ask Questions The Smart Way*</u>](http://www.catb.org/~esr/faqs/smart-questions.html) ( Chinese translation: [《提问的智慧》](https://github.com/ryanhanwu/How-To-Ask-Questions-The-Smart-Way/blob/main/README-zh_CN.md)) before you file an issue formally.
+        - Keep in mind that there is always welcome to ask questions on [Gitter](https://gitter.im/ants-pool/ants).
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: Actions I've taken before I'm here
+      description: Make sure you have tried the following ways but still the problem has not been solved.
+      options:
+        - label: I've thoroughly read the documentations on this issue but still have no clue.
+          required: true
+        - label: I've searched the current list of Github issues but didn't find any duplicate issues that have been solved.
+          required: true
+        - label: I've searched the internet with this issue, but haven't found anything helpful.
+          required: true
+    validations:
+      required: true
+  - type: textarea
+    id: bug-report
+    attributes:
+      label: What happened?
+      description: Describe (and illustrate) the bug that you encountered precisely.
+      placeholder: Please describe what happened and how it happened, the more details you provide, the faster the bug gets fixed.
+    validations:
+      required: true
+  - type: dropdown
+    id: major-version
+    attributes:
+      label: Major version of ants
+      description: What major version of ants are you running?
+      options:
+        - v2
+        - v1
+    validations:
+      required: true
+  - type: input
+    id: specific-version
+    attributes:
+      label: Specific version of ants
+      description: What's the specific version of ants?
+      placeholder: "For example: v2.6.0"
+    validations:
+      required: true
+  - type: dropdown
+    id: os
+    attributes:
+      label: Operating system
+      multiple: true
+      options:
+        - Linux
+        - macOS
+        - Windows
+        - BSD
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant log output
+      description: Please copy and paste any relevant log output.
+      render: shell
+    validations:
+      required: true
+  - type: textarea
+    id: code
+    attributes:
+      label: Code snippets (optional)
+      description: Helpful code snippets can really speed up the process of locating root cause and fixing the bug.
+      render: go
+  - type: textarea
+    id: how-to-reproduce
+    attributes:
+      label: How to Reproduce
+      description: Steps to reproduce the result.
+      placeholder: Tell us step by step how we can replicate this bug and what we should see in the end.
+      value: |
+        Steps to reproduce the behavior:
+        1. Go to '....'
+        2. Click on '....'
+        3. Do '....'
+        4. See '....'
+    validations:
+      required: true
+  - type: dropdown
+    id: bug-in-latest-code
+    attributes:
+      label: Does this issue reproduce with the latest release?
+      description: Whether this bug still exists in the latest version.
+      options:
+        - It can reproduce with the latest release
+        - It gets fixed in the latest release
+        - I haven't verified it with the latest release
+    validations:
+      required: true
