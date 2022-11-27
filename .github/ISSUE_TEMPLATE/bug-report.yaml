@@ -96,7 +96,7 @@ body:
     id: bug-in-latest-code
     attributes:
       label: Does this issue reproduce with the latest release?
-      description: Whether this bug still exists in the latest version.
+      description: Is this bug still present in the latest version?
       options:
         - It can reproduce with the latest release
         - It gets fixed in the latest release
