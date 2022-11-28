@@ -136,7 +136,7 @@ func NewPool(size int, options ...Option) (*Pool, error) {
 	p.workerCache.New = func() interface{} {
 		return &goWorker{
 			pool: p,
-			task: make(chan func(), workerChanCap),
+			task: make(chan Task, workerChanCap),
 		}
 	}
 	if p.options.PreAlloc {
@@ -168,6 +168,11 @@ func NewPool(size int, options ...Option) (*Pool, error) {
 // Pool.Submit() call once the current Pool runs out of its capacity, and to avoid this,
 // you should instantiate a Pool with ants.WithNonblocking(true).
 func (p *Pool) Submit(task func()) error {
+	return p.SubmitTask(TaskFn(task))
+}
+
+// SubmitTask submits a task to this pool.
+func (p *Pool) SubmitTask(task Task) error {
 	if p.IsClosed() {
 		return ErrPoolClosed
 	}

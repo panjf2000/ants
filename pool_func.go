@@ -67,6 +67,8 @@ type PoolWithFunc struct {
 	options *Options
 }
 
+var stopArg interface{} = &struct{ a byte }{}
+
 // purgePeriodically clears expired workers periodically which runs in an individual goroutine, as a scavenger.
 func (p *PoolWithFunc) purgePeriodically(ctx context.Context) {
 	heartbeat := time.NewTicker(p.options.ExpiryDuration)
@@ -109,7 +111,7 @@ func (p *PoolWithFunc) purgePeriodically(ctx context.Context) {
 		// may be blocking and may consume a lot of time if many workers
 		// are located on non-local CPUs.
 		for i, w := range expiredWorkers {
-			w.args <- nil
+			w.args <- stopArg
 			expiredWorkers[i] = nil
 		}
 
@@ -249,7 +251,7 @@ func (p *PoolWithFunc) Release() {
 	p.lock.Lock()
 	idleWorkers := p.workers
 	for _, w := range idleWorkers {
-		w.args <- nil
+		w.args <- stopArg
 	}
 	p.workers = nil
 	p.lock.Unlock()
