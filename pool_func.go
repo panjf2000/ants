@@ -89,17 +89,25 @@ func (p *PoolWithFunc) purgeStaleWorkers(ctx context.Context) {
 			break
 		}
 
-		currentTime := time.Now()
+		criticalTime := time.Now().Add(-p.options.ExpiryDuration)
+
 		p.lock.Lock()
 		idleWorkers := p.workers
 		n := len(idleWorkers)
-		var i int
-		for i = 0; i < n && currentTime.Sub(idleWorkers[i].recycleTime) > p.options.ExpiryDuration; i++ {
+		l, r, mid := 0, n-1, 0
+		for l <= r {
+			mid = (l + r) / 2
+			if criticalTime.Before(idleWorkers[mid].recycleTime) {
+				r = mid - 1
+			} else {
+				l = mid + 1
+			}
 		}
+		i := r + 1
 		expiredWorkers = append(expiredWorkers[:0], idleWorkers[:i]...)
 		if i > 0 {
 			m := copy(idleWorkers, idleWorkers[i:])
-			for i = m; i < n; i++ {
+			for i := m; i < n; i++ {
 				idleWorkers[i] = nil
 			}
 			p.workers = idleWorkers[:m]
