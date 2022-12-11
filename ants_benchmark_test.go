@@ -25,15 +25,16 @@ package ants
 import (
 	"runtime"
 	"sync"
-	"sync/atomic"
 	"testing"
 	"time"
+
+	"golang.org/x/sync/errgroup"
 )
 
 const (
-	RunTimes           = 1000000
+	RunTimes           = 1e6
+	PoolCap            = 5e4
 	BenchParam         = 10
-	BenchAntsSize      = 200000
 	DefaultExpiredTime = 10 * time.Second
 )
 
@@ -76,10 +77,11 @@ func BenchmarkGoroutines(b *testing.B) {
 	}
 }
 
-func BenchmarkSemaphore(b *testing.B) {
+func BenchmarkChannel(b *testing.B) {
 	var wg sync.WaitGroup
-	sema := make(chan struct{}, BenchAntsSize)
+	sema := make(chan struct{}, PoolCap)
 
+	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		wg.Add(RunTimes)
 		for j := 0; j < RunTimes; j++ {
@@ -94,12 +96,31 @@ func BenchmarkSemaphore(b *testing.B) {
 	}
 }
 
+func BenchmarkErrGroup(b *testing.B) {
+	var wg sync.WaitGroup
+	var pool errgroup.Group
+	pool.SetLimit(PoolCap)
+
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		wg.Add(RunTimes)
+		for j := 0; j < RunTimes; j++ {
+			pool.Go(func() error {
+				demoFunc()
+				wg.Done()
+				return nil
+			})
+		}
+		wg.Wait()
+	}
+}
+
 func BenchmarkAntsPool(b *testing.B) {
 	var wg sync.WaitGroup
-	p, _ := NewPool(BenchAntsSize, WithExpiryDuration(DefaultExpiredTime))
+	p, _ := NewPool(PoolCap, WithExpiryDuration(DefaultExpiredTime))
 	defer p.Release()
 
-	b.StartTimer()
+	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		wg.Add(RunTimes)
 		for j := 0; j < RunTimes; j++ {
@@ -110,7 +131,6 @@ func BenchmarkAntsPool(b *testing.B) {
 		}
 		wg.Wait()
 	}
-	b.StopTimer()
 }
 
 func BenchmarkGoroutinesThroughput(b *testing.B) {
@@ -122,7 +142,7 @@ func BenchmarkGoroutinesThroughput(b *testing.B) {
 }
 
 func BenchmarkSemaphoreThroughput(b *testing.B) {
-	sema := make(chan struct{}, BenchAntsSize)
+	sema := make(chan struct{}, PoolCap)
 	for i := 0; i < b.N; i++ {
 		for j := 0; j < RunTimes; j++ {
 			sema <- struct{}{}
@@ -135,54 +155,13 @@ func BenchmarkSemaphoreThroughput(b *testing.B) {
 }
 
 func BenchmarkAntsPoolThroughput(b *testing.B) {
-	p, _ := NewPool(BenchAntsSize, WithExpiryDuration(DefaultExpiredTime))
+	p, _ := NewPool(PoolCap, WithExpiryDuration(DefaultExpiredTime))
 	defer p.Release()
-	b.StartTimer()
+
+	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		for j := 0; j < RunTimes; j++ {
 			_ = p.Submit(demoFunc)
 		}
-	}
-	b.StopTimer()
-}
-
-func BenchmarkTimeNow(b *testing.B) {
-	for i := 0; i < b.N; i++ {
-		_ = time.Now()
-	}
-}
-
-func BenchmarkTimeNowCache(b *testing.B) {
-	var (
-		now    atomic.Value
-		offset int32
-	)
-
-	now.Store(time.Now())
-	go func() {
-		for range time.Tick(500 * time.Millisecond) {
-			now.Store(time.Now())
-			atomic.StoreInt32(&offset, 0)
-		}
-	}()
-
-	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
-		_ = now.Load().(time.Time).Add(time.Duration(atomic.AddInt32(&offset, 1)))
-	}
-}
-
-func BenchmarkTimeNowCache1(b *testing.B) {
-	var now atomic.Value
-	now.Store(time.Now())
-	go func() {
-		for range time.Tick(500 * time.Millisecond) {
-			now.Store(time.Now())
-		}
-	}()
-
-	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
-		_ = now.Load().(time.Time)
 	}
 }
