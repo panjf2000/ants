@@ -64,11 +64,13 @@ type PoolWithFunc struct {
 	heartbeatDone int32
 	stopHeartbeat context.CancelFunc
 
+	now atomic.Value
+
 	options *Options
 }
 
-// purgePeriodically clears expired workers periodically which runs in an individual goroutine, as a scavenger.
-func (p *PoolWithFunc) purgePeriodically(ctx context.Context) {
+// purgeStaleWorkers clears stale workers periodically, it runs in an individual goroutine, as a scavenger.
+func (p *PoolWithFunc) purgeStaleWorkers(ctx context.Context) {
 	heartbeat := time.NewTicker(p.options.ExpiryDuration)
 	defer func() {
 		heartbeat.Stop()
@@ -78,9 +80,9 @@ func (p *PoolWithFunc) purgePeriodically(ctx context.Context) {
 	var expiredWorkers []*goWorkerWithFunc
 	for {
 		select {
-		case <-heartbeat.C:
 		case <-ctx.Done():
 			return
+		case <-heartbeat.C:
 		}
 
 		if p.IsClosed() {
@@ -121,6 +123,20 @@ func (p *PoolWithFunc) purgePeriodically(ctx context.Context) {
 			p.cond.Broadcast()
 		}
 	}
+}
+
+// ticktock is a goroutine that updates the current time in the pool regularly.
+func (p *PoolWithFunc) ticktock() {
+	ticker := time.NewTicker(nowTimeUpdateInterval)
+	defer ticker.Stop()
+
+	for range ticker.C {
+		p.now.Store(time.Now())
+	}
+}
+
+func (p *PoolWithFunc) nowTime() time.Time {
+	return p.now.Load().(time.Time)
 }
 
 // NewPoolWithFunc generates an instance of ants pool with a specific function.
@@ -171,8 +187,12 @@ func NewPoolWithFunc(size int, pf func(interface{}), options ...Option) (*PoolWi
 	var ctx context.Context
 	ctx, p.stopHeartbeat = context.WithCancel(context.Background())
 	if !p.options.DisablePurge {
-		go p.purgePeriodically(ctx)
+		go p.purgeStaleWorkers(ctx)
 	}
+
+	p.now.Store(time.Now())
+	go p.ticktock()
+
 	return p, nil
 }
 
@@ -285,7 +305,7 @@ func (p *PoolWithFunc) Reboot() {
 		var ctx context.Context
 		ctx, p.stopHeartbeat = context.WithCancel(context.Background())
 		if !p.options.DisablePurge {
-			go p.purgePeriodically(ctx)
+			go p.purgeStaleWorkers(ctx)
 		}
 	}
 }
@@ -368,7 +388,7 @@ func (p *PoolWithFunc) revertWorker(worker *goWorkerWithFunc) bool {
 		p.cond.Broadcast()
 		return false
 	}
-	worker.recycleTime = time.Now()
+	worker.recycleTime = p.nowTime()
 	p.lock.Lock()
 
 	// To avoid memory leaks, add a double check in the lock scope.

@@ -62,11 +62,13 @@ type Pool struct {
 	heartbeatDone int32
 	stopHeartbeat context.CancelFunc
 
+	now atomic.Value
+
 	options *Options
 }
 
-// purgePeriodically clears expired workers periodically which runs in an individual goroutine, as a scavenger.
-func (p *Pool) purgePeriodically(ctx context.Context) {
+// purgeStaleWorkers clears stale workers periodically, it runs in an individual goroutine, as a scavenger.
+func (p *Pool) purgeStaleWorkers(ctx context.Context) {
 	heartbeat := time.NewTicker(p.options.ExpiryDuration)
 
 	defer func() {
@@ -76,9 +78,9 @@ func (p *Pool) purgePeriodically(ctx context.Context) {
 
 	for {
 		select {
-		case <-heartbeat.C:
 		case <-ctx.Done():
 			return
+		case <-heartbeat.C:
 		}
 
 		if p.IsClosed() {
@@ -106,6 +108,20 @@ func (p *Pool) purgePeriodically(ctx context.Context) {
 			p.cond.Broadcast()
 		}
 	}
+}
+
+// ticktock is a goroutine that updates the current time in the pool regularly.
+func (p *Pool) ticktock() {
+	ticker := time.NewTicker(nowTimeUpdateInterval)
+	defer ticker.Stop()
+
+	for range ticker.C {
+		p.now.Store(time.Now())
+	}
+}
+
+func (p *Pool) nowTime() time.Time {
+	return p.now.Load().(time.Time)
 }
 
 // NewPool generates an instance of ants pool.
@@ -154,8 +170,12 @@ func NewPool(size int, options ...Option) (*Pool, error) {
 	var ctx context.Context
 	ctx, p.stopHeartbeat = context.WithCancel(context.Background())
 	if !p.options.DisablePurge {
-		go p.purgePeriodically(ctx)
+		go p.purgeStaleWorkers(ctx)
 	}
+
+	p.now.Store(time.Now())
+	go p.ticktock()
+
 	return p, nil
 }
 
@@ -264,7 +284,7 @@ func (p *Pool) Reboot() {
 		var ctx context.Context
 		ctx, p.stopHeartbeat = context.WithCancel(context.Background())
 		if !p.options.DisablePurge {
-			go p.purgePeriodically(ctx)
+			go p.purgeStaleWorkers(ctx)
 		}
 	}
 }
@@ -340,7 +360,7 @@ func (p *Pool) revertWorker(worker *goWorker) bool {
 		p.cond.Broadcast()
 		return false
 	}
-	worker.recycleTime = time.Now()
+	worker.recycleTime = p.nowTime()
 	p.lock.Lock()
 
 	// To avoid memory leaks, add a double check in the lock scope.

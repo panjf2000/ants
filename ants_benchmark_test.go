@@ -25,6 +25,7 @@ package ants
 import (
 	"runtime"
 	"sync"
+	"sync/atomic"
 	"testing"
 	"time"
 )
@@ -143,4 +144,45 @@ func BenchmarkAntsPoolThroughput(b *testing.B) {
 		}
 	}
 	b.StopTimer()
+}
+
+func BenchmarkTimeNow(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		_ = time.Now()
+	}
+}
+
+func BenchmarkTimeNowCache(b *testing.B) {
+	var (
+		now    atomic.Value
+		offset int32
+	)
+
+	now.Store(time.Now())
+	go func() {
+		for range time.Tick(500 * time.Millisecond) {
+			now.Store(time.Now())
+			atomic.StoreInt32(&offset, 0)
+		}
+	}()
+
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		_ = now.Load().(time.Time).Add(time.Duration(atomic.AddInt32(&offset, 1)))
+	}
+}
+
+func BenchmarkTimeNowCache1(b *testing.B) {
+	var now atomic.Value
+	now.Store(time.Now())
+	go func() {
+		for range time.Tick(500 * time.Millisecond) {
+			now.Store(time.Now())
+		}
+	}()
+
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		_ = now.Load().(time.Time)
+	}
 }
