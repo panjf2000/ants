@@ -88,6 +88,8 @@ var (
 	defaultAntsPool, _ = NewPool(DefaultAntsPoolSize)
 )
 
+const nowTimeUpdateInterval = 500 * time.Millisecond
+
 // Logger is used for logging formatted messages.
 type Logger interface {
 	// Printf must have the same semantics as log.Printf.
