@@ -160,12 +160,14 @@ func (p *PoolWithFunc) ticktock(ctx context.Context) {
 }
 
 func (p *PoolWithFunc) goPurge() {
+	if p.options.DisablePurge {
+		return
+	}
+
 	// Start a goroutine to clean up expired workers periodically.
 	var ctx context.Context
 	ctx, p.stopPurge = context.WithCancel(context.Background())
-	if !p.options.DisablePurge {
-		go p.purgeStaleWorkers(ctx)
-	}
+	go p.purgeStaleWorkers(ctx)
 }
 
 func (p *PoolWithFunc) goTicktock() {
