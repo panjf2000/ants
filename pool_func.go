@@ -315,12 +315,14 @@ func (p *PoolWithFunc) Release() {
 
 // ReleaseTimeout is like Release but with a timeout, it waits all workers to exit before timing out.
 func (p *PoolWithFunc) ReleaseTimeout(timeout time.Duration) error {
-	if p.IsClosed() || p.stopPurge == nil || p.stopTicktock == nil {
+	if p.IsClosed() || (!p.options.DisablePurge && p.stopPurge == nil) || p.stopTicktock == nil {
 		return ErrPoolClosed
 	}
 
-	p.stopPurge()
-	p.stopPurge = nil
+	if p.stopPurge != nil {
+		p.stopPurge()
+		p.stopPurge = nil
+	}
 	p.stopTicktock()
 	p.stopTicktock = nil
 	p.Release()
