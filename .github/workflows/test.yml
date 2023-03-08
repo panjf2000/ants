@@ -39,7 +39,7 @@ jobs:
       - name: Setup and run golangci-lint
         uses: golangci/golangci-lint-action@v3
         with:
-          version: v1.50.1
+          version: v1.51.2
           args: --timeout 5m -v -E gofumpt -E gocritic -E misspell -E revive -E godot
   test:
     needs: lint
