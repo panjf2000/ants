@@ -37,8 +37,8 @@ type goWorkerWithFunc struct {
 	// args is a job should be done.
 	args chan interface{}
 
-	// recycleTime will be updated when putting a worker back into queue.
-	recycleTime time.Time
+	// lastUsed will be updated when putting a worker back into queue.
+	lastUsed time.Time
 }
 
 // run starts a goroutine to repeat the process
@@ -77,7 +77,7 @@ func (w *goWorkerWithFunc) finish() {
 }
 
 func (w *goWorkerWithFunc) when() time.Time {
-	return w.recycleTime
+	return w.lastUsed
 }
 
 func (w *goWorkerWithFunc) inputFunc(func()) {

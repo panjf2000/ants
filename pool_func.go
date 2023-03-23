@@ -395,7 +395,7 @@ func (p *PoolWithFunc) revertWorker(worker *goWorkerWithFunc) bool {
 		p.cond.Broadcast()
 		return false
 	}
-	worker.recycleTime = p.nowTime()
+	worker.lastUsed = p.nowTime()
 	p.lock.Lock()
 
 	// To avoid memory leaks, add a double check in the lock scope.
