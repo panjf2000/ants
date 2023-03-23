@@ -361,6 +361,7 @@ func (p *PoolWithFunc) retrieveWorker() (w worker) {
 			p.lock.Unlock()
 			return
 		}
+
 		p.addWaiting(1)
 		p.cond.Wait() // block and wait for an available worker
 		p.addWaiting(-1)
@@ -395,21 +396,20 @@ func (p *PoolWithFunc) revertWorker(worker *goWorkerWithFunc) bool {
 		p.cond.Broadcast()
 		return false
 	}
-	worker.lastUsed = p.nowTime()
-	p.lock.Lock()
 
+	worker.lastUsed = p.nowTime()
+
+	p.lock.Lock()
 	// To avoid memory leaks, add a double check in the lock scope.
 	// Issue: https://github.com/panjf2000/ants/issues/113
 	if p.IsClosed() {
 		p.lock.Unlock()
 		return false
 	}
-
 	if err := p.workers.insert(worker); err != nil {
 		p.lock.Unlock()
 		return false
 	}
-
 	// Notify the invoker stuck in 'retrieveWorker()' of there is an available worker in the worker queue.
 	p.cond.Signal()
 	p.lock.Unlock()
