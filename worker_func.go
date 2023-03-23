@@ -23,7 +23,7 @@
 package ants
 
 import (
-	"runtime"
+	"runtime/debug"
 	"time"
 )
 
@@ -53,10 +53,7 @@ func (w *goWorkerWithFunc) run() {
 				if ph := w.pool.options.PanicHandler; ph != nil {
 					ph(p)
 				} else {
-					w.pool.options.Logger.Printf("worker with func exits from a panic: %v\n", p)
-					var buf [4096]byte
-					n := runtime.Stack(buf[:], false)
-					w.pool.options.Logger.Printf("worker with func exits from panic: %s\n", string(buf[:n]))
+					w.pool.options.Logger.Printf("worker exits from panic: %v\n%s\n", p, debug.Stack())
 				}
 			}
 			// Call Signal() here in case there are goroutines waiting for available workers.
