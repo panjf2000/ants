@@ -74,3 +74,19 @@ func (w *goWorkerWithFunc) run() {
 		}
 	}()
 }
+
+func (w *goWorkerWithFunc) finish() {
+	w.args <- nil
+}
+
+func (w *goWorkerWithFunc) when() time.Time {
+	return w.recycleTime
+}
+
+func (w *goWorkerWithFunc) inputFunc(func()) {
+	panic("unreachable")
+}
+
+func (w *goWorkerWithFunc) inputParam(arg interface{}) {
+	w.args <- arg
+}

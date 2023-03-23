@@ -45,7 +45,7 @@ func TestLoopQueue(t *testing.T) {
 	err := q.insert(&goWorker{recycleTime: time.Now()})
 	assert.Error(t, err, "Enqueue, error")
 
-	q.retrieveExpiry(time.Second)
+	q.staleWorkers(time.Second)
 	assert.EqualValuesf(t, 6, q.len(), "Len error: %d", q.len())
 }
 
@@ -118,14 +118,14 @@ func TestRotatedArraySearch(t *testing.T) {
 	// [expiry4, time, time, time,  time, expiry5,  time, time, time, time/head/tail]
 	assert.EqualValues(t, -1, q.binarySearch(expiry2), "index should be -1")
 
-	assert.EqualValues(t, 9, q.binarySearch(q.items[9].recycleTime), "index should be 9")
+	assert.EqualValues(t, 9, q.binarySearch(q.items[9].when()), "index should be 9")
 	assert.EqualValues(t, 8, q.binarySearch(time.Now()), "index should be 8")
 }
 
 func TestRetrieveExpiry(t *testing.T) {
 	size := 10
 	q := newWorkerLoopQueue(size)
-	expirew := make([]*goWorker, 0)
+	expirew := make([]worker, 0)
 	u, _ := time.ParseDuration("1s")
 
 	// test [ time+1s, time+1s, time+1s, time+1s, time+1s, time, time, time, time, time]
@@ -138,7 +138,7 @@ func TestRetrieveExpiry(t *testing.T) {
 	for i := 0; i < size/2; i++ {
 		_ = q.insert(&goWorker{recycleTime: time.Now()})
 	}
-	workers := q.retrieveExpiry(u)
+	workers := q.staleWorkers(u)
 
 	assert.EqualValues(t, expirew, workers, "expired workers aren't right")
 
@@ -151,7 +151,7 @@ func TestRetrieveExpiry(t *testing.T) {
 	expirew = expirew[:0]
 	expirew = append(expirew, q.items[size/2:]...)
 
-	workers2 := q.retrieveExpiry(u)
+	workers2 := q.staleWorkers(u)
 
 	assert.EqualValues(t, expirew, workers2, "expired workers aren't right")
 
@@ -171,7 +171,7 @@ func TestRetrieveExpiry(t *testing.T) {
 	expirew = append(expirew, q.items[0:3]...)
 	expirew = append(expirew, q.items[size/2:]...)
 
-	workers3 := q.retrieveExpiry(u)
+	workers3 := q.staleWorkers(u)
 
 	assert.EqualValues(t, expirew, workers3, "expired workers aren't right")
 }

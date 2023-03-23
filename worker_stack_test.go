@@ -19,7 +19,7 @@ func TestNewWorkerStack(t *testing.T) {
 }
 
 func TestWorkerStack(t *testing.T) {
-	q := newWorkerArray(arrayType(-1), 0)
+	q := newWorkerArray(queueType(-1), 0)
 
 	for i := 0; i < 5; i++ {
 		err := q.insert(&goWorker{recycleTime: time.Now()})
@@ -45,7 +45,7 @@ func TestWorkerStack(t *testing.T) {
 		}
 	}
 	assert.EqualValues(t, 12, q.len(), "Len error")
-	q.retrieveExpiry(time.Second)
+	q.staleWorkers(time.Second)
 	assert.EqualValues(t, 6, q.len(), "Len error")
 }
 

@@ -45,7 +45,7 @@ type Pool struct {
 	lock sync.Locker
 
 	// workers is a slice that store the available workers.
-	workers workerArray
+	workers workerQueue
 
 	// state is used to notice the pool to closed itself.
 	state int32
@@ -91,16 +91,16 @@ func (p *Pool) purgeStaleWorkers(ctx context.Context) {
 		}
 
 		p.lock.Lock()
-		expiredWorkers := p.workers.retrieveExpiry(p.options.ExpiryDuration)
+		staleWorkers := p.workers.staleWorkers(p.options.ExpiryDuration)
 		p.lock.Unlock()
 
 		// Notify obsolete workers to stop.
 		// This notification must be outside the p.lock, since w.task
 		// may be blocking and may consume a lot of time if many workers
 		// are located on non-local CPUs.
-		for i := range expiredWorkers {
-			expiredWorkers[i].task <- nil
-			expiredWorkers[i] = nil
+		for i := range staleWorkers {
+			staleWorkers[i].finish()
+			staleWorkers[i] = nil
 		}
 
 		// There might be a situation where all workers have been cleaned up(no worker is running),
@@ -160,11 +160,11 @@ func (p *Pool) nowTime() time.Time {
 
 // NewPool generates an instance of ants pool.
 func NewPool(size int, options ...Option) (*Pool, error) {
-	opts := loadOptions(options...)
-
 	if size <= 0 {
 		size = -1
 	}
+
+	opts := loadOptions(options...)
 
 	if !opts.DisablePurge {
 		if expiry := opts.ExpiryDuration; expiry < 0 {
@@ -193,9 +193,9 @@ func NewPool(size int, options ...Option) (*Pool, error) {
 		if size == -1 {
 			return nil, ErrInvalidPreAllocSize
 		}
-		p.workers = newWorkerArray(loopQueueType, size)
+		p.workers = newWorkerArray(queueTypeLoopQueue, size)
 	} else {
-		p.workers = newWorkerArray(stackType, 0)
+		p.workers = newWorkerArray(queueTypeStack, 0)
 	}
 
 	p.cond = sync.NewCond(p.lock)
@@ -218,12 +218,11 @@ func (p *Pool) Submit(task func()) error {
 	if p.IsClosed() {
 		return ErrPoolClosed
 	}
-	var w *goWorker
-	if w = p.retrieveWorker(); w == nil {
-		return ErrPoolOverload
+	if w := p.retrieveWorker(); w != nil {
+		w.inputFunc(task)
+		return nil
 	}
-	w.task <- task
-	return nil
+	return ErrPoolOverload
 }
 
 // Running returns the number of workers currently running.
@@ -331,14 +330,13 @@ func (p *Pool) addWaiting(delta int) {
 }
 
 // retrieveWorker returns an available worker to run the tasks.
-func (p *Pool) retrieveWorker() (w *goWorker) {
+func (p *Pool) retrieveWorker() (w worker) {
 	spawnWorker := func() {
 		w = p.workerCache.Get().(*goWorker)
 		w.run()
 	}
 
 	p.lock.Lock()
-
 	w = p.workers.detach()
 	if w != nil { // first try to fetch the worker from the queue
 		p.lock.Unlock()
@@ -401,8 +399,7 @@ func (p *Pool) revertWorker(worker *goWorker) bool {
 		return false
 	}
 
-	err := p.workers.insert(worker)
-	if err != nil {
+	if err := p.workers.insert(worker); err != nil {
 		p.lock.Unlock()
 		return false
 	}
@@ -410,5 +407,6 @@ func (p *Pool) revertWorker(worker *goWorker) bool {
 	// Notify the invoker stuck in 'retrieveWorker()' of there is an available worker in the worker queue.
 	p.cond.Signal()
 	p.lock.Unlock()
+
 	return true
 }
