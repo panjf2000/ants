@@ -82,7 +82,7 @@ var (
 		return 1
 	}()
 
-	defaultLogger = Logger(log.New(os.Stderr, "", log.LstdFlags))
+	defaultLogger = Logger(log.New(os.Stderr, "[ants]: ", log.LstdFlags|log.Lmsgprefix|log.Lmicroseconds))
 
 	// Init an instance pool when importing ants.
 	defaultAntsPool, _ = NewPool(DefaultAntsPoolSize)
