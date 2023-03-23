@@ -118,7 +118,7 @@ func TestRotatedArraySearch(t *testing.T) {
 	// [expiry4, time, time, time,  time, expiry5,  time, time, time, time/head/tail]
 	assert.EqualValues(t, -1, q.binarySearch(expiry2), "index should be -1")
 
-	assert.EqualValues(t, 9, q.binarySearch(q.items[9].when()), "index should be 9")
+	assert.EqualValues(t, 9, q.binarySearch(q.items[9].lastUsedTime()), "index should be 9")
 	assert.EqualValues(t, 8, q.binarySearch(time.Now()), "index should be 8")
 }
 

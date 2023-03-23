@@ -64,7 +64,7 @@ func (wq *workerStack) binarySearch(l, r int, expiryTime time.Time) int {
 	var mid int
 	for l <= r {
 		mid = (l + r) / 2
-		if expiryTime.Before(wq.items[mid].when()) {
+		if expiryTime.Before(wq.items[mid].lastUsedTime()) {
 			r = mid - 1
 		} else {
 			l = mid + 1

@@ -76,7 +76,7 @@ func (w *goWorkerWithFunc) finish() {
 	w.args <- nil
 }
 
-func (w *goWorkerWithFunc) when() time.Time {
+func (w *goWorkerWithFunc) lastUsedTime() time.Time {
 	return w.lastUsed
 }
 

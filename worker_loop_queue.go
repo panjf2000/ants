@@ -115,7 +115,7 @@ func (wq *loopQueue) binarySearch(expiryTime time.Time) int {
 	nlen = len(wq.items)
 
 	// if no need to remove work, return -1
-	if wq.isEmpty() || expiryTime.Before(wq.items[wq.head].when()) {
+	if wq.isEmpty() || expiryTime.Before(wq.items[wq.head].lastUsedTime()) {
 		return -1
 	}
 
@@ -137,7 +137,7 @@ func (wq *loopQueue) binarySearch(expiryTime time.Time) int {
 		mid = l + ((r - l) >> 1)
 		// calculate true mid position from mapped mid position
 		tmid = (mid + basel + nlen) % nlen
-		if expiryTime.Before(wq.items[tmid].when()) {
+		if expiryTime.Before(wq.items[tmid].lastUsedTime()) {
 			r = mid - 1
 		} else {
 			l = mid + 1

@@ -16,7 +16,7 @@ var (
 type worker interface {
 	run()
 	finish()
-	when() time.Time
+	lastUsedTime() time.Time
 	inputFunc(func())
 	inputParam(interface{})
 }
