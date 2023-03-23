@@ -3,13 +3,13 @@ package ants
 import "time"
 
 type workerStack struct {
-	items  []*goWorker
-	expiry []*goWorker
+	items  []worker
+	expiry []worker
 }
 
 func newWorkerStack(size int) *workerStack {
 	return &workerStack{
-		items: make([]*goWorker, 0, size),
+		items: make([]worker, 0, size),
 	}
 }
 
@@ -21,12 +21,12 @@ func (wq *workerStack) isEmpty() bool {
 	return len(wq.items) == 0
 }
 
-func (wq *workerStack) insert(worker *goWorker) error {
-	wq.items = append(wq.items, worker)
+func (wq *workerStack) insert(w worker) error {
+	wq.items = append(wq.items, w)
 	return nil
 }
 
-func (wq *workerStack) detach() *goWorker {
+func (wq *workerStack) detach() worker {
 	l := wq.len()
 	if l == 0 {
 		return nil
@@ -39,7 +39,7 @@ func (wq *workerStack) detach() *goWorker {
 	return w
 }
 
-func (wq *workerStack) retrieveExpiry(duration time.Duration) []*goWorker {
+func (wq *workerStack) staleWorkers(duration time.Duration) []worker {
 	n := wq.len()
 	if n == 0 {
 		return nil
@@ -64,7 +64,7 @@ func (wq *workerStack) binarySearch(l, r int, expiryTime time.Time) int {
 	var mid int
 	for l <= r {
 		mid = (l + r) / 2
-		if expiryTime.Before(wq.items[mid].recycleTime) {
+		if expiryTime.Before(wq.items[mid].when()) {
 			r = mid - 1
 		} else {
 			l = mid + 1
@@ -75,7 +75,7 @@ func (wq *workerStack) binarySearch(l, r int, expiryTime time.Time) int {
 
 func (wq *workerStack) reset() {
 	for i := 0; i < wq.len(); i++ {
-		wq.items[i].task <- nil
+		wq.items[i].finish()
 		wq.items[i] = nil
 	}
 	wq.items = wq.items[:0]

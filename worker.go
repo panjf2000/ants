@@ -74,3 +74,19 @@ func (w *goWorker) run() {
 		}
 	}()
 }
+
+func (w *goWorker) finish() {
+	w.task <- nil
+}
+
+func (w *goWorker) when() time.Time {
+	return w.recycleTime
+}
+
+func (w *goWorker) inputFunc(fn func()) {
+	w.task <- fn
+}
+
+func (w *goWorker) inputParam(interface{}) {
+	panic("unreachable")
+}
