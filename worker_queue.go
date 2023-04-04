@@ -26,7 +26,7 @@ type workerQueue interface {
 	isEmpty() bool
 	insert(worker) error
 	detach() worker
-	staleWorkers(duration time.Duration) []worker
+	refresh(duration time.Duration) []worker // clean up the stale workers and return them
 	reset()
 }
 

@@ -78,7 +78,7 @@ func (wq *loopQueue) detach() worker {
 	return w
 }
 
-func (wq *loopQueue) staleWorkers(duration time.Duration) []worker {
+func (wq *loopQueue) refresh(duration time.Duration) []worker {
 	expiryTime := time.Now().Add(-duration)
 	index := wq.binarySearch(expiryTime)
 	if index == -1 {

@@ -45,7 +45,7 @@ func TestLoopQueue(t *testing.T) {
 	err := q.insert(&goWorker{lastUsed: time.Now()})
 	assert.Error(t, err, "Enqueue, error")
 
-	q.staleWorkers(time.Second)
+	q.refresh(time.Second)
 	assert.EqualValuesf(t, 6, q.len(), "Len error: %d", q.len())
 }
 
@@ -138,7 +138,7 @@ func TestRetrieveExpiry(t *testing.T) {
 	for i := 0; i < size/2; i++ {
 		_ = q.insert(&goWorker{lastUsed: time.Now()})
 	}
-	workers := q.staleWorkers(u)
+	workers := q.refresh(u)
 
 	assert.EqualValues(t, expirew, workers, "expired workers aren't right")
 
@@ -151,7 +151,7 @@ func TestRetrieveExpiry(t *testing.T) {
 	expirew = expirew[:0]
 	expirew = append(expirew, q.items[size/2:]...)
 
-	workers2 := q.staleWorkers(u)
+	workers2 := q.refresh(u)
 
 	assert.EqualValues(t, expirew, workers2, "expired workers aren't right")
 
@@ -171,7 +171,7 @@ func TestRetrieveExpiry(t *testing.T) {
 	expirew = append(expirew, q.items[0:3]...)
 	expirew = append(expirew, q.items[size/2:]...)
 
-	workers3 := q.staleWorkers(u)
+	workers3 := q.refresh(u)
 
 	assert.EqualValues(t, expirew, workers3, "expired workers aren't right")
 }

@@ -39,7 +39,7 @@ func (wq *workerStack) detach() worker {
 	return w
 }
 
-func (wq *workerStack) staleWorkers(duration time.Duration) []worker {
+func (wq *workerStack) refresh(duration time.Duration) []worker {
 	n := wq.len()
 	if n == 0 {
 		return nil

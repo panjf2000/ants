@@ -92,7 +92,7 @@ func (p *PoolWithFunc) purgeStaleWorkers(ctx context.Context) {
 		}
 
 		p.lock.Lock()
-		staleWorkers := p.workers.staleWorkers(p.options.ExpiryDuration)
+		staleWorkers := p.workers.refresh(p.options.ExpiryDuration)
 		p.lock.Unlock()
 
 		// Notify obsolete workers to stop.
