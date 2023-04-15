@@ -91,8 +91,11 @@ func (p *PoolWithFunc) purgeStaleWorkers(ctx context.Context) {
 			break
 		}
 
+		var isDormant bool
 		p.lock.Lock()
 		staleWorkers := p.workers.refresh(p.options.ExpiryDuration)
+		n := p.Running()
+		isDormant = n == 0 || n == len(staleWorkers)
 		p.lock.Unlock()
 
 		// Notify obsolete workers to stop.
@@ -105,10 +108,8 @@ func (p *PoolWithFunc) purgeStaleWorkers(ctx context.Context) {
 		}
 
 		// There might be a situation where all workers have been cleaned up(no worker is running),
-		// or another case where the pool capacity has been Tuned up,
-		// while some invokers still get stuck in "p.cond.Wait()",
-		// then it ought to wake all those invokers.
-		if p.Running() == 0 || (p.Waiting() > 0 && p.Free() > 0) {
+		// while some invokers still are stuck in "p.cond.Wait()", then we need to awake those invokers.
+		if isDormant && p.Waiting() > 0 {
 			p.cond.Broadcast()
 		}
 	}
@@ -371,14 +372,8 @@ func (p *PoolWithFunc) retrieveWorker() (w worker) {
 			return
 		}
 
-		var nw int
-		if nw = p.Running(); nw == 0 { // awakened by the scavenger
-			p.lock.Unlock()
-			spawnWorker()
-			return
-		}
 		if w = p.workers.detach(); w == nil {
-			if nw < p.Cap() {
+			if p.Free() > 0 {
 				p.lock.Unlock()
 				spawnWorker()
 				return
