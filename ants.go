@@ -81,10 +81,10 @@ var (
 		// since otherwise the sender might be dragged down if the receiver is CPU-bound.
 		return 1
 	}()
-	
-	// Quick fix: go version 1.13 do not support log.Lmsgprefix
-	fix_log_Lmsgprefix = 64
-	defaultLogger = Logger(log.New(os.Stderr, "[ants]: ", log.LstdFlags|fix_log_Lmsgprefix|log.Lmicroseconds))
+
+	// log.Lmsgprefix is not available in go1.13, just make an identical value for it.
+	logLmsgprefix = 64
+	defaultLogger = Logger(log.New(os.Stderr, "[ants]: ", log.LstdFlags|logLmsgprefix|log.Lmicroseconds))
 
 	// Init an instance pool when importing ants.
 	defaultAntsPool, _ = NewPool(DefaultAntsPoolSize)
