@@ -82,7 +82,9 @@ var (
 		return 1
 	}()
 
-	defaultLogger = Logger(log.New(os.Stderr, "[ants]: ", log.LstdFlags|log.Lmsgprefix|log.Lmicroseconds))
+	// log.Lmsgprefix is not available in go1.13, just make an identical value for it.
+	logLmsgprefix = 64
+	defaultLogger = Logger(log.New(os.Stderr, "[ants]: ", log.LstdFlags|logLmsgprefix|log.Lmicroseconds))
 
 	// Init an instance pool when importing ants.
 	defaultAntsPool, _ = NewPool(DefaultAntsPoolSize)
