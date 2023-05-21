@@ -23,7 +23,7 @@ Library `ants` implements a goroutine pool with fixed capacity, managing and rec
 
 - Managing and recycling a massive number of goroutines automatically
 - Purging overdue goroutines periodically
-- Abundant APIs: submitting tasks, getting the number of running goroutines, tuning capacity of pool dynamically, releasing pool, rebooting pool
+- Abundant APIs: submitting tasks, getting the number of running goroutines, tuning the capacity of the pool dynamically, releasing the pool, rebooting the pool
 - Handle panic gracefully to prevent programs from crash
 - Efficient in memory usage and it even achieves [higher performance](#-performance-summary) than unlimited goroutines in Golang
 - Nonblocking mechanism
@@ -61,7 +61,7 @@ go get -u github.com/panjf2000/ants/v2
 ```
 
 ## 🛠 How to use
-Just take a imagination that your program starts a massive number of goroutines, resulting in a huge consumption of memory. To mitigate that kind of situation, all you need to do is to import `ants` package and submit all your tasks to a default pool with fixed capacity, activated when package `ants` is imported:
+Just imagine that your program starts a massive number of goroutines, resulting in a huge consumption of memory. To mitigate that kind of situation, all you need to do is to import `ants` package and submit all your tasks to a default pool with fixed capacity, activated when package `ants` is imported:
 
 ``` go
 package main
@@ -209,14 +209,13 @@ func WithLogger(logger Logger) Option {
 }
 ```
 
-`ants.Options`contains all optional configurations of ants pool, which allows you to customize the goroutine pool by invoking option functions to set up each configuration in `NewPool`/`NewPoolWithFunc`method.
+`ants.Options`contains all optional configurations of the ants pool, which allows you to customize the goroutine pool by invoking option functions to set up each configuration in `NewPool`/`NewPoolWithFunc`method.
 
 ### Customize limited pool
 
-`ants` also supports customizing the capacity of pool. You can invoke the `NewPool` method to instantiate a pool with a given capacity, as following:
+`ants` also supports customizing the capacity of the pool. You can invoke the `NewPool` method to instantiate a pool with a given capacity, as follows:
 
 ``` go
-// Set 10000 the size of goroutine pool
 p, _ := ants.NewPool(10000)
 ```
 
@@ -234,11 +233,11 @@ pool.Tune(1000) // Tune its capacity to 1000
 pool.Tune(100000) // Tune its capacity to 100000
 ```
 
-Don't worry about the synchronous problems in this case, the method here is thread-safe (or should be called goroutine-safe).
+Don't worry about the contention problems in this case, the method here is thread-safe (or should be called goroutine-safe).
 
 ### Pre-malloc goroutine queue in pool
 
-`ants` allows you to pre-allocate memory of goroutine queue in pool, which may get a performance enhancement under some special certain circumstances such as the scenario that requires a pool with ultra-large capacity, meanwhile each task in goroutine lasts for a long time, in this case, pre-mallocing will reduce a lot of memory allocation in goroutine queue.
+`ants` allows you to pre-allocate the memory of the goroutine queue in the pool, which may get a performance enhancement under some special certain circumstances such as the scenario that requires a pool with ultra-large capacity, meanwhile, each task in goroutine lasts for a long time, in this case, pre-mallocing will reduce a lot of memory allocation in goroutine queue.
 
 ```go
 // ants will pre-malloc the whole capacity of pool when you invoke this method
@@ -265,19 +264,19 @@ All tasks submitted to `ants` pool will not be guaranteed to be addressed in ord
 ## 🧲 Benchmarks
 
 <div align="center"><img src="https://user-images.githubusercontent.com/7496278/51515466-c7ce9e00-1e4e-11e9-89c4-bd3785b3c667.png"/></div>
- In this benchmark result, the first and second benchmarks performed test cases with 1M tasks and the rest of benchmarks performed test cases with 10M tasks, both in unlimited goroutines and `ants` pool, and the capacity of this `ants` goroutine-pool was limited to 50K.
+ In this benchmark result, the first and second benchmarks performed test cases with 1M tasks, and the rest of the benchmarks performed test cases with 10M tasks, both in unlimited goroutines and `ants` pool, and the capacity of this `ants` goroutine pool was limited to 50K.
 
-- BenchmarkGoroutine-4 represents the benchmarks with unlimited goroutines in golang.
+- BenchmarkGoroutine-4 represents the benchmarks with unlimited goroutines in Golang.
 
-- BenchmarkPoolGroutine-4 represents the benchmarks with a `ants` pool.
+- BenchmarkPoolGroutine-4 represents the benchmarks with an `ants` pool.
 
 ### Benchmarks with Pool 
 
 ![](https://user-images.githubusercontent.com/7496278/51515499-f187c500-1e4e-11e9-80e5-3df8f94fa70f.png)
 
-In above benchmark result, the first and second benchmarks performed test cases with 1M tasks and the rest of benchmarks performed test cases with 10M tasks, both in unlimited goroutines and `ants` pool, and the capacity of this `ants` goroutine-pool was limited to 50K.
+In the above benchmark result, the first and second benchmarks performed test cases with 1M tasks, and the rest of the benchmarks performed test cases with 10M tasks, both in unlimited goroutines and `ants` pool and the capacity of this `ants` goroutine-pool was limited to 50K.
 
-**As you can see, `ants` performs 2 times faster than goroutines without pool (10M tasks) and it only consumes half the memory comparing with goroutines without pool. (both in 1M and 10M tasks)**
+**As you can see, `ants` performs 2 times faster than goroutines without a pool (10M tasks) and it only consumes half the memory compared with goroutines without a pool. (both in 1M and 10M tasks)**
 
 ### Benchmarks with PoolWithFunc
 
@@ -307,11 +306,13 @@ In above benchmark result, the first and second benchmarks performed test cases 
 
 Please read our [Contributing Guidelines](CONTRIBUTING.md) before opening a PR and thank you to all the developers who already made contributions to `ants`!
 
-[![](https://opencollective.com/ants/contributors.svg?width=890&button=false)](https://github.com/panjf2000/ants/graphs/contributors)
+<a href="https://github.com/panjf2000/ants/graphs/contributors">
+	<img src="https://contrib.rocks/image?repo=panjf2000/ants" />
+</a>
 
 ## 📄 License
 
-Source code in `ants` is available under the [MIT License](/LICENSE).
+The source code in `ants` is available under the [MIT License](/LICENSE).
 
 ## 📚 Relevant Articles
 
@@ -364,13 +365,13 @@ Support us with a monthly donation and help us continue our activities.
 
 ## 💎 Sponsors
 
-Become a bronze sponsor with a monthly donation of $10 and get your logo on our README on Github.
+Become a bronze sponsor with a monthly donation of $10 and get your logo on our README on GitHub.
 
 <a href="https://opencollective.com/ants#sponsors" target="_blank"><img src="https://opencollective.com/ants/sponsors.svg"></a>
 
 ## ☕️ Buy me a coffee
 
-> Please be sure to leave your name, GitHub account or other social media accounts when you donate by the following means so that I can add it to the list of donors as a token of my appreciation.
+> Please be sure to leave your name, GitHub account, or other social media accounts when you donate by the following means so that I can add it to the list of donors as a token of my appreciation.
 
 <img src="https://raw.githubusercontent.com/panjf2000/illustrations/master/payments/WeChatPay.JPG" width="250" align="middle"/>&nbsp;&nbsp;
 <img src="https://raw.githubusercontent.com/panjf2000/illustrations/master/payments/AliPay.JPG" width="250" align="middle"/>&nbsp;&nbsp;

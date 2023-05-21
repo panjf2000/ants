@@ -216,7 +216,6 @@ func WithLogger(logger Logger) Option {
 `ants`支持实例化使用者自己的一个 Pool ，指定具体的池容量；通过调用 `NewPool` 方法可以实例化一个新的带有指定容量的 Pool ，如下：
 
 ``` go
-// Set 10000 the size of goroutine pool
 p, _ := ants.NewPool(10000)
 ```
 
@@ -308,7 +307,9 @@ pool.Reboot()
 
 请在提 PR 之前仔细阅读 [Contributing Guidelines](CONTRIBUTING.md)，感谢那些为 `ants` 贡献过代码的开发者！
 
-[![](https://opencollective.com/ants/contributors.svg?width=890&button=false)](https://github.com/panjf2000/ants/graphs/contributors)
+<a href="https://github.com/panjf2000/ants/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=panjf2000/ants" />
+</a>
 
 ## 📄 证书
 
