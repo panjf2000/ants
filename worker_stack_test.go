@@ -19,7 +19,7 @@ func TestNewWorkerStack(t *testing.T) {
 }
 
 func TestWorkerStack(t *testing.T) {
-	q := newWorkerArray(queueType(-1), 0)
+	q := newWorkerQueue(queueType(-1), 0)
 
 	for i := 0; i < 5; i++ {
 		err := q.insert(&goWorker{lastUsed: time.Now()})

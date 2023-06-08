@@ -49,7 +49,7 @@ func TestLoopQueue(t *testing.T) {
 	assert.EqualValuesf(t, 6, q.len(), "Len error: %d", q.len())
 }
 
-func TestRotatedArraySearch(t *testing.T) {
+func TestRotatedQueueSearch(t *testing.T) {
 	size := 10
 	q := newWorkerLoopQueue(size)
 

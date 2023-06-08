@@ -37,7 +37,7 @@ const (
 	queueTypeLoopQueue
 )
 
-func newWorkerArray(qType queueType, size int) workerQueue {
+func newWorkerQueue(qType queueType, size int) workerQueue {
 	switch qType {
 	case queueTypeStack:
 		return newWorkerStack(size)
