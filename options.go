@@ -42,6 +42,12 @@ type Options struct {
 
 	// When DisablePurge is true, workers are not purged and are resident.
 	DisablePurge bool
+
+	// Qos limit time Duration.
+	QosDuration time.Duration
+
+	// Qos limit size per time Duration.
+	QosLimit int
 }
 
 // WithOptions accepts the whole options config.
@@ -97,5 +103,13 @@ func WithLogger(logger Logger) Option {
 func WithDisablePurge(disable bool) Option {
 	return func(opts *Options) {
 		opts.DisablePurge = disable
+	}
+}
+
+// WithQos Duration and Limit, Duration is the time window, Limit is the number of tasks executed in the current time window.
+func WithQos(qosDuration time.Duration, qosLimit int) Option {
+	return func(opts *Options) {
+		opts.QosDuration = qosDuration
+		opts.QosLimit = qosLimit
 	}
 }

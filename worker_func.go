@@ -64,6 +64,8 @@ func (w *goWorkerWithFunc) run() {
 			if args == nil {
 				return
 			}
+			w.pool.qos.WaitQosUnlock()
+			w.pool.qos.AddQosExecuted()
 			w.pool.poolFunc(args)
 			if ok := w.pool.revertWorker(w); !ok {
 				return

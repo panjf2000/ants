@@ -68,6 +68,8 @@ type Pool struct {
 	now atomic.Value
 
 	options *Options
+
+	qos *Qos
 }
 
 // purgeStaleWorkers clears stale workers periodically, it runs in an individual goroutine, as a scavenger.
@@ -179,10 +181,14 @@ func NewPool(size int, options ...Option) (*Pool, error) {
 		opts.Logger = defaultLogger
 	}
 
+	qos := newQos(opts.QosDuration, opts.QosLimit)
+	qos.QosResetterAsync()
+
 	p := &Pool{
 		capacity: int32(size),
 		lock:     syncx.NewSpinLock(),
 		options:  opts,
+		qos:      qos,
 	}
 	p.workerCache.New = func() interface{} {
 		return &goWorker{
