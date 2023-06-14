@@ -106,7 +106,7 @@ func WithDisablePurge(disable bool) Option {
 	}
 }
 
-// WithQos Duration and Limit, Duration is the time window, Limit is the number of tasks executed in the current time window.
+// WithQos in qosDuration time duration, only qosLimit tasks can be executed.
 func WithQos(qosDuration time.Duration, qosLimit int) Option {
 	return func(opts *Options) {
 		opts.QosDuration = qosDuration

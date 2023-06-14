@@ -27,6 +27,7 @@ Library `ants` implements a goroutine pool with fixed capacity, managing and rec
 - Handle panic gracefully to prevent programs from crash
 - Efficient in memory usage and it even achieves [higher performance](#-performance-summary) than unlimited goroutines in Golang
 - Nonblocking mechanism
+- Qos limiter: provides Qos guarantees for tasks in special scenarios to prevent resources from being exhausted
 
 ## 💡 How `ants` works
 
