@@ -973,3 +973,26 @@ func TestReleaseTimeout(t *testing.T) {
 	err = pf.ReleaseTimeout(2 * time.Second)
 	assert.NoError(t, err)
 }
+
+func TestAntsPoolWithQos(t *testing.T) {
+	p, _ := NewPool(TestSize, WithQos(1*time.Second, 5000))
+	defer p.Release()
+	var wg sync.WaitGroup
+	for i := 0; i < n; i++ {
+		wg.Add(1)
+		_ = p.Submit(func() {
+			demoFunc()
+			wg.Done()
+		})
+	}
+	wg.Wait()
+
+	t.Logf("pool, capacity:%d", p.Cap())
+	t.Logf("pool, running workers number:%d", p.Running())
+	t.Logf("pool, free workers number:%d", p.Free())
+
+	mem := runtime.MemStats{}
+	runtime.ReadMemStats(&mem)
+	curMem = mem.TotalAlloc/MiB - curMem
+	t.Logf("memory usage:%d MB", curMem)
+}
