@@ -12,8 +12,8 @@ type Qos struct {
 	qosDuration  time.Duration // Duration for QoS (Quality of Service) interval
 	qosLimit     int32         // Maximum number of QoS executions allowed within the interval
 	qosExecuted  int32         // Number of QoS executions that have occurred
-	qosResetter  *time.Ticker
-	qosResetCond sync.Cond
+	qosResetter  *time.Ticker  // Ticker for resetting QoS
+	qosResetCond sync.Cond     // Condition for waiting for QoS reset
 }
 
 // newQos Creates a new Qos instance with the specified duration and limit.
