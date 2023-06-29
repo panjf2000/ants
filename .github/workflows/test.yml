@@ -7,12 +7,22 @@ on:
       - dev
     paths-ignore:
       - '**.md'
+      - '.github/FUNDING.yml'
+      - '.github/release-drafter.yml'
+      - '.github/ISSUE_TEMPLATE/*'
+      - '.github/workflows/release-drafter.yaml'
+      - 'examples/*'
   pull_request:
     branches:
       - master
       - dev
     paths-ignore:
       - '**.md'
+      - '.github/FUNDING.yml'
+      - '.github/release-drafter.yml'
+      - '.github/ISSUE_TEMPLATE/*'
+      - '.github/workflows/release-drafter.yaml'
+      - 'examples/*'
 
 env:
   GO111MODULE: on
