@@ -10,6 +10,7 @@ on:
       - '.github/FUNDING.yml'
       - '.github/release-drafter.yml'
       - '.github/ISSUE_TEMPLATE/*'
+      - '.github/workflows/pull-request.yaml'
       - '.github/workflows/release-drafter.yaml'
       - 'examples/*'
   pull_request:
@@ -21,6 +22,7 @@ on:
       - '.github/FUNDING.yml'
       - '.github/release-drafter.yml'
       - '.github/ISSUE_TEMPLATE/*'
+      - '.github/workflows/pull-request.yaml'
       - '.github/workflows/release-drafter.yaml'
       - 'examples/*'
 
