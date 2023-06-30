@@ -123,6 +123,11 @@ func Release() {
 	defaultAntsPool.Release()
 }
 
+// ReleaseWaitAllWorkersExit Closes the default pool and wait all workers exit.
+func ReleaseWaitAllWorkersExit() {
+	defaultAntsPool.ReleaseWaitAllWorkersExit()
+}
+
 // Reboot reboots the default pool.
 func Reboot() {
 	defaultAntsPool.Reboot()
