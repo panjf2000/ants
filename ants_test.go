@@ -975,6 +975,7 @@ func TestReleaseTimeout(t *testing.T) {
 }
 
 func TestDefaultPoolReleaseTimeout(t *testing.T) {
+	Reboot()
 	for i := 0; i < 5; i++ {
 		_ = Submit(func() {
 			time.Sleep(time.Second)
