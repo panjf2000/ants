@@ -64,6 +64,22 @@ body:
         - BSD
     validations:
       required: true
+  - type: input
+    id: os-version
+    attributes:
+      label: OS version
+      description: What's the specific version of OS?
+      placeholder: "Run `uname -srm` command to get the info, for example: Darwin 21.5.0 arm64, Linux 5.4.0-137-generic x86_64"
+    validations:
+      required: true
+  - type: input
+    id: go-version
+    attributes:
+      label: Go version
+      description: What's the specific version of Go?
+      placeholder: "Run `go version` command to get the info, for example: go1.20.5 linux/amd64"
+    validations:
+      required: true
   - type: textarea
     id: logs
     attributes:
