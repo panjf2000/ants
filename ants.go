@@ -123,11 +123,6 @@ func Release() {
 	defaultAntsPool.Release()
 }
 
-// ReleaseTimeout is like Release but with a timeout, it waits all workers to exit before timing out.
-func ReleaseTimeout(timeout time.Duration) error {
-	return defaultAntsPool.ReleaseTimeout(timeout)
-}
-
 // Reboot reboots the default pool.
 func Reboot() {
 	defaultAntsPool.Reboot()

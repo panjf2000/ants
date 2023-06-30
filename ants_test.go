@@ -973,15 +973,3 @@ func TestReleaseTimeout(t *testing.T) {
 	err = pf.ReleaseTimeout(2 * time.Second)
 	assert.NoError(t, err)
 }
-
-func TestDefaultPoolReleaseTimeout(t *testing.T) {
-	Reboot()
-	for i := 0; i < 5; i++ {
-		_ = Submit(func() {
-			time.Sleep(time.Second)
-		})
-	}
-	assert.NotZero(t, Running())
-	err := ReleaseTimeout(2 * time.Second)
-	assert.NoError(t, err)
-}
