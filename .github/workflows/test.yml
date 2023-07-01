@@ -7,26 +7,20 @@ on:
       - dev
     paths-ignore:
       - '**.md'
-      - '.github/FUNDING.yml'
-      - '.github/release-drafter.yml'
-      - '.github/ISSUE_TEMPLATE/*'
-      - '.github/workflows/codeql.yml'
-      - '.github/workflows/pull-request.yml'
-      - '.github/workflows/release-drafter.yml'
+      - '**.yml'
+      - '**.yaml'
       - 'examples/*'
+      - '!.github/workflows/test.yml'
   pull_request:
     branches:
       - master
       - dev
     paths-ignore:
       - '**.md'
-      - '.github/FUNDING.yml'
-      - '.github/release-drafter.yml'
-      - '.github/ISSUE_TEMPLATE/*'
-      - '.github/workflows/codeql.yml'
-      - '.github/workflows/pull-request.yml'
-      - '.github/workflows/release-drafter.yml'
+      - '**.yml'
+      - '**.yaml'
       - 'examples/*'
+      - '!.github/workflows/test.yml'
 
 env:
   GO111MODULE: on
