@@ -273,6 +273,13 @@ func (p *Pool) IsClosed() bool {
 
 // Release closes this pool and releases the worker queue.
 func (p *Pool) Release() {
+	if p.stopPurge != nil {
+		p.stopPurge()
+		p.stopPurge = nil
+	}
+	p.stopTicktock()
+	p.stopTicktock = nil
+
 	if !atomic.CompareAndSwapInt32(&p.state, OPENED, CLOSED) {
 		return
 	}
@@ -289,13 +296,6 @@ func (p *Pool) ReleaseTimeout(timeout time.Duration) error {
 	if p.IsClosed() || (!p.options.DisablePurge && p.stopPurge == nil) || p.stopTicktock == nil {
 		return ErrPoolClosed
 	}
-
-	if p.stopPurge != nil {
-		p.stopPurge()
-		p.stopPurge = nil
-	}
-	p.stopTicktock()
-	p.stopTicktock = nil
 	p.Release()
 
 	endTime := time.Now().Add(timeout)
