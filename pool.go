@@ -273,6 +273,10 @@ func (p *Pool) IsClosed() bool {
 
 // Release closes this pool and releases the worker queue.
 func (p *Pool) Release() {
+	if !atomic.CompareAndSwapInt32(&p.state, OPENED, CLOSED) {
+		return
+	}
+
 	if p.stopPurge != nil {
 		p.stopPurge()
 		p.stopPurge = nil
@@ -280,9 +284,6 @@ func (p *Pool) Release() {
 	p.stopTicktock()
 	p.stopTicktock = nil
 
-	if !atomic.CompareAndSwapInt32(&p.state, OPENED, CLOSED) {
-		return
-	}
 	p.lock.Lock()
 	p.workers.reset()
 	p.lock.Unlock()
