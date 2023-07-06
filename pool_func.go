@@ -282,6 +282,14 @@ func (p *PoolWithFunc) Release() {
 	if !atomic.CompareAndSwapInt32(&p.state, OPENED, CLOSED) {
 		return
 	}
+
+	if p.stopPurge != nil {
+		p.stopPurge()
+		p.stopPurge = nil
+	}
+	p.stopTicktock()
+	p.stopTicktock = nil
+
 	p.lock.Lock()
 	p.workers.reset()
 	p.lock.Unlock()
@@ -295,13 +303,6 @@ func (p *PoolWithFunc) ReleaseTimeout(timeout time.Duration) error {
 	if p.IsClosed() || (!p.options.DisablePurge && p.stopPurge == nil) || p.stopTicktock == nil {
 		return ErrPoolClosed
 	}
-
-	if p.stopPurge != nil {
-		p.stopPurge()
-		p.stopPurge = nil
-	}
-	p.stopTicktock()
-	p.stopTicktock = nil
 	p.Release()
 
 	endTime := time.Now().Add(timeout)
