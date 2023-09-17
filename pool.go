@@ -341,21 +341,21 @@ func (p *Pool) retrieveWorker() (w worker) {
 	p.lock.Lock()
 
 retry:
+	// First try to fetch the worker from the queue
 	if w = p.workers.detach(); w != nil {
-		// first try to fetch the worker from the queue
 		p.lock.Unlock()
 		return
 	}
 
+	// If the worker queue is empty and we don't run out of the pool capacity,
+	// then just spawn a new worker goroutine.
 	if capacity := p.Cap(); capacity == -1 || capacity > p.Running() {
-		// if the worker queue is empty and we don't run out of the pool capacity,
-		// then just spawn a new worker goroutine.
 		p.lock.Unlock()
 		spawnWorker()
 		return
 	}
 
-	// otherwise, we'll have to keep them blocked and wait for at least one worker to be put back into pool.
+	// Otherwise, we'll have to keep them blocked and wait for at least one worker to be put back into pool.
 	if p.options.Nonblocking {
 		p.lock.Unlock()
 		return

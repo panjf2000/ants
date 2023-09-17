@@ -345,45 +345,43 @@ func (p *PoolWithFunc) retrieveWorker() (w worker) {
 	}
 
 	p.lock.Lock()
-	w = p.workers.detach()
-	if w != nil { // first try to fetch the worker from the queue
+
+retry:
+	// First try to fetch the worker from the queue
+	if w = p.workers.detach(); w != nil {
 		p.lock.Unlock()
-	} else if capacity := p.Cap(); capacity == -1 || capacity > p.Running() {
-		// if the worker queue is empty and we don't run out of the pool capacity,
-		// then just spawn a new worker goroutine.
+		return
+	}
+
+	// If the worker queue is empty and we don't run out of the pool capacity,
+	// then just spawn a new worker goroutine.
+	if capacity := p.Cap(); capacity == -1 || capacity > p.Running() {
 		p.lock.Unlock()
 		spawnWorker()
-	} else { // otherwise, we'll have to keep them blocked and wait for at least one worker to be put back into pool.
-		if p.options.Nonblocking {
-			p.lock.Unlock()
-			return
-		}
-	retry:
-		if p.options.MaxBlockingTasks != 0 && p.Waiting() >= p.options.MaxBlockingTasks {
-			p.lock.Unlock()
-			return
-		}
-
-		p.addWaiting(1)
-		p.cond.Wait() // block and wait for an available worker
-		p.addWaiting(-1)
-
-		if p.IsClosed() {
-			p.lock.Unlock()
-			return
-		}
-
-		if w = p.workers.detach(); w == nil {
-			if p.Free() > 0 {
-				p.lock.Unlock()
-				spawnWorker()
-				return
-			}
-			goto retry
-		}
-		p.lock.Unlock()
+		return
 	}
-	return
+
+	// Otherwise, we'll have to keep them blocked and wait for at least one worker to be put back into pool.
+	if p.options.Nonblocking {
+		p.lock.Unlock()
+		return
+	}
+
+	if p.options.MaxBlockingTasks != 0 && p.Waiting() >= p.options.MaxBlockingTasks {
+		p.lock.Unlock()
+		return
+	}
+
+	p.addWaiting(1)
+	p.cond.Wait() // block and wait for an available worker
+	p.addWaiting(-1)
+
+	if p.IsClosed() {
+		p.lock.Unlock()
+		return
+	}
+
+	goto retry
 }
 
 // revertWorker puts a worker back into free pool, recycling the goroutines.
