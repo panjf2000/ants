@@ -341,7 +341,7 @@ func (p *Pool) retrieveWorker() (w worker) {
 	p.lock.Lock()
 
 retry:
-	// First try to fetch the worker from the queue
+	// First try to fetch the worker from the queue.
 	if w = p.workers.detach(); w != nil {
 		p.lock.Unlock()
 		return
