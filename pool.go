@@ -355,17 +355,13 @@ retry:
 		return
 	}
 
+	// Bail out early if it's in nonblocking mode or the number of pending callers reaches the maximum limit value.
+	if p.options.Nonblocking || (p.options.MaxBlockingTasks != 0 && p.Waiting() >= p.options.MaxBlockingTasks) {
+		p.lock.Unlock()
+		return
+	}
+
 	// Otherwise, we'll have to keep them blocked and wait for at least one worker to be put back into pool.
-	if p.options.Nonblocking {
-		p.lock.Unlock()
-		return
-	}
-
-	if p.options.MaxBlockingTasks != 0 && p.Waiting() >= p.options.MaxBlockingTasks {
-		p.lock.Unlock()
-		return
-	}
-
 	p.addWaiting(1)
 	p.cond.Wait() // block and wait for an available worker
 	p.addWaiting(-1)
