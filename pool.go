@@ -333,11 +333,6 @@ func (p *Pool) addWaiting(delta int) {
 
 // retrieveWorker returns an available worker to run the tasks.
 func (p *Pool) retrieveWorker() (w worker) {
-	spawnWorker := func() {
-		w = p.workerCache.Get().(*goWorker)
-		w.run()
-	}
-
 	p.lock.Lock()
 
 retry:
@@ -351,7 +346,8 @@ retry:
 	// then just spawn a new worker goroutine.
 	if capacity := p.Cap(); capacity == -1 || capacity > p.Running() {
 		p.lock.Unlock()
-		spawnWorker()
+		w = p.workerCache.Get().(*goWorker)
+		w.run()
 		return
 	}
 
