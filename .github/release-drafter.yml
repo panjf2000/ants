@@ -44,6 +44,7 @@ autolabeler:
     title:
       - /fix/i
       - /bug/i
+      - /patch/i
   - label: docs
     files:
       - '*.md'
@@ -65,11 +66,27 @@ autolabeler:
       - /feature/i
       - /implement/i
       - /add/i
+      - /minor/i
   - label: dependencies
     title:
       - /dependencies/i
       - /upgrade/i
       - /bump up/i
+  - label: chores
+    title:
+      - /chore/i
+      - /\bmisc\b/i
+      - /cleanup/i
+      - /clean up/i
+  - label: major
+    title:
+      - /major:/i
+  - label: minor
+    title:
+      - /minor:/i
+  - label: patch
+    title:
+      - /patch:/i
 template: |
     ## Changelogs
     

@@ -107,8 +107,8 @@ func (p *PoolWithFunc) purgeStaleWorkers(ctx context.Context) {
 			staleWorkers[i] = nil
 		}
 
-		// There might be a situation where all workers have been cleaned up(no worker is running),
-		// while some invokers still are stuck in "p.cond.Wait()", then we need to awake those invokers.
+		// There might be a situation where all workers have been cleaned up (no worker is running),
+		// while some invokers still are stuck in p.cond.Wait(), then we need to awake those invokers.
 		if isDormant && p.Waiting() > 0 {
 			p.cond.Broadcast()
 		}
@@ -213,8 +213,6 @@ func NewPoolWithFunc(size int, pf func(interface{}), options ...Option) (*PoolWi
 	return p, nil
 }
 
-//---------------------------------------------------------------------------
-
 // Invoke submits a task to pool.
 //
 // Note that you are allowed to call Pool.Invoke() from the current Pool.Invoke(),
@@ -225,11 +223,12 @@ func (p *PoolWithFunc) Invoke(args interface{}) error {
 	if p.IsClosed() {
 		return ErrPoolClosed
 	}
-	if w := p.retrieveWorker(); w != nil {
+
+	w, err := p.retrieveWorker()
+	if w != nil {
 		w.inputParam(args)
-		return nil
 	}
-	return ErrPoolOverload
+	return err
 }
 
 // Running returns the number of workers currently running.
@@ -327,8 +326,6 @@ func (p *PoolWithFunc) Reboot() {
 	}
 }
 
-//---------------------------------------------------------------------------
-
 func (p *PoolWithFunc) addRunning(delta int) {
 	atomic.AddInt32(&p.running, int32(delta))
 }
@@ -338,52 +335,42 @@ func (p *PoolWithFunc) addWaiting(delta int) {
 }
 
 // retrieveWorker returns an available worker to run the tasks.
-func (p *PoolWithFunc) retrieveWorker() (w worker) {
-	spawnWorker := func() {
+func (p *PoolWithFunc) retrieveWorker() (w worker, err error) {
+	p.lock.Lock()
+
+retry:
+	// First try to fetch the worker from the queue.
+	if w = p.workers.detach(); w != nil {
+		p.lock.Unlock()
+		return
+	}
+
+	// If the worker queue is empty and we don't run out of the pool capacity,
+	// then just spawn a new worker goroutine.
+	if capacity := p.Cap(); capacity == -1 || capacity > p.Running() {
+		p.lock.Unlock()
 		w = p.workerCache.Get().(*goWorkerWithFunc)
 		w.run()
+		return
 	}
 
-	p.lock.Lock()
-	w = p.workers.detach()
-	if w != nil { // first try to fetch the worker from the queue
+	// Bail out early if it's in nonblocking mode or the number of pending callers reaches the maximum limit value.
+	if p.options.Nonblocking || (p.options.MaxBlockingTasks != 0 && p.Waiting() >= p.options.MaxBlockingTasks) {
 		p.lock.Unlock()
-	} else if capacity := p.Cap(); capacity == -1 || capacity > p.Running() {
-		// if the worker queue is empty and we don't run out of the pool capacity,
-		// then just spawn a new worker goroutine.
-		p.lock.Unlock()
-		spawnWorker()
-	} else { // otherwise, we'll have to keep them blocked and wait for at least one worker to be put back into pool.
-		if p.options.Nonblocking {
-			p.lock.Unlock()
-			return
-		}
-	retry:
-		if p.options.MaxBlockingTasks != 0 && p.Waiting() >= p.options.MaxBlockingTasks {
-			p.lock.Unlock()
-			return
-		}
-
-		p.addWaiting(1)
-		p.cond.Wait() // block and wait for an available worker
-		p.addWaiting(-1)
-
-		if p.IsClosed() {
-			p.lock.Unlock()
-			return
-		}
-
-		if w = p.workers.detach(); w == nil {
-			if p.Free() > 0 {
-				p.lock.Unlock()
-				spawnWorker()
-				return
-			}
-			goto retry
-		}
-		p.lock.Unlock()
+		return nil, ErrPoolOverload
 	}
-	return
+
+	// Otherwise, we'll have to keep them blocked and wait for at least one worker to be put back into pool.
+	p.addWaiting(1)
+	p.cond.Wait() // block and wait for an available worker
+	p.addWaiting(-1)
+
+	if p.IsClosed() {
+		p.lock.Unlock()
+		return nil, ErrPoolClosed
+	}
+
+	goto retry
 }
 
 // revertWorker puts a worker back into free pool, recycling the goroutines.
