@@ -70,6 +70,12 @@ autolabeler:
       - /dependencies/i
       - /upgrade/i
       - /bump up/i
+  - label: chores
+    title:
+      - /chore/i
+      - /\bmisc\b/i
+      - /cleanup/i
+      - /clean up/i
   - label: major
     title:
       - /major:/i
