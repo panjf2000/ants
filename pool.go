@@ -107,7 +107,7 @@ func (p *Pool) purgeStaleWorkers(ctx context.Context) {
 		}
 
 		// There might be a situation where all workers have been cleaned up(no worker is running),
-		// while some invokers still are stuck in "p.cond.Wait()", then we need to awake those invokers.
+		// while some invokers still are stuck in p.cond.Wait(), then we need to awake those invokers.
 		if isDormant && p.Waiting() > 0 {
 			p.cond.Broadcast()
 		}
@@ -206,8 +206,6 @@ func NewPool(size int, options ...Option) (*Pool, error) {
 
 	return p, nil
 }
-
-// ---------------------------------------------------------------------------
 
 // Submit submits a task to this pool.
 //
@@ -320,8 +318,6 @@ func (p *Pool) Reboot() {
 		p.goTicktock()
 	}
 }
-
-// ---------------------------------------------------------------------------
 
 func (p *Pool) addRunning(delta int) {
 	atomic.AddInt32(&p.running, int32(delta))
