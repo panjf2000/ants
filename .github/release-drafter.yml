@@ -70,6 +70,15 @@ autolabeler:
       - /dependencies/i
       - /upgrade/i
       - /bump up/i
+  - label: major
+    title:
+      - /major:/i
+  - label: minor
+    title:
+      - /minor:/i
+  - label: patch
+    title:
+      - /patch:/i
 template: |
     ## Changelogs
     
