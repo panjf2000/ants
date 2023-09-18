@@ -223,11 +223,12 @@ func (p *PoolWithFunc) Invoke(args interface{}) error {
 	if p.IsClosed() {
 		return ErrPoolClosed
 	}
-	if w := p.retrieveWorker(); w != nil {
+
+	w, err := p.retrieveWorker()
+	if w != nil {
 		w.inputParam(args)
-		return nil
 	}
-	return ErrPoolOverload
+	return err
 }
 
 // Running returns the number of workers currently running.
@@ -334,7 +335,7 @@ func (p *PoolWithFunc) addWaiting(delta int) {
 }
 
 // retrieveWorker returns an available worker to run the tasks.
-func (p *PoolWithFunc) retrieveWorker() (w worker) {
+func (p *PoolWithFunc) retrieveWorker() (w worker, err error) {
 	p.lock.Lock()
 
 retry:
@@ -356,7 +357,7 @@ retry:
 	// Bail out early if it's in nonblocking mode or the number of pending callers reaches the maximum limit value.
 	if p.options.Nonblocking || (p.options.MaxBlockingTasks != 0 && p.Waiting() >= p.options.MaxBlockingTasks) {
 		p.lock.Unlock()
-		return
+		return nil, ErrPoolOverload
 	}
 
 	// Otherwise, we'll have to keep them blocked and wait for at least one worker to be put back into pool.
@@ -366,7 +367,7 @@ retry:
 
 	if p.IsClosed() {
 		p.lock.Unlock()
-		return
+		return nil, ErrPoolClosed
 	}
 
 	goto retry
