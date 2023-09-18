@@ -106,7 +106,7 @@ func (p *Pool) purgeStaleWorkers(ctx context.Context) {
 			staleWorkers[i] = nil
 		}
 
-		// There might be a situation where all workers have been cleaned up(no worker is running),
+		// There might be a situation where all workers have been cleaned up (no worker is running),
 		// while some invokers still are stuck in p.cond.Wait(), then we need to awake those invokers.
 		if isDormant && p.Waiting() > 0 {
 			p.cond.Broadcast()
