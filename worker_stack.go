@@ -62,7 +62,7 @@ func (wq *workerStack) refresh(duration time.Duration) []worker {
 
 func (wq *workerStack) binarySearch(l, r int, expiryTime time.Time) int {
 	for l <= r {
-		mid := int(uint(l+r) >> 1) // avoid overflow when computing mid
+		mid := l + ((r - l) >> 1) // avoid overflow when computing mid
 		if expiryTime.Before(wq.items[mid].lastUsedTime()) {
 			r = mid - 1
 		} else {
