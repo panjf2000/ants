@@ -126,7 +126,7 @@ func (wq *loopQueue) binarySearch(expiryTime time.Time) int {
 	basel = wq.head
 	l := 0
 	for l <= r {
-		mid = l + ((r - l) >> 1)
+		mid = l + ((r - l) >> 1) // avoid overflow when computing mid
 		// calculate true mid position from mapped mid position
 		tmid = (mid + basel + nlen) % nlen
 		if expiryTime.Before(wq.items[tmid].lastUsedTime()) {
