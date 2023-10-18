@@ -19,15 +19,12 @@ func newWorkerLoopQueue(size int) *loopQueue {
 }
 
 func (wq *loopQueue) len() int {
-	if wq.size == 0 {
+	if wq.size == 0 || wq.isEmpty() {
 		return 0
 	}
 
-	if wq.head == wq.tail {
-		if wq.isFull {
-			return wq.size
-		}
-		return 0
+	if wq.head == wq.tail && wq.isFull {
+		return wq.size
 	}
 
 	if wq.tail > wq.head {
@@ -50,11 +47,8 @@ func (wq *loopQueue) insert(w worker) error {
 		return errQueueIsFull
 	}
 	wq.items[wq.tail] = w
-	wq.tail++
+	wq.tail = (wq.tail + 1) % wq.size
 
-	if wq.tail == wq.size {
-		wq.tail = 0
-	}
 	if wq.tail == wq.head {
 		wq.isFull = true
 	}
@@ -69,10 +63,8 @@ func (wq *loopQueue) detach() worker {
 
 	w := wq.items[wq.head]
 	wq.items[wq.head] = nil
-	wq.head++
-	if wq.head == wq.size {
-		wq.head = 0
-	}
+	wq.head = (wq.head + 1) % wq.size
+
 	wq.isFull = false
 
 	return w
@@ -134,7 +126,7 @@ func (wq *loopQueue) binarySearch(expiryTime time.Time) int {
 	basel = wq.head
 	l := 0
 	for l <= r {
-		mid = l + ((r - l) >> 1)
+		mid = l + ((r - l) >> 1) // avoid overflow when computing mid
 		// calculate true mid position from mapped mid position
 		tmid = (mid + basel + nlen) % nlen
 		if expiryTime.Before(wq.items[tmid].lastUsedTime()) {
