@@ -66,6 +66,12 @@ var (
 	// ErrTimeout will be returned after the operations timed out.
 	ErrTimeout = errors.New("operation timed out")
 
+	// ErrInvalidPoolIndex will be returned when trying to retrieve a pool with an invalid index.
+	ErrInvalidPoolIndex = errors.New("invalid pool index")
+
+	// ErrInvalidLoadBalancingStrategy will be returned when trying to create a MultiPool with an invalid load-balancing strategy.
+	ErrInvalidLoadBalancingStrategy = errors.New("invalid load-balancing strategy")
+
 	// workerChanCap determines whether the channel of a worker should be a buffered channel
 	// to get the best performance. Inspired by fasthttp at
 	// https://github.com/valyala/fasthttp/blob/master/workerpool.go#L139

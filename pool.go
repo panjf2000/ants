@@ -31,7 +31,8 @@ import (
 	syncx "github.com/panjf2000/ants/v2/internal/sync"
 )
 
-// Pool accepts the tasks from client, it limits the total of goroutines to a given number by recycling goroutines.
+// Pool accepts the tasks and process them concurrently,
+// it limits the total of goroutines to a given number by recycling goroutines.
 type Pool struct {
 	// capacity of the pool, a negative value means that the capacity of pool is limitless, an infinite pool is used to
 	// avoid potential issue of endless blocking caused by nested usage of a pool: submitting a task to pool
@@ -159,7 +160,7 @@ func (p *Pool) nowTime() time.Time {
 	return p.now.Load().(time.Time)
 }
 
-// NewPool generates an instance of ants pool.
+// NewPool instantiates a Pool with customized options.
 func NewPool(size int, options ...Option) (*Pool, error) {
 	if size <= 0 {
 		size = -1
@@ -210,7 +211,7 @@ func NewPool(size int, options ...Option) (*Pool, error) {
 // Submit submits a task to this pool.
 //
 // Note that you are allowed to call Pool.Submit() from the current Pool.Submit(),
-// but what calls for special attention is that you will get blocked with the latest
+// but what calls for special attention is that you will get blocked with the last
 // Pool.Submit() call once the current Pool runs out of its capacity, and to avoid this,
 // you should instantiate a Pool with ants.WithNonblocking(true).
 func (p *Pool) Submit(task func()) error {
@@ -230,7 +231,7 @@ func (p *Pool) Running() int {
 	return int(atomic.LoadInt32(&p.running))
 }
 
-// Free returns the number of available goroutines to work, -1 indicates this pool is unlimited.
+// Free returns the number of available workers, -1 indicates this pool is unlimited.
 func (p *Pool) Free() int {
 	c := p.Cap()
 	if c < 0 {
@@ -239,7 +240,7 @@ func (p *Pool) Free() int {
 	return c - p.Running()
 }
 
-// Waiting returns the number of tasks which are waiting be executed.
+// Waiting returns the number of tasks waiting to be executed.
 func (p *Pool) Waiting() int {
 	return int(atomic.LoadInt32(&p.waiting))
 }
@@ -339,7 +340,7 @@ retry:
 		return
 	}
 
-	// If the worker queue is empty and we don't run out of the pool capacity,
+	// If the worker queue is empty, and we don't run out of the pool capacity,
 	// then just spawn a new worker goroutine.
 	if capacity := p.Cap(); capacity == -1 || capacity > p.Running() {
 		p.lock.Unlock()
