@@ -33,7 +33,7 @@ import (
 // MultiPoolWithFunc consists of multiple pools, from which you will benefit the
 // performance improvement on basis of the fine-grained locking that reduces
 // the lock contention.
-// MultiPoolWithFunc is a good fit for the scenario that you have a large number of
+// MultiPoolWithFunc is a good fit for the scenario where you have a large number of
 // tasks to submit, and you don't want the single pool to be the bottleneck.
 type MultiPoolWithFunc struct {
 	pools []*PoolWithFunc
@@ -59,8 +59,8 @@ func NewMultiPoolWithFunc(size, sizePerPool int, fn func(interface{}), lbs LoadB
 	return &MultiPoolWithFunc{pools: pools, lbs: lbs}, nil
 }
 
-func (mp *MultiPoolWithFunc) next() (idx int) {
-	switch mp.lbs {
+func (mp *MultiPoolWithFunc) next(lbs LoadBalancingStrategy) (idx int) {
+	switch lbs {
 	case RoundRobin:
 		if idx = int((atomic.AddUint32(&mp.index, 1) - 1) % uint32(len(mp.pools))); idx == -1 {
 			idx = 0
@@ -80,11 +80,18 @@ func (mp *MultiPoolWithFunc) next() (idx int) {
 }
 
 // Invoke submits a task to a pool selected by the load-balancing strategy.
-func (mp *MultiPoolWithFunc) Invoke(args interface{}) error {
+func (mp *MultiPoolWithFunc) Invoke(args interface{}) (err error) {
 	if mp.IsClosed() {
 		return ErrPoolClosed
 	}
-	return mp.pools[mp.next()].Invoke(args)
+
+	if err = mp.pools[mp.next(mp.lbs)].Invoke(args); err == nil {
+		return
+	}
+	if err == ErrPoolOverload && mp.lbs == RoundRobin {
+		return mp.pools[mp.next(LeastTasks)].Invoke(args)
+	}
+	return
 }
 
 // Running returns the number of the currently running workers across all pools.

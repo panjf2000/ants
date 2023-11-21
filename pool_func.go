@@ -31,7 +31,7 @@ import (
 	syncx "github.com/panjf2000/ants/v2/internal/sync"
 )
 
-// PoolWithFunc accepts the tasks from client,
+// PoolWithFunc accepts the tasks and process them concurrently,
 // it limits the total of goroutines to a given number by recycling goroutines.
 type PoolWithFunc struct {
 	// capacity of the pool.
@@ -216,7 +216,7 @@ func NewPoolWithFunc(size int, pf func(interface{}), options ...Option) (*PoolWi
 // Invoke submits a task to pool.
 //
 // Note that you are allowed to call Pool.Invoke() from the current Pool.Invoke(),
-// but what calls for special attention is that you will get blocked with the latest
+// but what calls for special attention is that you will get blocked with the last
 // Pool.Invoke() call once the current Pool runs out of its capacity, and to avoid this,
 // you should instantiate a PoolWithFunc with ants.WithNonblocking(true).
 func (p *PoolWithFunc) Invoke(args interface{}) error {
@@ -236,7 +236,7 @@ func (p *PoolWithFunc) Running() int {
 	return int(atomic.LoadInt32(&p.running))
 }
 
-// Free returns the number of available goroutines to work, -1 indicates this pool is unlimited.
+// Free returns the number of available workers, -1 indicates this pool is unlimited.
 func (p *PoolWithFunc) Free() int {
 	c := p.Cap()
 	if c < 0 {
@@ -245,7 +245,7 @@ func (p *PoolWithFunc) Free() int {
 	return c - p.Running()
 }
 
-// Waiting returns the number of tasks which are waiting be executed.
+// Waiting returns the number of tasks waiting to be executed.
 func (p *PoolWithFunc) Waiting() int {
 	return int(atomic.LoadInt32(&p.waiting))
 }
@@ -345,7 +345,7 @@ retry:
 		return
 	}
 
-	// If the worker queue is empty and we don't run out of the pool capacity,
+	// If the worker queue is empty, and we don't run out of the pool capacity,
 	// then just spawn a new worker goroutine.
 	if capacity := p.Cap(); capacity == -1 || capacity > p.Running() {
 		p.lock.Unlock()

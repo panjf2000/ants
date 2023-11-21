@@ -138,6 +138,24 @@ func BenchmarkAntsPool(b *testing.B) {
 	}
 }
 
+func BenchmarkAntsMultiPool(b *testing.B) {
+	var wg sync.WaitGroup
+	p, _ := NewMultiPool(10, PoolCap/10, RoundRobin, WithExpiryDuration(DefaultExpiredTime))
+	defer p.ReleaseTimeout(DefaultExpiredTime) //nolint:errcheck
+
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		wg.Add(RunTimes)
+		for j := 0; j < RunTimes; j++ {
+			_ = p.Submit(func() {
+				demoFunc()
+				wg.Done()
+			})
+		}
+		wg.Wait()
+	}
+}
+
 func BenchmarkGoroutinesThroughput(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		for j := 0; j < RunTimes; j++ {
@@ -162,6 +180,18 @@ func BenchmarkSemaphoreThroughput(b *testing.B) {
 func BenchmarkAntsPoolThroughput(b *testing.B) {
 	p, _ := NewPool(PoolCap, WithExpiryDuration(DefaultExpiredTime))
 	defer p.Release()
+
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		for j := 0; j < RunTimes; j++ {
+			_ = p.Submit(demoFunc)
+		}
+	}
+}
+
+func BenchmarkAntsMultiPoolThroughput(b *testing.B) {
+	p, _ := NewMultiPool(10, PoolCap/10, RoundRobin, WithExpiryDuration(DefaultExpiredTime))
+	defer p.ReleaseTimeout(DefaultExpiredTime) //nolint:errcheck
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
