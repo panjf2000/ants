@@ -44,7 +44,7 @@ const (
 // MultiPool consists of multiple pools, from which you will benefit the
 // performance improvement on basis of the fine-grained locking that reduces
 // the lock contention.
-// MultiPool is a good fit for the scenario that you have a large number of
+// MultiPool is a good fit for the scenario where you have a large number of
 // tasks to submit, and you don't want the single pool to be the bottleneck.
 type MultiPool struct {
 	pools []*Pool
@@ -70,8 +70,8 @@ func NewMultiPool(size, sizePerPool int, lbs LoadBalancingStrategy, options ...O
 	return &MultiPool{pools: pools, lbs: lbs}, nil
 }
 
-func (mp *MultiPool) next() (idx int) {
-	switch mp.lbs {
+func (mp *MultiPool) next(lbs LoadBalancingStrategy) (idx int) {
+	switch lbs {
 	case RoundRobin:
 		if idx = int((atomic.AddUint32(&mp.index, 1) - 1) % uint32(len(mp.pools))); idx == -1 {
 			idx = 0
@@ -91,11 +91,17 @@ func (mp *MultiPool) next() (idx int) {
 }
 
 // Submit submits a task to a pool selected by the load-balancing strategy.
-func (mp *MultiPool) Submit(task func()) error {
+func (mp *MultiPool) Submit(task func()) (err error) {
 	if mp.IsClosed() {
 		return ErrPoolClosed
 	}
-	return mp.pools[mp.next()].Submit(task)
+	if err = mp.pools[mp.next(mp.lbs)].Submit(task); err == nil {
+		return
+	}
+	if err == ErrPoolOverload && mp.lbs == RoundRobin {
+		return mp.pools[mp.next(LeastTasks)].Submit(task)
+	}
+	return
 }
 
 // Running returns the number of the currently running workers across all pools.
