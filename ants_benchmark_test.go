@@ -48,22 +48,22 @@ func demoPoolFunc(args interface{}) {
 	time.Sleep(time.Duration(n) * time.Millisecond)
 }
 
-var stopLongRunningFunc atomic.Bool
+var stopLongRunningFunc int32
 
 func longRunningFunc() {
-	for !stopLongRunningFunc.Load() {
+	for atomic.LoadInt32(&stopLongRunningFunc) == 0 {
 		runtime.Gosched()
 	}
 }
 
-var stopLongRunningPoolFunc atomic.Bool
+var stopLongRunningPoolFunc int32
 
 func longRunningPoolFunc(arg interface{}) {
 	if ch, ok := arg.(chan struct{}); ok {
 		<-ch
 		return
 	}
-	for !stopLongRunningPoolFunc.Load() {
+	for atomic.LoadInt32(&stopLongRunningPoolFunc) == 0 {
 		runtime.Gosched()
 	}
 }

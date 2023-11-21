@@ -1021,11 +1021,11 @@ func TestMultiPool(t *testing.T) {
 			n, _ = mp.FreeByIndex(i)
 			assert.EqualValues(t, 0, n)
 		}
-		stopLongRunningFunc.Store(true)
+		atomic.StoreInt32(&stopLongRunningFunc, 1)
 		assert.NoError(t, mp.ReleaseTimeout(3*time.Second))
 		assert.Zero(t, mp.Running())
 		assert.True(t, mp.IsClosed())
-		stopLongRunningFunc.Store(false)
+		atomic.StoreInt32(&stopLongRunningFunc, 0)
 	}
 	testFn()
 
@@ -1076,11 +1076,11 @@ func TestMultiPoolWithFunc(t *testing.T) {
 			n, _ = mp.FreeByIndex(i)
 			assert.EqualValues(t, 0, n)
 		}
-		stopLongRunningPoolFunc.Store(true)
+		atomic.StoreInt32(&stopLongRunningPoolFunc, 1)
 		assert.NoError(t, mp.ReleaseTimeout(3*time.Second))
 		assert.Zero(t, mp.Running())
 		assert.True(t, mp.IsClosed())
-		stopLongRunningPoolFunc.Store(false)
+		atomic.StoreInt32(&stopLongRunningPoolFunc, 0)
 	}
 	testFn()
 
