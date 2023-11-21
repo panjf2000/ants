@@ -25,7 +25,6 @@ package ants
 import (
 	"errors"
 	"fmt"
-	"math"
 	"strings"
 	"sync/atomic"
 	"time"
@@ -68,7 +67,7 @@ func (mp *MultiPoolWithFunc) next() (idx int) {
 		}
 		return
 	case LeastTasks:
-		leastTasks := math.MaxInt
+		leastTasks := 1<<31 - 1
 		for i, pool := range mp.pools {
 			if n := pool.Running(); n < leastTasks {
 				leastTasks = n
