@@ -200,3 +200,27 @@ func BenchmarkAntsMultiPoolThroughput(b *testing.B) {
 		}
 	}
 }
+
+func BenchmarkParallelAntsPoolThroughput(b *testing.B) {
+	p, _ := NewPool(PoolCap, WithExpiryDuration(DefaultExpiredTime))
+	defer p.Release()
+
+	b.ResetTimer()
+	b.RunParallel(func(pb *testing.PB) {
+		for pb.Next() {
+			_ = p.Submit(demoFunc)
+		}
+	})
+}
+
+func BenchmarkParallelAntsMultiPoolThroughput(b *testing.B) {
+	p, _ := NewMultiPool(10, PoolCap/10, RoundRobin, WithExpiryDuration(DefaultExpiredTime))
+	defer p.ReleaseTimeout(DefaultExpiredTime) //nolint:errcheck
+
+	b.ResetTimer()
+	b.RunParallel(func(pb *testing.PB) {
+		for pb.Next() {
+			_ = p.Submit(demoFunc)
+		}
+	})
+}
