@@ -160,7 +160,7 @@ func (p *PoolWithFunc) nowTime() time.Time {
 	return p.now.Load().(time.Time)
 }
 
-// NewPoolWithFunc generates an instance of ants pool with a specific function.
+// NewPoolWithFunc instantiates a PoolWithFunc with customized options.
 func NewPoolWithFunc(size int, pf func(interface{}), options ...Option) (*PoolWithFunc, error) {
 	if size <= 0 {
 		size = -1
