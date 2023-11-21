@@ -985,3 +985,113 @@ func TestDefaultPoolReleaseTimeout(t *testing.T) {
 	err := ReleaseTimeout(2 * time.Second)
 	assert.NoError(t, err)
 }
+
+func TestMultiPool(t *testing.T) {
+	_, err := NewMultiPool(10, -1, 8)
+	assert.ErrorIs(t, err, ErrInvalidLoadBalancingStrategy)
+
+	mp, err := NewMultiPool(10, 5, RoundRobin)
+	testFn := func() {
+		for i := 0; i < 50; i++ {
+			err = mp.Submit(longRunningFunc)
+			assert.NoError(t, err)
+		}
+		assert.EqualValues(t, mp.Waiting(), 0)
+		_, err = mp.WaitingByIndex(-1)
+		assert.ErrorIs(t, err, ErrInvalidPoolIndex)
+		_, err = mp.WaitingByIndex(11)
+		assert.ErrorIs(t, err, ErrInvalidPoolIndex)
+		assert.EqualValues(t, 50, mp.Running())
+		_, err = mp.RunningByIndex(-1)
+		assert.ErrorIs(t, err, ErrInvalidPoolIndex)
+		_, err = mp.RunningByIndex(11)
+		assert.ErrorIs(t, err, ErrInvalidPoolIndex)
+		assert.EqualValues(t, 0, mp.Free())
+		_, err = mp.FreeByIndex(-1)
+		assert.ErrorIs(t, err, ErrInvalidPoolIndex)
+		_, err = mp.FreeByIndex(11)
+		assert.ErrorIs(t, err, ErrInvalidPoolIndex)
+		assert.EqualValues(t, 50, mp.Cap())
+		assert.False(t, mp.IsClosed())
+		for i := 0; i < 10; i++ {
+			n, _ := mp.WaitingByIndex(i)
+			assert.EqualValues(t, 0, n)
+			n, _ = mp.RunningByIndex(i)
+			assert.EqualValues(t, 5, n)
+			n, _ = mp.FreeByIndex(i)
+			assert.EqualValues(t, 0, n)
+		}
+		stopLongRunningFunc.Store(true)
+		assert.NoError(t, mp.ReleaseTimeout(3*time.Second))
+		assert.Zero(t, mp.Running())
+		assert.True(t, mp.IsClosed())
+		stopLongRunningFunc.Store(false)
+	}
+	testFn()
+
+	mp.Reboot()
+	testFn()
+
+	mp, err = NewMultiPool(10, 5, LeastTasks)
+	testFn()
+
+	mp.Reboot()
+	testFn()
+
+	mp.Tune(10)
+}
+
+func TestMultiPoolWithFunc(t *testing.T) {
+	_, err := NewMultiPoolWithFunc(10, -1, longRunningPoolFunc, 8)
+	assert.ErrorIs(t, err, ErrInvalidLoadBalancingStrategy)
+
+	mp, err := NewMultiPoolWithFunc(10, 5, longRunningPoolFunc, RoundRobin)
+	testFn := func() {
+		for i := 0; i < 50; i++ {
+			err = mp.Invoke(i)
+			assert.NoError(t, err)
+		}
+		assert.EqualValues(t, mp.Waiting(), 0)
+		_, err = mp.WaitingByIndex(-1)
+		assert.ErrorIs(t, err, ErrInvalidPoolIndex)
+		_, err = mp.WaitingByIndex(11)
+		assert.ErrorIs(t, err, ErrInvalidPoolIndex)
+		assert.EqualValues(t, 50, mp.Running())
+		_, err = mp.RunningByIndex(-1)
+		assert.ErrorIs(t, err, ErrInvalidPoolIndex)
+		_, err = mp.RunningByIndex(11)
+		assert.ErrorIs(t, err, ErrInvalidPoolIndex)
+		assert.EqualValues(t, 0, mp.Free())
+		_, err = mp.FreeByIndex(-1)
+		assert.ErrorIs(t, err, ErrInvalidPoolIndex)
+		_, err = mp.FreeByIndex(11)
+		assert.ErrorIs(t, err, ErrInvalidPoolIndex)
+		assert.EqualValues(t, 50, mp.Cap())
+		assert.False(t, mp.IsClosed())
+		for i := 0; i < 10; i++ {
+			n, _ := mp.WaitingByIndex(i)
+			assert.EqualValues(t, 0, n)
+			n, _ = mp.RunningByIndex(i)
+			assert.EqualValues(t, 5, n)
+			n, _ = mp.FreeByIndex(i)
+			assert.EqualValues(t, 0, n)
+		}
+		stopLongRunningPoolFunc.Store(true)
+		assert.NoError(t, mp.ReleaseTimeout(3*time.Second))
+		assert.Zero(t, mp.Running())
+		assert.True(t, mp.IsClosed())
+		stopLongRunningPoolFunc.Store(false)
+	}
+	testFn()
+
+	mp.Reboot()
+	testFn()
+
+	mp, err = NewMultiPoolWithFunc(10, 5, longRunningPoolFunc, LeastTasks)
+	testFn()
+
+	mp.Reboot()
+	testFn()
+
+	mp.Tune(10)
+}

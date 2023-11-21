@@ -25,6 +25,7 @@ package ants
 import (
 	"runtime"
 	"sync"
+	"sync/atomic"
 	"testing"
 	"time"
 
@@ -47,18 +48,22 @@ func demoPoolFunc(args interface{}) {
 	time.Sleep(time.Duration(n) * time.Millisecond)
 }
 
+var stopLongRunningFunc atomic.Bool
+
 func longRunningFunc() {
-	for {
+	for !stopLongRunningFunc.Load() {
 		runtime.Gosched()
 	}
 }
+
+var stopLongRunningPoolFunc atomic.Bool
 
 func longRunningPoolFunc(arg interface{}) {
 	if ch, ok := arg.(chan struct{}); ok {
 		<-ch
 		return
 	}
-	for {
+	for !stopLongRunningPoolFunc.Load() {
 		runtime.Gosched()
 	}
 }

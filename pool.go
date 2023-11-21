@@ -159,7 +159,7 @@ func (p *Pool) nowTime() time.Time {
 	return p.now.Load().(time.Time)
 }
 
-// NewPool generates an instance of ants pool.
+// NewPool instantiates a Pool with customized options.
 func NewPool(size int, options ...Option) (*Pool, error) {
 	if size <= 0 {
 		size = -1
