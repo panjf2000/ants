@@ -27,6 +27,12 @@ import (
 	"time"
 )
 
+// goTask is the task with a function and arguments
+type goTask struct {
+	task func(args ...interface{})
+	args []interface{}
+}
+
 // goWorker is the actual executor who runs the tasks,
 // it starts a goroutine that accepts tasks and
 // performs function calls.
@@ -35,7 +41,7 @@ type goWorker struct {
 	pool *Pool
 
 	// task is a job should be done.
-	task chan func()
+	task chan *goTask
 
 	// lastUsed will be updated when putting a worker back into queue.
 	lastUsed time.Time
@@ -64,7 +70,7 @@ func (w *goWorker) run() {
 			if f == nil {
 				return
 			}
-			f()
+			f.task(f.args...)
 			if ok := w.pool.revertWorker(w); !ok {
 				return
 			}
