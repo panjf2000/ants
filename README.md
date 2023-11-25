@@ -2,7 +2,7 @@
 <img src="https://raw.githubusercontent.com/panjf2000/logos/master/ants/logo.png" />
 <b>A goroutine pool for Go</b>
 <br/><br/>
-<a title="Build Status" target="_blank" href="https://github.com/panjf2000/ants/actions?query=workflow%3ATests"><img src="https://img.shields.io/github/workflow/status/panjf2000/ants/Tests?style=flat-square&logo=github-actions" /></a>
+<a title="Build Status" target="_blank" href="https://github.com/panjf2000/ants/actions?query=workflow%3ATests"><img src="https://img.shields.io/github/actions/workflow/status/panjf2000/ants/test.yml?branch=master&style=flat-square&logo=github-actions" /></a>
 <a title="Codecov" target="_blank" href="https://codecov.io/gh/panjf2000/ants"><img src="https://img.shields.io/codecov/c/github/panjf2000/ants?style=flat-square&logo=codecov" /></a>
 <a title="Release" target="_blank" href="https://github.com/panjf2000/ants/releases"><img src="https://img.shields.io/github/v/release/panjf2000/ants.svg?color=161823&style=flat-square&logo=smartthings" /></a>
 <a title="Tag" target="_blank" href="https://github.com/panjf2000/ants/tags"><img src="https://img.shields.io/github/v/tag/panjf2000/ants?color=%23ff8936&logo=fitbit&style=flat-square" /></a>
@@ -13,7 +13,7 @@
 <a title="Mentioned in Awesome Go" target="_blank" href="https://github.com/avelino/awesome-go#goroutines"><img src="https://awesome.re/mentioned-badge-flat.svg" /></a>
 </p>
 
-English | [🇨🇳中文](README_ZH.md)
+English | [中文](README_ZH.md)
 
 ## 📖 Introduction
 
@@ -23,14 +23,10 @@ Library `ants` implements a goroutine pool with fixed capacity, managing and rec
 
 - Managing and recycling a massive number of goroutines automatically
 - Purging overdue goroutines periodically
-- Abundant APIs: submitting tasks, getting the number of running goroutines, tuning capacity of pool dynamically, releasing pool, rebooting pool
+- Abundant APIs: submitting tasks, getting the number of running goroutines, tuning the capacity of the pool dynamically, releasing the pool, rebooting the pool
 - Handle panic gracefully to prevent programs from crash
 - Efficient in memory usage and it even achieves [higher performance](#-performance-summary) than unlimited goroutines in Golang
 - Nonblocking mechanism
-
-## ⚔️ Tested in the following Golang releases:
-
-All releases from **Go1.8.x** to **Go1.18.x**.
 
 ## 💡 How `ants` works
 
@@ -65,7 +61,7 @@ go get -u github.com/panjf2000/ants/v2
 ```
 
 ## 🛠 How to use
-Just take a imagination that your program starts a massive number of goroutines, resulting in a huge consumption of memory. To mitigate that kind of situation, all you need to do is to import `ants` package and submit all your tasks to a default pool with fixed capacity, activated when package `ants` is imported:
+Just imagine that your program starts a massive number of goroutines, resulting in a huge consumption of memory. To mitigate that kind of situation, all you need to do is to import `ants` package and submit all your tasks to a default pool with fixed capacity, activated when package `ants` is imported:
 
 ``` go
 package main
@@ -238,14 +234,13 @@ func WithLogger(logger Logger) Option {
 }
 ```
 
-`ants.Options`contains all optional configurations of ants pool, which allows you to customize the goroutine pool by invoking option functions to set up each configuration in `NewPool`/`NewPoolWithFunc`method.
+`ants.Options`contains all optional configurations of the ants pool, which allows you to customize the goroutine pool by invoking option functions to set up each configuration in `NewPool`/`NewPoolWithFunc`method.
 
 ### Customize limited pool
 
-`ants` also supports customizing the capacity of pool. You can invoke the `NewPool` method to instantiate a pool with a given capacity, as following:
+`ants` also supports customizing the capacity of the pool. You can invoke the `NewPool` method to instantiate a pool with a given capacity, as follows:
 
 ``` go
-// Set 10000 the size of goroutine pool
 p, _ := ants.NewPool(10000)
 ```
 
@@ -263,11 +258,11 @@ pool.Tune(1000) // Tune its capacity to 1000
 pool.Tune(100000) // Tune its capacity to 100000
 ```
 
-Don't worry about the synchronous problems in this case, the method here is thread-safe (or should be called goroutine-safe).
+Don't worry about the contention problems in this case, the method here is thread-safe (or should be called goroutine-safe).
 
 ### Pre-malloc goroutine queue in pool
 
-`ants` allows you to pre-allocate memory of goroutine queue in pool, which may get a performance enhancement under some special certain circumstances such as the scenario that requires a pool with ultra-large capacity, meanwhile each task in goroutine lasts for a long time, in this case, pre-mallocing will reduce a lot of memory allocation in goroutine queue.
+`ants` allows you to pre-allocate the memory of the goroutine queue in the pool, which may get a performance enhancement under some special certain circumstances such as the scenario that requires a pool with ultra-large capacity, meanwhile, each task in goroutine lasts for a long time, in this case, pre-mallocing will reduce a lot of memory allocation in goroutine queue.
 
 ```go
 // ants will pre-malloc the whole capacity of pool when you invoke this method
@@ -294,19 +289,19 @@ All tasks submitted to `ants` pool will not be guaranteed to be addressed in ord
 ## 🧲 Benchmarks
 
 <div align="center"><img src="https://user-images.githubusercontent.com/7496278/51515466-c7ce9e00-1e4e-11e9-89c4-bd3785b3c667.png"/></div>
- In this benchmark result, the first and second benchmarks performed test cases with 1M tasks and the rest of benchmarks performed test cases with 10M tasks, both in unlimited goroutines and `ants` pool, and the capacity of this `ants` goroutine-pool was limited to 50K.
+ In this benchmark result, the first and second benchmarks performed test cases with 1M tasks, and the rest of the benchmarks performed test cases with 10M tasks, both in unlimited goroutines and `ants` pool, and the capacity of this `ants` goroutine pool was limited to 50K.
 
-- BenchmarkGoroutine-4 represents the benchmarks with unlimited goroutines in golang.
+- BenchmarkGoroutine-4 represents the benchmarks with unlimited goroutines in Golang.
 
-- BenchmarkPoolGroutine-4 represents the benchmarks with a `ants` pool.
+- BenchmarkPoolGroutine-4 represents the benchmarks with an `ants` pool.
 
 ### Benchmarks with Pool 
 
 ![](https://user-images.githubusercontent.com/7496278/51515499-f187c500-1e4e-11e9-80e5-3df8f94fa70f.png)
 
-In above benchmark result, the first and second benchmarks performed test cases with 1M tasks and the rest of benchmarks performed test cases with 10M tasks, both in unlimited goroutines and `ants` pool, and the capacity of this `ants` goroutine-pool was limited to 50K.
+In the above benchmark result, the first and second benchmarks performed test cases with 1M tasks, and the rest of the benchmarks performed test cases with 10M tasks, both in unlimited goroutines and `ants` pool and the capacity of this `ants` goroutine-pool was limited to 50K.
 
-**As you can see, `ants` performs 2 times faster than goroutines without pool (10M tasks) and it only consumes half the memory comparing with goroutines without pool. (both in 1M and 10M tasks)**
+**As you can see, `ants` performs 2 times faster than goroutines without a pool (10M tasks) and it only consumes half the memory compared with goroutines without a pool. (both in 1M and 10M tasks)**
 
 ### Benchmarks with PoolWithFunc
 
@@ -336,11 +331,13 @@ In above benchmark result, the first and second benchmarks performed test cases 
 
 Please read our [Contributing Guidelines](CONTRIBUTING.md) before opening a PR and thank you to all the developers who already made contributions to `ants`!
 
-[![](https://opencollective.com/ants/contributors.svg?width=890&button=false)](https://github.com/panjf2000/ants/graphs/contributors)
+<a href="https://github.com/panjf2000/ants/graphs/contributors">
+	<img src="https://contrib.rocks/image?repo=panjf2000/ants" />
+</a>
 
 ## 📄 License
 
-Source code in `ants` is available under the [MIT License](/LICENSE).
+The source code in `ants` is available under the [MIT License](/LICENSE).
 
 ## 📚 Relevant Articles
 
@@ -355,19 +352,30 @@ Source code in `ants` is available under the [MIT License](/LICENSE).
 
 The following companies/organizations use `ants` in production.
 
-<a href="https://www.tencent.com"><img src="http://img.taohuawu.club/gallery/tencent_logo.png" width="250" align="middle"/></a>&nbsp;&nbsp;<a href="https://www.bytedance.com/" target="_blank"><img src="http://img.taohuawu.club/gallery/ByteDance_Logo.png" width="250" align="middle"/></a>&nbsp;&nbsp;<a href="https://tieba.baidu.com/" target="_blank"><img src="http://img.taohuawu.club/gallery/baidu-tieba-logo.png" width="300" align="middle"/></a>&nbsp;&nbsp;<a href="https://www.sina.com.cn/" target="_blank"><img src="http://img.taohuawu.club/gallery/sina-logo.png" width="200" align="middle"/></a>&nbsp;&nbsp;<a href="https://www.163.com/" target="_blank"><img src="http://img.taohuawu.club/gallery/netease-logo.png" width="150" align="middle"/></a>&nbsp;&nbsp;<a href="https://www.tencentmusic.com/" target="_blank"><img src="http://img.taohuawu.club/gallery/tencent-music-logo.png" width="250" align="middle"/></a>&nbsp;&nbsp;<a href="https://www.futuhk.com/" target="_blank"><img src="http://img.taohuawu.club/gallery/futu-logo.png" width="250" align="middle"/></a>&nbsp;&nbsp;<a href="https://www.shopify.com/" target="_blank"><img src="http://img.taohuawu.club/gallery/shopify-logo.png" width="250" align="middle"/></a>&nbsp;&nbsp;<a href="https://www.wechat.com/en/" target="_blank"><img src="http://img.taohuawu.club/gallery/wechat-logo.png" width="250" align="middle"/></a><a href="https://www.baidu.com/" target="_blank"><img src="http://img.taohuawu.club/gallery/baidu-mobile.png" width="250" align="middle"/></a>
+<a href="https://www.tencent.com"><img src="http://img.taohuawu.club/gallery/tencent_logo.png" width="250" align="middle"/></a>&nbsp;&nbsp;<a href="https://www.bytedance.com/" target="_blank"><img src="http://img.taohuawu.club/gallery/ByteDance_Logo.png" width="250" align="middle"/></a>&nbsp;&nbsp;<a href="https://tieba.baidu.com/" target="_blank"><img src="http://img.taohuawu.club/gallery/baidu-tieba-logo.png" width="300" align="middle"/></a>&nbsp;&nbsp;<a href="https://www.sina.com.cn/" target="_blank"><img src="http://img.taohuawu.club/gallery/sina-logo.png" width="200" align="middle"/></a>&nbsp;&nbsp;<a href="https://www.163.com/" target="_blank"><img src="http://img.taohuawu.club/gallery/netease-logo.png" width="150" align="middle"/></a>&nbsp;&nbsp;<a href="https://www.tencentmusic.com/" target="_blank"><img src="http://img.taohuawu.club/gallery/tencent-music-logo.png" width="250" align="middle"/></a>&nbsp;&nbsp;<a href="https://www.futuhk.com/" target="_blank"><img src="http://img.taohuawu.club/gallery/futu-logo.png" width="250" align="middle"/></a>&nbsp;&nbsp;<a href="https://www.shopify.com/" target="_blank"><img src="http://img.taohuawu.club/gallery/shopify-logo.png" width="250" align="middle"/></a>&nbsp;&nbsp;<a href="https://www.wechat.com/en/" target="_blank"><img src="http://img.taohuawu.club/gallery/wechat-logo.png" width="250" align="middle"/></a><a href="https://www.baidu.com/" target="_blank"><img src="http://img.taohuawu.club/gallery/baidu-mobile.png" width="250" align="middle"/></a>&nbsp;&nbsp;<a href="https://www.360.com" target="_blank"><img src="http://img.taohuawu.club/gallery/360-logo.png" width="250" align="middle"/></a><a href="https://www.huaweicloud.com/intl/en-us/" target="_blank"><img src="https://res-static.hc-cdn.cn/cloudbu-site/china/zh-cn/%E7%BB%84%E4%BB%B6%E9%AA%8C%E8%AF%81/pep-common-header/logo-en.png" width="250" align="middle"/></a>&nbsp;&nbsp;<a href="https://www.matrixorigin.io" target="_blank"><img src="https://www.matrixorigin.io/_next/static/media/logo-light-en.42553c69.svg" width="250" align="middle"/></a>&nbsp;&nbsp;<a href="https://adguard-dns.io" target="_blank"><img src="https://cdn.adtidy.org/website/images/AdGuardDNS_black.svg" width="250" align="middle"/></a>&nbsp;&nbsp;<a href="https://bk.tencent.com" target="_blank"><img src="https://static.apiseven.com/2022/11/14/6371adab14119.png" width="250" align="middle"/></a>
 
 ### open-source software
 
+The open-source projects below do concurrent programming with the help of `ants`.
+
 - [gnet](https://github.com/panjf2000/gnet):  A high-performance, lightweight, non-blocking, event-driven networking framework written in pure Go.
-- [nps](https://github.com/ehang-io/nps): A lightweight, high-performance, powerful intranet penetration proxy server, with a powerful web management terminal.
 - [milvus](https://github.com/milvus-io/milvus): An open-source vector database for scalable similarity search and AI applications.
+- [nps](https://github.com/ehang-io/nps): A lightweight, high-performance, powerful intranet penetration proxy server, with a powerful web management terminal.
+- [siyuan](https://github.com/siyuan-note/siyuan): SiYuan is a local-first personal knowledge management system that supports complete offline use, as well as end-to-end encrypted synchronization.
 - [osmedeus](https://github.com/j3ssie/osmedeus): A Workflow Engine for Offensive Security.
-- [jitsu](https://github.com/jitsucom/jitsu): An open-source Segment alternative. Fully-scriptable data ingestion engine for modern data teams. Set-up a real-time data pipeline in minutes, not days.
+- [jitsu](https://github.com/jitsucom/jitsu/tree/master): An open-source Segment alternative. Fully-scriptable data ingestion engine for modern data teams. Set-up a real-time data pipeline in minutes, not days.
 - [triangula](https://github.com/RH12503/triangula): Generate high-quality triangulated and polygonal art from images.
+- [teler](https://github.com/kitabisa/teler): Real-time HTTP Intrusion Detection.
 - [bsc](https://github.com/binance-chain/bsc): A Binance Smart Chain client based on the go-ethereum fork.
 - [jaeles](https://github.com/jaeles-project/jaeles): The Swiss Army knife for automated Web Application Testing.
 - [devlake](https://github.com/apache/incubator-devlake): The open-source dev data platform & dashboard for your DevOps tools.
+- [matrixone](https://github.com/matrixorigin/matrixone): MatrixOne is a future-oriented hyper-converged cloud and edge native DBMS that supports transactional, analytical, and streaming workloads with a simplified and distributed database engine, across multiple data centers, clouds, edges and other heterogeneous infrastructures.
+- [bk-bcs](https://github.com/TencentBlueKing/bk-bcs): BlueKing Container Service (BCS, same below) is a container management and orchestration platform for the micro-services under the BlueKing ecosystem.
+- [trueblocks-core](https://github.com/TrueBlocks/trueblocks-core): TrueBlocks improves access to blockchain data for any EVM-compatible chain (particularly Ethereum mainnet) while remaining entirely local.
+- [openGemini](https://github.com/openGemini/openGemini): openGemini is an open-source,cloud-native time-series database(TSDB) that can be widely used in IoT, Internet of Vehicles(IoV), O&M monitoring, and industrial Internet scenarios.
+- [AdGuardDNS](https://github.com/AdguardTeam/AdGuardDNS): AdGuard DNS is an alternative solution for tracker blocking, privacy protection, and parental control.
+- [WatchAD2.0](https://github.com/Qihoo360/WatchAD2.0): WatchAD2.0 是 360 信息安全中心开发的一款针对域安全的日志分析与监控系统，它可以收集所有域控上的事件日志、网络流量，通过特征匹配、协议分析、历史行为、敏感操作和蜜罐账户等方式来检测各种已知与未知威胁，功能覆盖了大部分目前的常见内网域渗透手法。
+- [vanus](https://github.com/vanus-labs/vanus): Vanus is a Serverless, event streaming system with processing capabilities. It easily connects SaaS, Cloud Services, and Databases to help users build next-gen Event-driven Applications.
 
 #### All use cases:
 
@@ -391,13 +399,13 @@ Support us with a monthly donation and help us continue our activities.
 
 ## 💎 Sponsors
 
-Become a bronze sponsor with a monthly donation of $10 and get your logo on our README on Github.
+Become a bronze sponsor with a monthly donation of $10 and get your logo on our README on GitHub.
 
 <a href="https://opencollective.com/ants#sponsors" target="_blank"><img src="https://opencollective.com/ants/sponsors.svg"></a>
 
 ## ☕️ Buy me a coffee
 
-> Please be sure to leave your name, GitHub account or other social media accounts when you donate by the following means so that I can add it to the list of donors as a token of my appreciation.
+> Please be sure to leave your name, GitHub account, or other social media accounts when you donate by the following means so that I can add it to the list of donors as a token of my appreciation.
 
 <img src="https://raw.githubusercontent.com/panjf2000/illustrations/master/payments/WeChatPay.JPG" width="250" align="middle"/>&nbsp;&nbsp;
 <img src="https://raw.githubusercontent.com/panjf2000/illustrations/master/payments/AliPay.JPG" width="250" align="middle"/>&nbsp;&nbsp;
@@ -405,7 +413,7 @@ Become a bronze sponsor with a monthly donation of $10 and get your logo on our 
 
 ## 💵 Patrons
 
-<a target="_blank" href="https://github.com/patrick-othmer"><img src="https://avatars1.githubusercontent.com/u/8964313" width="100" alt="Patrick Othmer" /></a>&nbsp;<a target="_blank" href="https://github.com/panjf2000/gnet"><img src="https://avatars2.githubusercontent.com/u/50285334" width="100" alt="Jimmy" /></a>&nbsp;<a target="_blank" href="https://github.com/cafra"><img src="https://avatars0.githubusercontent.com/u/13758306" width="100" alt="ChenZhen" /></a>&nbsp;<a target="_blank" href="https://github.com/yangwenmai"><img src="https://avatars0.githubusercontent.com/u/1710912" width="100" alt="Mai Yang" /></a>&nbsp;<a target="_blank" href="https://github.com/BeijingWks"><img src="https://avatars3.githubusercontent.com/u/33656339" width="100" alt="王开帅" /></a>&nbsp;<a target="_blank" href="https://github.com/refs"><img src="https://avatars3.githubusercontent.com/u/6905948" width="100" alt="Unger Alejandro" /></a>&nbsp;<a target="_blank" href="https://github.com/Wuvist"><img src="https://avatars.githubusercontent.com/u/657796" width="100" alt="Weng Wei" /></a>
+<a target="_blank" href="https://github.com/patrick-othmer"><img src="https://avatars1.githubusercontent.com/u/8964313" width="100" alt="Patrick Othmer" /></a>&nbsp;<a target="_blank" href="https://github.com/panjf2000/ants"><img src="https://avatars2.githubusercontent.com/u/50285334" width="100" alt="Jimmy" /></a>&nbsp;<a target="_blank" href="https://github.com/cafra"><img src="https://avatars0.githubusercontent.com/u/13758306" width="100" alt="ChenZhen" /></a>&nbsp;<a target="_blank" href="https://github.com/yangwenmai"><img src="https://avatars0.githubusercontent.com/u/1710912" width="100" alt="Mai Yang" /></a>&nbsp;<a target="_blank" href="https://github.com/BeijingWks"><img src="https://avatars3.githubusercontent.com/u/33656339" width="100" alt="王开帅" /></a>&nbsp;<a target="_blank" href="https://github.com/refs"><img src="https://avatars3.githubusercontent.com/u/6905948" width="100" alt="Unger Alejandro" /></a>&nbsp;<a target="_blank" href="https://github.com/Wuvist"><img src="https://avatars.githubusercontent.com/u/657796" width="100" alt="Weng Wei" /></a>
 
 ## 🔋 Sponsorship
 

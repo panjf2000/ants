@@ -2,7 +2,7 @@
 // Use of this source code is governed by an MIT-style
 // license that can be found in the LICENSE file.
 
-package internal
+package sync
 
 import (
 	"runtime"
@@ -14,12 +14,11 @@ import (
 /*
 Benchmark result for three types of locks:
 	goos: darwin
-	goarch: amd64
-	pkg: github.com/panjf2000/ants/v2/internal
-	cpu: Intel(R) Core(TM) i7-9750H CPU @ 2.60GHz
-	BenchmarkMutex-12              	20549502	        71.84 ns/op	       0 B/op	       0 allocs/op
-	BenchmarkSpinLock-12           	58629697	        20.02 ns/op	       0 B/op	       0 allocs/op
-	BenchmarkBackOffSpinLock-12    	72523454	        15.74 ns/op	       0 B/op	       0 allocs/op
+	goarch: arm64
+	pkg: github.com/panjf2000/ants/v2/internal/sync
+	BenchmarkMutex-10              	10452573	       111.1 ns/op	       0 B/op	       0 allocs/op
+	BenchmarkSpinLock-10           	58953211	        18.01 ns/op	       0 B/op	       0 allocs/op
+	BenchmarkBackOffSpinLock-10    	100000000	        10.81 ns/op	       0 B/op	       0 allocs/op
 */
 
 type originSpinLock uint32

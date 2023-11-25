@@ -38,12 +38,6 @@ const (
 	_   = 1 << (10 * iota)
 	KiB // 1024
 	MiB // 1048576
-	// GiB // 1073741824
-	// TiB // 1099511627776             (超过了int32的范围)
-	// PiB // 1125899906842624
-	// EiB // 1152921504606846976
-	// ZiB // 1180591620717411303424    (超过了int64的范围)
-	// YiB // 1208925819614629174706176
 )
 
 const (
@@ -189,9 +183,7 @@ func TestAntsPoolWithFuncGetWorkerFromCachePreMalloc(t *testing.T) {
 	t.Logf("memory usage:%d MB", curMem)
 }
 
-//-------------------------------------------------------------------------------------------
 // Contrast between goroutines without a pool and goroutines with ants pool.
-//-------------------------------------------------------------------------------------------
 
 func TestNoPool(t *testing.T) {
 	var wg sync.WaitGroup
@@ -231,9 +223,6 @@ func TestAntsPool(t *testing.T) {
 	curMem = mem.TotalAlloc/MiB - curMem
 	t.Logf("memory usage:%d MB", curMem)
 }
-
-//-------------------------------------------------------------------------------------------
-//-------------------------------------------------------------------------------------------
 
 func TestPanicHandler(t *testing.T) {
 	var panicCounter int64
@@ -333,22 +322,50 @@ func TestPoolPanicWithoutHandlerPreMalloc(t *testing.T) {
 	_ = p1.Invoke("Oops!")
 }
 
-func TestPurge(t *testing.T) {
-	p, err := NewPool(10)
+func TestPurgePool(t *testing.T) {
+	size := 500
+	ch := make(chan struct{})
+
+	p, err := NewPool(size)
 	assert.NoErrorf(t, err, "create TimingPool failed: %v", err)
 	defer p.Release()
-	_ = p.Submit(demoFunc)
-	time.Sleep(3 * DefaultCleanIntervalTime)
-	assert.EqualValues(t, 0, p.Running(), "all p should be purged")
-	p1, err := NewPoolWithFunc(10, demoPoolFunc)
+
+	for i := 0; i < size; i++ {
+		j := i + 1
+		_ = p.Submit(func() {
+			<-ch
+			d := j % 100
+			time.Sleep(time.Duration(d) * time.Millisecond)
+		})
+	}
+	assert.Equalf(t, size, p.Running(), "pool should be full, expected: %d, but got: %d", size, p.Running())
+
+	close(ch)
+	time.Sleep(5 * DefaultCleanIntervalTime)
+	assert.Equalf(t, 0, p.Running(), "pool should be empty after purge, but got %d", p.Running())
+
+	ch = make(chan struct{})
+	f := func(i interface{}) {
+		<-ch
+		d := i.(int) % 100
+		time.Sleep(time.Duration(d) * time.Millisecond)
+	}
+
+	p1, err := NewPoolWithFunc(size, f)
 	assert.NoErrorf(t, err, "create TimingPoolWithFunc failed: %v", err)
 	defer p1.Release()
-	_ = p1.Invoke(1)
-	time.Sleep(3 * DefaultCleanIntervalTime)
-	assert.EqualValues(t, 0, p.Running(), "all p should be purged")
+
+	for i := 0; i < size; i++ {
+		_ = p1.Invoke(i)
+	}
+	assert.Equalf(t, size, p1.Running(), "pool should be full, expected: %d, but got: %d", size, p1.Running())
+
+	close(ch)
+	time.Sleep(5 * DefaultCleanIntervalTime)
+	assert.Equalf(t, 0, p1.Running(), "pool should be empty after purge, but got %d", p1.Running())
 }
 
-func TestPurgePreMalloc(t *testing.T) {
+func TestPurgePreMallocPool(t *testing.T) {
 	p, err := NewPool(10, WithPreAlloc(true))
 	assert.NoErrorf(t, err, "create TimingPool failed: %v", err)
 	defer p.Release()
@@ -558,9 +575,119 @@ func TestInfinitePool(t *testing.T) {
 	}
 	var err error
 	_, err = NewPool(-1, WithPreAlloc(true))
-	if err != ErrInvalidPreAllocSize {
-		t.Errorf("expect ErrInvalidPreAllocSize but got %v", err)
+	assert.EqualErrorf(t, err, ErrInvalidPreAllocSize.Error(), "")
+}
+
+func testPoolWithDisablePurge(t *testing.T, p *Pool, numWorker int, waitForPurge time.Duration) {
+	sig := make(chan struct{})
+	var wg1, wg2 sync.WaitGroup
+	wg1.Add(numWorker)
+	wg2.Add(numWorker)
+	for i := 0; i < numWorker; i++ {
+		_ = p.Submit(func() {
+			wg1.Done()
+			<-sig
+			wg2.Done()
+		})
 	}
+	wg1.Wait()
+
+	runningCnt := p.Running()
+	assert.EqualValuesf(t, numWorker, runningCnt, "expect %d workers running, but got %d", numWorker, runningCnt)
+	freeCnt := p.Free()
+	assert.EqualValuesf(t, 0, freeCnt, "expect %d free workers, but got %d", 0, freeCnt)
+
+	// Finish all tasks and sleep for a while to wait for purging, since we've disabled purge mechanism,
+	// we should see that all workers are still running after the sleep.
+	close(sig)
+	wg2.Wait()
+	time.Sleep(waitForPurge + waitForPurge/2)
+
+	runningCnt = p.Running()
+	assert.EqualValuesf(t, numWorker, runningCnt, "expect %d workers running, but got %d", numWorker, runningCnt)
+	freeCnt = p.Free()
+	assert.EqualValuesf(t, 0, freeCnt, "expect %d free workers, but got %d", 0, freeCnt)
+
+	err := p.ReleaseTimeout(waitForPurge + waitForPurge/2)
+	assert.NoErrorf(t, err, "release pool failed: %v", err)
+
+	runningCnt = p.Running()
+	assert.EqualValuesf(t, 0, runningCnt, "expect %d workers running, but got %d", 0, runningCnt)
+	freeCnt = p.Free()
+	assert.EqualValuesf(t, numWorker, freeCnt, "expect %d free workers, but got %d", numWorker, freeCnt)
+}
+
+func TestWithDisablePurgePool(t *testing.T) {
+	numWorker := 10
+	p, _ := NewPool(numWorker, WithDisablePurge(true))
+	testPoolWithDisablePurge(t, p, numWorker, DefaultCleanIntervalTime)
+}
+
+func TestWithDisablePurgeAndWithExpirationPool(t *testing.T) {
+	numWorker := 10
+	expiredDuration := time.Millisecond * 100
+	p, _ := NewPool(numWorker, WithDisablePurge(true), WithExpiryDuration(expiredDuration))
+	testPoolWithDisablePurge(t, p, numWorker, expiredDuration)
+}
+
+func testPoolFuncWithDisablePurge(t *testing.T, p *PoolWithFunc, numWorker int, wg1, wg2 *sync.WaitGroup, sig chan struct{}, waitForPurge time.Duration) {
+	for i := 0; i < numWorker; i++ {
+		_ = p.Invoke(i)
+	}
+	wg1.Wait()
+
+	runningCnt := p.Running()
+	assert.EqualValuesf(t, numWorker, runningCnt, "expect %d workers running, but got %d", numWorker, runningCnt)
+	freeCnt := p.Free()
+	assert.EqualValuesf(t, 0, freeCnt, "expect %d free workers, but got %d", 0, freeCnt)
+
+	// Finish all tasks and sleep for a while to wait for purging, since we've disabled purge mechanism,
+	// we should see that all workers are still running after the sleep.
+	close(sig)
+	wg2.Wait()
+	time.Sleep(waitForPurge + waitForPurge/2)
+
+	runningCnt = p.Running()
+	assert.EqualValuesf(t, numWorker, runningCnt, "expect %d workers running, but got %d", numWorker, runningCnt)
+	freeCnt = p.Free()
+	assert.EqualValuesf(t, 0, freeCnt, "expect %d free workers, but got %d", 0, freeCnt)
+
+	err := p.ReleaseTimeout(waitForPurge + waitForPurge/2)
+	assert.NoErrorf(t, err, "release pool failed: %v", err)
+
+	runningCnt = p.Running()
+	assert.EqualValuesf(t, 0, runningCnt, "expect %d workers running, but got %d", 0, runningCnt)
+	freeCnt = p.Free()
+	assert.EqualValuesf(t, numWorker, freeCnt, "expect %d free workers, but got %d", numWorker, freeCnt)
+}
+
+func TestWithDisablePurgePoolFunc(t *testing.T) {
+	numWorker := 10
+	sig := make(chan struct{})
+	var wg1, wg2 sync.WaitGroup
+	wg1.Add(numWorker)
+	wg2.Add(numWorker)
+	p, _ := NewPoolWithFunc(numWorker, func(i interface{}) {
+		wg1.Done()
+		<-sig
+		wg2.Done()
+	}, WithDisablePurge(true))
+	testPoolFuncWithDisablePurge(t, p, numWorker, &wg1, &wg2, sig, DefaultCleanIntervalTime)
+}
+
+func TestWithDisablePurgeAndWithExpirationPoolFunc(t *testing.T) {
+	numWorker := 2
+	sig := make(chan struct{})
+	var wg1, wg2 sync.WaitGroup
+	wg1.Add(numWorker)
+	wg2.Add(numWorker)
+	expiredDuration := time.Millisecond * 100
+	p, _ := NewPoolWithFunc(numWorker, func(i interface{}) {
+		wg1.Done()
+		<-sig
+		wg2.Done()
+	}, WithDisablePurge(true), WithExpiryDuration(expiredDuration))
+	testPoolFuncWithDisablePurge(t, p, numWorker, &wg1, &wg2, sig, expiredDuration)
 }
 
 func TestInfinitePoolWithFunc(t *testing.T) {
@@ -845,4 +972,126 @@ func TestReleaseTimeout(t *testing.T) {
 	assert.NotZero(t, pf.Running())
 	err = pf.ReleaseTimeout(2 * time.Second)
 	assert.NoError(t, err)
+}
+
+func TestDefaultPoolReleaseTimeout(t *testing.T) {
+	Reboot()
+	for i := 0; i < 5; i++ {
+		_ = Submit(func() {
+			time.Sleep(time.Second)
+		})
+	}
+	assert.NotZero(t, Running())
+	err := ReleaseTimeout(2 * time.Second)
+	assert.NoError(t, err)
+}
+
+func TestMultiPool(t *testing.T) {
+	_, err := NewMultiPool(10, -1, 8)
+	assert.ErrorIs(t, err, ErrInvalidLoadBalancingStrategy)
+
+	mp, err := NewMultiPool(10, 5, RoundRobin)
+	testFn := func() {
+		for i := 0; i < 50; i++ {
+			err = mp.Submit(longRunningFunc)
+			assert.NoError(t, err)
+		}
+		assert.EqualValues(t, mp.Waiting(), 0)
+		_, err = mp.WaitingByIndex(-1)
+		assert.ErrorIs(t, err, ErrInvalidPoolIndex)
+		_, err = mp.WaitingByIndex(11)
+		assert.ErrorIs(t, err, ErrInvalidPoolIndex)
+		assert.EqualValues(t, 50, mp.Running())
+		_, err = mp.RunningByIndex(-1)
+		assert.ErrorIs(t, err, ErrInvalidPoolIndex)
+		_, err = mp.RunningByIndex(11)
+		assert.ErrorIs(t, err, ErrInvalidPoolIndex)
+		assert.EqualValues(t, 0, mp.Free())
+		_, err = mp.FreeByIndex(-1)
+		assert.ErrorIs(t, err, ErrInvalidPoolIndex)
+		_, err = mp.FreeByIndex(11)
+		assert.ErrorIs(t, err, ErrInvalidPoolIndex)
+		assert.EqualValues(t, 50, mp.Cap())
+		assert.False(t, mp.IsClosed())
+		for i := 0; i < 10; i++ {
+			n, _ := mp.WaitingByIndex(i)
+			assert.EqualValues(t, 0, n)
+			n, _ = mp.RunningByIndex(i)
+			assert.EqualValues(t, 5, n)
+			n, _ = mp.FreeByIndex(i)
+			assert.EqualValues(t, 0, n)
+		}
+		atomic.StoreInt32(&stopLongRunningFunc, 1)
+		assert.NoError(t, mp.ReleaseTimeout(3*time.Second))
+		assert.Zero(t, mp.Running())
+		assert.True(t, mp.IsClosed())
+		atomic.StoreInt32(&stopLongRunningFunc, 0)
+	}
+	testFn()
+
+	mp.Reboot()
+	testFn()
+
+	mp, err = NewMultiPool(10, 5, LeastTasks)
+	testFn()
+
+	mp.Reboot()
+	testFn()
+
+	mp.Tune(10)
+}
+
+func TestMultiPoolWithFunc(t *testing.T) {
+	_, err := NewMultiPoolWithFunc(10, -1, longRunningPoolFunc, 8)
+	assert.ErrorIs(t, err, ErrInvalidLoadBalancingStrategy)
+
+	mp, err := NewMultiPoolWithFunc(10, 5, longRunningPoolFunc, RoundRobin)
+	testFn := func() {
+		for i := 0; i < 50; i++ {
+			err = mp.Invoke(i)
+			assert.NoError(t, err)
+		}
+		assert.EqualValues(t, mp.Waiting(), 0)
+		_, err = mp.WaitingByIndex(-1)
+		assert.ErrorIs(t, err, ErrInvalidPoolIndex)
+		_, err = mp.WaitingByIndex(11)
+		assert.ErrorIs(t, err, ErrInvalidPoolIndex)
+		assert.EqualValues(t, 50, mp.Running())
+		_, err = mp.RunningByIndex(-1)
+		assert.ErrorIs(t, err, ErrInvalidPoolIndex)
+		_, err = mp.RunningByIndex(11)
+		assert.ErrorIs(t, err, ErrInvalidPoolIndex)
+		assert.EqualValues(t, 0, mp.Free())
+		_, err = mp.FreeByIndex(-1)
+		assert.ErrorIs(t, err, ErrInvalidPoolIndex)
+		_, err = mp.FreeByIndex(11)
+		assert.ErrorIs(t, err, ErrInvalidPoolIndex)
+		assert.EqualValues(t, 50, mp.Cap())
+		assert.False(t, mp.IsClosed())
+		for i := 0; i < 10; i++ {
+			n, _ := mp.WaitingByIndex(i)
+			assert.EqualValues(t, 0, n)
+			n, _ = mp.RunningByIndex(i)
+			assert.EqualValues(t, 5, n)
+			n, _ = mp.FreeByIndex(i)
+			assert.EqualValues(t, 0, n)
+		}
+		atomic.StoreInt32(&stopLongRunningPoolFunc, 1)
+		assert.NoError(t, mp.ReleaseTimeout(3*time.Second))
+		assert.Zero(t, mp.Running())
+		assert.True(t, mp.IsClosed())
+		atomic.StoreInt32(&stopLongRunningPoolFunc, 0)
+	}
+	testFn()
+
+	mp.Reboot()
+	testFn()
+
+	mp, err = NewMultiPoolWithFunc(10, 5, longRunningPoolFunc, LeastTasks)
+	testFn()
+
+	mp.Reboot()
+	testFn()
+
+	mp.Tune(10)
 }

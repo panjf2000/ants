@@ -1,0 +1,97 @@
+name-template: Ants v$RESOLVED_VERSION
+tag-template: v$RESOLVED_VERSION
+categories:
+    - title: 🧨 Breaking changes
+      labels:
+          - breaking changes
+    - title: 🚀 Features
+      labels:
+          - proposal
+          - new feature
+    - title: 🛩 Enhancements
+      labels:
+          - enhancement
+          - optimization
+    - title: 🐛 Bugfixes
+      labels:
+          - bug
+    - title: 📚 Documentation
+      labels:
+          - doc
+          - docs
+    - title: 🗃 Misc
+      labels:
+          - chores
+change-template: '- $TITLE (#$NUMBER)'
+change-title-escapes: '\<*_&' # You can add # and @ to disable mentions, and add ` to disable code blocks.
+version-resolver:
+  major:
+    labels:
+      - major
+  minor:
+    labels:
+      - minor
+      - new feature
+      - proposal
+  patch:
+    labels:
+      - patch
+      - bug
+      - dependencies
+  default: patch
+autolabeler:
+  - label: bug
+    title:
+      - /fix/i
+      - /bug/i
+      - /patch/i
+  - label: docs
+    files:
+      - '*.md'
+    title:
+      - /doc/i
+      - /README/i
+  - label: enhancement
+    title:
+      - /opt:/i
+      - /refactor/i
+      - /optimize/i
+      - /improve/i
+      - /update/i
+      - /remove/i
+      - /delete/i
+  - label: new feature
+    title:
+      - /feat:/i
+      - /feature/i
+      - /implement/i
+      - /add/i
+      - /minor/i
+  - label: dependencies
+    title:
+      - /dependencies/i
+      - /upgrade/i
+      - /bump up/i
+  - label: chores
+    title:
+      - /chore/i
+      - /\bmisc\b/i
+      - /cleanup/i
+      - /clean up/i
+  - label: major
+    title:
+      - /major:/i
+  - label: minor
+    title:
+      - /minor:/i
+  - label: patch
+    title:
+      - /patch:/i
+template: |
+    ## Changelogs
+    
+    $CHANGES
+
+    **Full Changelog**: https://github.com/$OWNER/$REPOSITORY/compare/$PREVIOUS_TAG...v$RESOLVED_VERSION
+  
+    Thanks to all these contributors: $CONTRIBUTORS for making this release possible.

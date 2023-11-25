@@ -13,27 +13,35 @@ var (
 	errQueueIsReleased = errors.New("the queue length is zero")
 )
 
-type workerArray interface {
+type worker interface {
+	run()
+	finish()
+	lastUsedTime() time.Time
+	inputFunc(func())
+	inputParam(interface{})
+}
+
+type workerQueue interface {
 	len() int
 	isEmpty() bool
-	insert(worker *goWorker) error
-	detach() *goWorker
-	retrieveExpiry(duration time.Duration) []*goWorker
+	insert(worker) error
+	detach() worker
+	refresh(duration time.Duration) []worker // clean up the stale workers and return them
 	reset()
 }
 
-type arrayType int
+type queueType int
 
 const (
-	stackType arrayType = 1 << iota
-	loopQueueType
+	queueTypeStack queueType = 1 << iota
+	queueTypeLoopQueue
 )
 
-func newWorkerArray(aType arrayType, size int) workerArray {
-	switch aType {
-	case stackType:
+func newWorkerQueue(qType queueType, size int) workerQueue {
+	switch qType {
+	case queueTypeStack:
 		return newWorkerStack(size)
-	case loopQueueType:
+	case queueTypeLoopQueue:
 		return newWorkerLoopQueue(size)
 	default:
 		return newWorkerStack(size)

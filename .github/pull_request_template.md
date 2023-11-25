@@ -1,13 +1,5 @@
----
-name: Pull request
-about: Propose changes to the code
-title: ''
-labels: ''
-assignees: ''
----
-
 <!--
-Thank you for contributing to `ants`! Please fill this out to help us make the most of your pull request.
+Thank you for contributing to `ants`! Please fill this out to help us review your pull request more efficiently.
 
 Was this change discussed in an issue first? That can help save time in case the change is not a good fit for the project. Not all pull requests get merged.
 

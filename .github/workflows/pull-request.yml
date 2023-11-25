@@ -1,0 +1,19 @@
+name: Check pull request target
+on:
+  pull_request:
+    types:
+      - opened
+      - reopened
+      - synchronize
+    branches:
+      - master
+jobs:
+  check-branches:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check target branch
+        run: |
+          if [ ${{ github.head_ref }} != "dev" ]; then
+            echo "Only pull requests from dev branch are only allowed to be merged into master branch."
+            exit 1
+          fi

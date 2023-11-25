@@ -25,14 +25,17 @@ package ants
 import (
 	"runtime"
 	"sync"
+	"sync/atomic"
 	"testing"
 	"time"
+
+	"golang.org/x/sync/errgroup"
 )
 
 const (
-	RunTimes           = 1000000
+	RunTimes           = 1e6
+	PoolCap            = 5e4
 	BenchParam         = 10
-	BenchAntsSize      = 200000
 	DefaultExpiredTime = 10 * time.Second
 )
 
@@ -45,18 +48,22 @@ func demoPoolFunc(args interface{}) {
 	time.Sleep(time.Duration(n) * time.Millisecond)
 }
 
+var stopLongRunningFunc int32
+
 func longRunningFunc() {
-	for {
+	for atomic.LoadInt32(&stopLongRunningFunc) == 0 {
 		runtime.Gosched()
 	}
 }
+
+var stopLongRunningPoolFunc int32
 
 func longRunningPoolFunc(arg interface{}) {
 	if ch, ok := arg.(chan struct{}); ok {
 		<-ch
 		return
 	}
-	for {
+	for atomic.LoadInt32(&stopLongRunningPoolFunc) == 0 {
 		runtime.Gosched()
 	}
 }
@@ -75,10 +82,11 @@ func BenchmarkGoroutines(b *testing.B) {
 	}
 }
 
-func BenchmarkSemaphore(b *testing.B) {
+func BenchmarkChannel(b *testing.B) {
 	var wg sync.WaitGroup
-	sema := make(chan struct{}, BenchAntsSize)
+	sema := make(chan struct{}, PoolCap)
 
+	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		wg.Add(RunTimes)
 		for j := 0; j < RunTimes; j++ {
@@ -93,12 +101,31 @@ func BenchmarkSemaphore(b *testing.B) {
 	}
 }
 
+func BenchmarkErrGroup(b *testing.B) {
+	var wg sync.WaitGroup
+	var pool errgroup.Group
+	pool.SetLimit(PoolCap)
+
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		wg.Add(RunTimes)
+		for j := 0; j < RunTimes; j++ {
+			pool.Go(func() error {
+				demoFunc()
+				wg.Done()
+				return nil
+			})
+		}
+		wg.Wait()
+	}
+}
+
 func BenchmarkAntsPool(b *testing.B) {
 	var wg sync.WaitGroup
-	p, _ := NewPool(BenchAntsSize, WithExpiryDuration(DefaultExpiredTime))
+	p, _ := NewPool(PoolCap, WithExpiryDuration(DefaultExpiredTime))
 	defer p.Release()
 
-	b.StartTimer()
+	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		wg.Add(RunTimes)
 		for j := 0; j < RunTimes; j++ {
@@ -109,7 +136,24 @@ func BenchmarkAntsPool(b *testing.B) {
 		}
 		wg.Wait()
 	}
-	b.StopTimer()
+}
+
+func BenchmarkAntsMultiPool(b *testing.B) {
+	var wg sync.WaitGroup
+	p, _ := NewMultiPool(10, PoolCap/10, RoundRobin, WithExpiryDuration(DefaultExpiredTime))
+	defer p.ReleaseTimeout(DefaultExpiredTime) //nolint:errcheck
+
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		wg.Add(RunTimes)
+		for j := 0; j < RunTimes; j++ {
+			_ = p.Submit(func() {
+				demoFunc()
+				wg.Done()
+			})
+		}
+		wg.Wait()
+	}
 }
 
 func BenchmarkGoroutinesThroughput(b *testing.B) {
@@ -121,7 +165,7 @@ func BenchmarkGoroutinesThroughput(b *testing.B) {
 }
 
 func BenchmarkSemaphoreThroughput(b *testing.B) {
-	sema := make(chan struct{}, BenchAntsSize)
+	sema := make(chan struct{}, PoolCap)
 	for i := 0; i < b.N; i++ {
 		for j := 0; j < RunTimes; j++ {
 			sema <- struct{}{}
@@ -134,13 +178,25 @@ func BenchmarkSemaphoreThroughput(b *testing.B) {
 }
 
 func BenchmarkAntsPoolThroughput(b *testing.B) {
-	p, _ := NewPool(BenchAntsSize, WithExpiryDuration(DefaultExpiredTime))
+	p, _ := NewPool(PoolCap, WithExpiryDuration(DefaultExpiredTime))
 	defer p.Release()
-	b.StartTimer()
+
+	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		for j := 0; j < RunTimes; j++ {
 			_ = p.Submit(demoFunc)
 		}
 	}
-	b.StopTimer()
+}
+
+func BenchmarkAntsMultiPoolThroughput(b *testing.B) {
+	p, _ := NewMultiPool(10, PoolCap/10, RoundRobin, WithExpiryDuration(DefaultExpiredTime))
+	defer p.ReleaseTimeout(DefaultExpiredTime) //nolint:errcheck
+
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		for j := 0; j < RunTimes; j++ {
+			_ = p.Submit(demoFunc)
+		}
+	}
 }

@@ -39,6 +39,9 @@ type Options struct {
 	// Logger is the customized logger for logging info, if it is not set,
 	// default standard logger from log package is used.
 	Logger Logger
+
+	// When DisablePurge is true, workers are not purged and are resident.
+	DisablePurge bool
 }
 
 // WithOptions accepts the whole options config.
@@ -87,5 +90,12 @@ func WithPanicHandler(panicHandler func(interface{})) Option {
 func WithLogger(logger Logger) Option {
 	return func(opts *Options) {
 		opts.Logger = logger
+	}
+}
+
+// WithDisablePurge indicates whether we turn off automatically purge.
+func WithDisablePurge(disable bool) Option {
+	return func(opts *Options) {
+		opts.DisablePurge = disable
 	}
 }
