@@ -37,17 +37,17 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - name: Setup Go
-        uses: actions/setup-go@v3
+        uses: actions/setup-go@v5
         with:
           go-version: '^1.16'
 
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Setup and run golangci-lint
         uses: golangci/golangci-lint-action@v3
         with:
-          version: v1.51.2
+          version: v1.55.2
           args: --timeout 5m -v -E gofumpt -E gocritic -E misspell -E revive -E godot
   test:
     needs: lint
@@ -60,12 +60,12 @@ jobs:
     runs-on: ${{ matrix.os}}
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           ref: ${{ github.ref }}
 
       - name: Setup Go
-        uses: actions/setup-go@v3
+        uses: actions/setup-go@v5
         with:
           go-version: ${{ matrix.go }}
 
@@ -83,7 +83,7 @@ jobs:
           echo "GO_CACHE=$(go env GOCACHE)" >> $GITHUB_OUTPUT
 
       - name: Cache go modules
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: |
             ${{ steps.go-env.outputs.GO_CACHE }}
@@ -96,11 +96,12 @@ jobs:
         run: go test -v -race -coverprofile="codecov.report" -covermode=atomic
 
       - name: Upload code coverage report to Codecov
-        uses: codecov/codecov-action@v3
+        uses: codecov/codecov-action@v4
         with:
           file: ./codecov.report
           flags: unittests
           name: codecov-ants
           fail_ci_if_error: true
           verbose: true
-
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
