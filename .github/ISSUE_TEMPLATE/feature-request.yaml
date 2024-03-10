@@ -11,7 +11,7 @@ body:
       value: |
         ## Before you go any further
         - Please read [<u>*How To Ask Questions The Smart Way*</u>](http://www.catb.org/~esr/faqs/smart-questions.html) ( Chinese translation: [《提问的智慧》](https://github.com/ryanhanwu/How-To-Ask-Questions-The-Smart-Way/blob/main/README-zh_CN.md)) before you file an issue formally.
-        - Keep in mind that there is always welcome to ask questions on [Gitter](https://gitter.im/ants-pool/ants).
+        - Keep in mind that there is always welcome to ask questions on [Discord](https://discord.gg/Cuy7KPaWQc).
   - type: textarea
     id: feature-request
     attributes:
