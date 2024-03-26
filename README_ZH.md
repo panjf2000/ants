@@ -7,7 +7,6 @@
 <a title="Release" target="_blank" href="https://github.com/panjf2000/ants/releases"><img src="https://img.shields.io/github/v/release/panjf2000/ants.svg?color=161823&style=flat-square&logo=smartthings" /></a>
 <a title="Tag" target="_blank" href="https://github.com/panjf2000/ants/tags"><img src="https://img.shields.io/github/v/tag/panjf2000/ants?color=%23ff8936&logo=fitbit&style=flat-square" /></a>
 <br/>
-<a title="Chat Room" target="_blank" href="https://gitter.im/ants-pool/ants?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=body_badge"><img src="https://badges.gitter.im/ants-pool/ants.svg" /></a>
 <a title="Go Report Card" target="_blank" href="https://goreportcard.com/report/github.com/panjf2000/ants"><img src="https://goreportcard.com/badge/github.com/panjf2000/ants?style=flat-square" /></a>
 <a title="Doc for ants" target="_blank" href="https://pkg.go.dev/github.com/panjf2000/ants/v2?tab=doc"><img src="https://img.shields.io/badge/go.dev-doc-007d9c?style=flat-square&logo=read-the-docs" /></a>
 <a title="Mentioned in Awesome Go" target="_blank" href="https://github.com/avelino/awesome-go#goroutines"><img src="https://awesome.re/mentioned-badge-flat.svg" /></a>
@@ -122,6 +121,39 @@ func main() {
 	wg.Wait()
 	fmt.Printf("running goroutines: %d\n", p.Running())
 	fmt.Printf("finish all tasks, result is %d\n", sum)
+	if sum != 499500 {
+		panic("the final result is wrong!!!")
+	}
+
+	// Use the MultiPool and set the capacity of the 10 goroutine pools to unlimited.
+	// If you use -1 as the pool size parameter, the size will be unlimited.
+	// There are two load-balancing algorithms for pools: ants.RoundRobin and ants.LeastTasks.
+	mp, _ := ants.NewMultiPool(10, -1, ants.RoundRobin)
+	defer mp.ReleaseTimeout(5 * time.Second)
+	for i := 0; i < runTimes; i++ {
+		wg.Add(1)
+		_ = mp.Submit(syncCalculateSum)
+	}
+	wg.Wait()
+	fmt.Printf("running goroutines: %d\n", mp.Running())
+	fmt.Printf("finish all tasks.\n")
+
+	// Use the MultiPoolFunc and set the capacity of 10 goroutine pools to (runTimes/10).
+	mpf, _ := ants.NewMultiPoolWithFunc(10, runTimes/10, func(i interface{}) {
+		myFunc(i)
+		wg.Done()
+	}, ants.LeastTasks)
+	defer mpf.ReleaseTimeout(5 * time.Second)
+	for i := 0; i < runTimes; i++ {
+		wg.Add(1)
+		_ = mpf.Invoke(int32(i))
+	}
+	wg.Wait()
+	fmt.Printf("running goroutines: %d\n", mpf.Running())
+	fmt.Printf("finish all tasks, result is %d\n", sum)
+	if sum != 499500*2 {
+		panic("the final result is wrong!!!")
+	}
 }
 ```
 
@@ -328,7 +360,7 @@ pool.Reboot()
 
 以下公司/组织在生产环境上使用了 `ants`。
 
-<a href="https://www.tencent.com"><img src="http://img.taohuawu.club/gallery/tencent_logo.png" width="250" align="middle"/></a>&nbsp;&nbsp;<a href="https://www.bytedance.com/" target="_blank"><img src="http://img.taohuawu.club/gallery/ByteDance_Logo.png" width="250" align="middle"/></a>&nbsp;&nbsp;<a href="https://tieba.baidu.com/" target="_blank"><img src="http://img.taohuawu.club/gallery/baidu-tieba-logo.png" width="300" align="middle"/></a>&nbsp;&nbsp;<a href="https://www.sina.com.cn/" target="_blank"><img src="http://img.taohuawu.club/gallery/sina-logo.png" width="200" align="middle"/></a>&nbsp;&nbsp;<a href="https://www.163.com/" target="_blank"><img src="http://img.taohuawu.club/gallery/netease-logo.png" width="150" align="middle"/></a>&nbsp;&nbsp;<a href="https://www.tencentmusic.com/" target="_blank"><img src="http://img.taohuawu.club/gallery/tencent-music-logo.png" width="250" align="middle"/></a>&nbsp;&nbsp;<a href="https://www.futuhk.com/" target="_blank"><img src="http://img.taohuawu.club/gallery/futu-logo.png" width="250" align="middle"/></a>&nbsp;&nbsp;<a href="https://www.shopify.com/" target="_blank"><img src="http://img.taohuawu.club/gallery/shopify-logo.png" width="250" align="middle"/></a>&nbsp;&nbsp;<a href="https://weixin.qq.com/" target="_blank"><img src="http://img.taohuawu.club/gallery/wechat-logo.png" width="250" align="middle"/></a><a href="https://www.baidu.com/" target="_blank"><img src="http://img.taohuawu.club/gallery/baidu-mobile.png" width="250" align="middle"/></a>&nbsp;&nbsp;<a href="https://www.360.com" target="_blank"><img src="http://img.taohuawu.club/gallery/360-logo.png" width="250" align="middle"/></a><a href="https://www.huaweicloud.com" target="_blank"><img src="https://res-static.hc-cdn.cn/cloudbu-site/china/zh-cn/wangxue/header/logo.svg" width="250" align="middle"/></a>&nbsp;&nbsp;<a href="https://matrixorigin.cn" target="_blank"><img src="https://matrixorigin.cn/_next/static/media/logo-light-zh.a2a8f3c0.svg" width="250" align="middle"/></a>&nbsp;&nbsp;<a href="https://adguard-dns.io" target="_blank"><img src="https://cdn.adtidy.org/website/images/AdGuardDNS_black.svg" width="250" align="middle"/></a>&nbsp;&nbsp;<a href="https://bk.tencent.com" target="_blank"><img src="https://static.apiseven.com/2022/11/14/6371adab14119.png" width="250" align="middle"/></a>
+<a href="https://www.tencent.com"><img src="https://res.strikefreedom.top/static_res/logos/tencent_logo.png" width="250" align="middle"/></a>&nbsp;&nbsp;<a href="https://www.bytedance.com/" target="_blank"><img src="https://res.strikefreedom.top/static_res/logos/ByteDance_Logo.png" width="250" align="middle"/></a>&nbsp;&nbsp;<a href="https://tieba.baidu.com/" target="_blank"><img src="https://res.strikefreedom.top/static_res/logos/baidu-tieba-logo.png" width="300" align="middle"/></a>&nbsp;&nbsp;<a href="https://weibo.com/" target="_blank"><img src="https://res.strikefreedom.top/static_res/logos/weibo-logo.png" width="300" align="middle"/></a>&nbsp;&nbsp;<a href="https://www.tencentmusic.com/" target="_blank"><img src="https://res.strikefreedom.top/static_res/logos/tencent-music-logo.png" width="250" align="middle"/></a>&nbsp;&nbsp;<a href="https://www.futuhk.com/" target="_blank"><img src="https://res.strikefreedom.top/static_res/logos/futu-logo.png" width="250" align="middle"/></a>&nbsp;&nbsp;<a href="https://www.shopify.com/" target="_blank"><img src="https://res.strikefreedom.top/static_res/logos/shopify-logo.png" width="250" align="middle"/></a>&nbsp;&nbsp;<a href="https://weixin.qq.com/" target="_blank"><img src="https://res.strikefreedom.top/static_res/logos/wechat-logo.png" width="250" align="middle"/></a><a href="https://www.baidu.com/" target="_blank"><img src="https://res.strikefreedom.top/static_res/logos/baidu-mobile.png" width="250" align="middle"/></a>&nbsp;&nbsp;<a href="https://www.360.com" target="_blank"><img src="https://res.strikefreedom.top/static_res/logos/360-logo.png" width="250" align="middle"/></a><a href="https://www.huaweicloud.com" target="_blank"><img src="https://res-static.hc-cdn.cn/cloudbu-site/china/zh-cn/wangxue/header/logo.svg" width="250" align="middle"/></a>&nbsp;&nbsp;<a href="https://matrixorigin.cn" target="_blank"><img src="https://matrixorigin.cn/_next/static/media/logo-light-zh.a2a8f3c0.svg" width="250" align="middle"/></a>&nbsp;&nbsp;<a href="https://adguard-dns.io" target="_blank"><img src="https://cdn.adtidy.org/website/images/AdGuardDNS_black.svg" width="250" align="middle"/></a>&nbsp;&nbsp;<a href="https://bk.tencent.com" target="_blank"><img src="https://static.apiseven.com/2022/11/14/6371adab14119.png" width="250" align="middle"/></a>&nbsp;&nbsp;<a href="https://cn.aliyun.com" target="_blank"><img src="https://res.strikefreedom.top/static_res/logos/aliyun-cn.png" width="250" align="middle"/></a>&nbsp;&nbsp;<a href="https://www.zuoyebang.com" target="_blank"><img src="https://res.strikefreedom.top/static_res/logos/zuoyebang-logo.jpeg" width="300" align="middle"/></a>
 
 ### 开源软件
 
@@ -352,6 +384,8 @@ pool.Reboot()
 - [AdGuardDNS](https://github.com/AdguardTeam/AdGuardDNS): AdGuard DNS is an alternative solution for tracker blocking, privacy protection, and parental control.
 - [WatchAD2.0](https://github.com/Qihoo360/WatchAD2.0): WatchAD2.0 是 360 信息安全中心开发的一款针对域安全的日志分析与监控系统，它可以收集所有域控上的事件日志、网络流量，通过特征匹配、协议分析、历史行为、敏感操作和蜜罐账户等方式来检测各种已知与未知威胁，功能覆盖了大部分目前的常见内网域渗透手法。
 - [vanus](https://github.com/vanus-labs/vanus): Vanus is a Serverless, event streaming system with processing capabilities. It easily connects SaaS, Cloud Services, and Databases to help users build next-gen Event-driven Applications.
+- [trpc-go](https://github.com/trpc-group/trpc-go): 一个 Go 实现的可插拔的高性能 RPC 框架。
+- [motan-go](https://github.com/weibocom/motan-go): 一套高性能、易于使用的分布式远程服务调用(RPC)框架。motan-go 是 motan 的 Go 语言实现。
 
 #### 所有案例:
 

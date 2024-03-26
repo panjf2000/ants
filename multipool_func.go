@@ -45,6 +45,9 @@ type MultiPoolWithFunc struct {
 // NewMultiPoolWithFunc instantiates a MultiPoolWithFunc with a size of the pool list and a size
 // per pool, and the load-balancing strategy.
 func NewMultiPoolWithFunc(size, sizePerPool int, fn func(interface{}), lbs LoadBalancingStrategy, options ...Option) (*MultiPoolWithFunc, error) {
+	if lbs != RoundRobin && lbs != LeastTasks {
+		return nil, ErrInvalidLoadBalancingStrategy
+	}
 	pools := make([]*PoolWithFunc, size)
 	for i := 0; i < size; i++ {
 		pool, err := NewPoolWithFunc(sizePerPool, fn, options...)
@@ -52,9 +55,6 @@ func NewMultiPoolWithFunc(size, sizePerPool int, fn func(interface{}), lbs LoadB
 			return nil, err
 		}
 		pools[i] = pool
-	}
-	if lbs != RoundRobin && lbs != LeastTasks {
-		return nil, ErrInvalidLoadBalancingStrategy
 	}
 	return &MultiPoolWithFunc{pools: pools, lbs: lbs}, nil
 }
