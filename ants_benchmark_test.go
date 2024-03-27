@@ -23,6 +23,7 @@
 package ants
 
 import (
+	"math/rand"
 	"runtime"
 	"sync"
 	"sync/atomic"
@@ -46,6 +47,15 @@ func demoFunc() {
 func demoPoolFunc(args interface{}) {
 	n := args.(int)
 	time.Sleep(time.Duration(n) * time.Millisecond)
+}
+
+func demoPanicFunc() {
+	rand.Seed(time.Now().UnixNano())
+	randomNumber := rand.Intn(10000)
+	//simulate a large number of goroutines causing panics.
+	if randomNumber%2 == 0 {
+		panic("panic")
+	}
 }
 
 var stopLongRunningFunc int32
@@ -132,6 +142,26 @@ func BenchmarkAntsPool(b *testing.B) {
 			_ = p.Submit(func() {
 				demoFunc()
 				wg.Done()
+			})
+		}
+		wg.Wait()
+	}
+}
+
+func BenchmarkAntsPoolWithPanic(b *testing.B) {
+	var wg sync.WaitGroup
+	p, _ := NewPool(PoolCap, WithExpiryDuration(DefaultExpiredTime))
+	defer p.Release()
+
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		wg.Add(RunTimes)
+		for j := 0; j < RunTimes; j++ {
+			_ = p.Submit(func() {
+				defer func() {
+					wg.Done()
+				}()
+				demoPanicFunc()
 			})
 		}
 		wg.Wait()
