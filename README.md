@@ -298,7 +298,7 @@ All tasks submitted to `ants` pool will not be guaranteed to be addressed in ord
 Please read our [Contributing Guidelines](CONTRIBUTING.md) before opening a PR and thank you to all the developers who already made contributions to `ants`!
 
 <a href="https://github.com/panjf2000/ants/graphs/contributors">
-	<img src="https://contrib.rocks/image?repo=panjf2000/ants" />
+  <img src="https://contrib.rocks/image?repo=panjf2000/ants" />
 </a>
 
 ## 📄 License
@@ -318,7 +318,98 @@ The source code in `ants` is available under the [MIT License](/LICENSE).
 
 The following companies/organizations use `ants` in production.
 
-<a href="https://www.tencent.com"><img src="https://res.strikefreedom.top/static_res/logos/tencent_logo.png" width="250" align="middle"/></a>&nbsp;&nbsp;<a href="https://www.bytedance.com/" target="_blank"><img src="https://res.strikefreedom.top/static_res/logos/ByteDance_Logo.png" width="250" align="middle"/></a>&nbsp;&nbsp;<a href="https://tieba.baidu.com/" target="_blank"><img src="https://res.strikefreedom.top/static_res/logos/baidu-tieba-logo.png" width="300" align="middle"/></a>&nbsp;&nbsp;<a href="https://weibo.com/" target="_blank"><img src="https://res.strikefreedom.top/static_res/logos/weibo-logo.png" width="300" align="middle"/></a>&nbsp;&nbsp;<a href="https://www.tencentmusic.com/" target="_blank"><img src="https://res.strikefreedom.top/static_res/logos/tencent-music-logo.png" width="250" align="middle"/></a>&nbsp;&nbsp;<a href="https://www.futuhk.com/" target="_blank"><img src="https://res.strikefreedom.top/static_res/logos/futu-logo.png" width="250" align="middle"/></a>&nbsp;&nbsp;<a href="https://www.shopify.com/" target="_blank"><img src="https://res.strikefreedom.top/static_res/logos/shopify-logo.png" width="250" align="middle"/></a>&nbsp;&nbsp;<a href="https://www.wechat.com/en/" target="_blank"><img src="https://res.strikefreedom.top/static_res/logos/wechat-logo.png" width="250" align="middle"/></a><a href="https://www.baidu.com/" target="_blank"><img src="https://res.strikefreedom.top/static_res/logos/baidu-mobile.png" width="250" align="middle"/></a>&nbsp;&nbsp;<a href="https://www.360.com" target="_blank"><img src="https://res.strikefreedom.top/static_res/logos/360-logo.png" width="250" align="middle"/></a><a href="https://www.huaweicloud.com/intl/en-us/" target="_blank"><img src="https://res-static.hc-cdn.cn/cloudbu-site/china/zh-cn/%E7%BB%84%E4%BB%B6%E9%AA%8C%E8%AF%81/pep-common-header/logo-en.png" width="250" align="middle"/></a>&nbsp;&nbsp;<a href="https://www.matrixorigin.io" target="_blank"><img src="https://www.matrixorigin.io/_next/static/media/logo-light-en.42553c69.svg" width="250" align="middle"/></a>&nbsp;&nbsp;<a href="https://adguard-dns.io" target="_blank"><img src="https://cdn.adtidy.org/website/images/AdGuardDNS_black.svg" width="250" align="middle"/></a>&nbsp;&nbsp;<a href="https://bk.tencent.com" target="_blank"><img src="https://static.apiseven.com/2022/11/14/6371adab14119.png" width="250" align="middle"/></a>&nbsp;&nbsp;<a href="https://www.alibabacloud.com" target="_blank"><img src="https://res.strikefreedom.top/static_res/logos/aliyun-intl.png" width="250" align="middle"/></a>&nbsp;&nbsp;<a href="https://www.zuoyebang.com" target="_blank"><img src="https://res.strikefreedom.top/static_res/logos/zuoyebang-logo.jpeg" width="300" align="middle"/></a>
+<table>
+  <tbody>
+    <tr>
+      <td align="center" valign="middle">
+        <a href="https://www.tencent.com">
+          <img src="https://res.strikefreedom.top/static_res/logos/tencent_logo.png" width="250" />
+        </a>
+      </td>
+      <td align="center" valign="middle">
+        <a href="https://www.bytedance.com/" target="_blank">
+          <img src="https://res.strikefreedom.top/static_res/logos/ByteDance_Logo.png" width="250" />
+        </a>
+      </td>
+      <td align="center" valign="middle">
+        <a href="https://tieba.baidu.com/" target="_blank">
+          <img src="https://res.strikefreedom.top/static_res/logos/baidu-tieba-logo.png" width="300" />
+        </a>
+      </td>
+      <td align="center" valign="middle">
+        <a href="https://weibo.com/" target="_blank">
+          <img src="https://res.strikefreedom.top/static_res/logos/weibo-logo.png" width="300" />
+        </a>
+      </td>
+    </tr>
+    <tr>
+      <td align="center" valign="middle">
+        <a href="https://www.tencentmusic.com/" target="_blank">
+          <img src="https://res.strikefreedom.top/static_res/logos/tencent-music-logo.png" width="250" />
+        </a>
+      </td>
+      <td align="center" valign="middle">
+        <a href="https://www.futuhk.com/" target="_blank">
+          <img src="https://res.strikefreedom.top/static_res/logos/futu-logo.png" width="250" />
+        </a>
+      </td>
+      <td align="center" valign="middle">
+        <a href="https://www.shopify.com/" target="_blank">
+          <img src="https://res.strikefreedom.top/static_res/logos/shopify-logo.png" width="250" />
+        </a>
+      </td>
+      <td align="center" valign="middle">
+        <a href="https://www.wechat.com/en/" target="_blank">
+          <img src="https://res.strikefreedom.top/static_res/logos/wechat-logo.png" width="250" />
+        </a>
+      </td>
+    </tr>
+    <tr>
+      <td align="center" valign="middle">
+        <a href="https://www.baidu.com/" target="_blank">
+          <img src="https://res.strikefreedom.top/static_res/logos/baidu-mobile.png" width="250" />
+        </a>
+      </td>
+      <td align="center" valign="middle">
+        <a href="https://www.360.com" target="_blank">
+          <img src="https://res.strikefreedom.top/static_res/logos/360-logo.png" width="250" />
+        </a>
+      </td>
+      <td align="center" valign="middle">
+        <a href="https://www.huaweicloud.com/intl/en-us/" target="_blank">
+          <img src="https://res-static.hc-cdn.cn/cloudbu-site/china/zh-cn/%E7%BB%84%E4%BB%B6%E9%AA%8C%E8%AF%81/pep-common-header/logo-en.png" width="250" />
+        </a>
+      </td>
+      <td align="center" valign="middle">
+        <a href="https://www.matrixorigin.io" target="_blank">
+          <img src="https://www.matrixorigin.io/_next/static/media/logo-light-en.42553c69.svg" width="250" />
+        </a>
+      </td>
+    </tr>
+    <tr>
+      <td align="center" valign="middle">
+        <a href="https://adguard-dns.io" target="_blank">
+          <img src="https://cdn.adtidy.org/website/images/AdGuardDNS_black.svg" width="250" />
+        </a>
+      </td>
+      <td align="center" valign="middle">
+        <a href="https://bk.tencent.com" target="_blank">
+          <img src="https://static.apiseven.com/2022/11/14/6371adab14119.png" width="250" />
+        </a>
+      </td>
+      <td align="center" valign="middle">
+        <a href="https://www.alibabacloud.com" target="_blank">
+          <img src="https://res.strikefreedom.top/static_res/logos/aliyun-intl.png" width="250" />
+        </a>
+      </td>
+      <td align="center" valign="middle">
+        <a href="https://www.zuoyebang.com" target="_blank">
+          <img src="https://res.strikefreedom.top/static_res/logos/zuoyebang-logo.jpeg" width="300" />
+        </a>
+      </td>
+    </tr>
+  </tbody>
+</table>
 
 ### open-source software
 
@@ -381,7 +472,47 @@ Become a bronze sponsor with a monthly donation of $10 and get your logo on our 
 
 ## 💵 Patrons
 
-<a target="_blank" href="https://github.com/patrick-othmer"><img src="https://avatars1.githubusercontent.com/u/8964313" width="100" alt="Patrick Othmer" /></a>&nbsp;<a target="_blank" href="https://github.com/panjf2000/ants"><img src="https://avatars2.githubusercontent.com/u/50285334" width="100" alt="Jimmy" /></a>&nbsp;<a target="_blank" href="https://github.com/cafra"><img src="https://avatars0.githubusercontent.com/u/13758306" width="100" alt="ChenZhen" /></a>&nbsp;<a target="_blank" href="https://github.com/yangwenmai"><img src="https://avatars0.githubusercontent.com/u/1710912" width="100" alt="Mai Yang" /></a>&nbsp;<a target="_blank" href="https://github.com/BeijingWks"><img src="https://avatars3.githubusercontent.com/u/33656339" width="100" alt="王开帅" /></a>&nbsp;<a target="_blank" href="https://github.com/refs"><img src="https://avatars3.githubusercontent.com/u/6905948" width="100" alt="Unger Alejandro" /></a>&nbsp;<a target="_blank" href="https://github.com/Wuvist"><img src="https://avatars.githubusercontent.com/u/657796" width="100" alt="Weng Wei" /></a>
+<table>
+  <tbody>
+    <tr>
+      <td align="center" valign="middle">
+        <a target="_blank" href="https://github.com/patrick-othmer">
+          <img src="https://avatars1.githubusercontent.com/u/8964313" width="100" alt="Patrick Othmer" />
+        </a>
+      </td>
+      <td align="center" valign="middle">
+        <a target="_blank" href="https://github.com/panjf2000/ants">
+          <img src="https://avatars2.githubusercontent.com/u/50285334" width="100" alt="Jimmy" />
+        </a>
+      </td>
+      <td align="center" valign="middle">
+        <a target="_blank" href="https://github.com/cafra">
+          <img src="https://avatars0.githubusercontent.com/u/13758306" width="100" alt="ChenZhen" />
+        </a>
+      </td>
+      <td align="center" valign="middle">
+        <a target="_blank" href="https://github.com/yangwenmai">
+          <img src="https://avatars0.githubusercontent.com/u/1710912" width="100" alt="Mai Yang" />
+        </a>
+      </td>
+      <td align="center" valign="middle">
+        <a target="_blank" href="https://github.com/BeijingWks">
+          <img src="https://avatars3.githubusercontent.com/u/33656339" width="100" alt="王开帅" />
+        </a>
+      </td>
+      <td align="center" valign="middle">
+        <a target="_blank" href="https://github.com/refs">
+          <img src="https://avatars3.githubusercontent.com/u/6905948" width="100" alt="Unger Alejandro" />
+        </a>
+      </td>
+      <td align="center" valign="middle">
+        <a target="_blank" href="https://github.com/Wuvist">
+          <img src="https://avatars.githubusercontent.com/u/657796" width="100" alt="Weng Wei" />
+        </a>
+      </td>
+    </tr>
+  </tbody>
+</table>
 
 ## 🔋 Sponsorship
 
