@@ -92,9 +92,10 @@ func (p *PoolWithFunc) ticktock() {
 		atomic.StoreInt32(&p.ticktockDone, 1)
 	}()
 
+	ticktockCtx := p.ticktockCtx // copy to the local variable to avoid race from Reboot()
 	for {
 		select {
-		case <-p.ticktockCtx.Done():
+		case <-ticktockCtx.Done():
 			return
 		case <-ticker.C:
 		}
