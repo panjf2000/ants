@@ -503,7 +503,7 @@ func TestMaxBlockingSubmitWithFunc(t *testing.T) {
 
 func TestRebootDefaultPool(t *testing.T) {
 	defer Release()
-	Reboot()
+	Reboot() // should do nothing inside
 	var wg sync.WaitGroup
 	wg.Add(1)
 	_ = Submit(func() {
@@ -511,7 +511,7 @@ func TestRebootDefaultPool(t *testing.T) {
 		wg.Done()
 	})
 	wg.Wait()
-	Release()
+	assert.NoError(t, ReleaseTimeout(time.Second))
 	assert.EqualError(t, Submit(nil), ErrPoolClosed.Error(), "pool should be closed")
 	Reboot()
 	wg.Add(1)
@@ -530,7 +530,7 @@ func TestRebootNewPool(t *testing.T) {
 		wg.Done()
 	})
 	wg.Wait()
-	p.Release()
+	assert.NoError(t, p.ReleaseTimeout(time.Second))
 	assert.EqualError(t, p.Submit(nil), ErrPoolClosed.Error(), "pool should be closed")
 	p.Reboot()
 	wg.Add(1)
@@ -546,7 +546,7 @@ func TestRebootNewPool(t *testing.T) {
 	wg.Add(1)
 	_ = p1.Invoke(1)
 	wg.Wait()
-	p1.Release()
+	assert.NoError(t, p1.ReleaseTimeout(time.Second))
 	assert.EqualError(t, p1.Invoke(nil), ErrPoolClosed.Error(), "pool should be closed")
 	p1.Reboot()
 	wg.Add(1)
@@ -975,7 +975,7 @@ func TestReleaseTimeout(t *testing.T) {
 }
 
 func TestDefaultPoolReleaseTimeout(t *testing.T) {
-	Reboot()
+	Reboot() // should do nothing inside
 	for i := 0; i < 5; i++ {
 		_ = Submit(func() {
 			time.Sleep(time.Second)
