@@ -91,9 +91,10 @@ func (p *Pool) purgeStaleWorkers() {
 		atomic.StoreInt32(&p.purgeDone, 1)
 	}()
 
+	purgeCtx := p.purgeCtx // copy to the local variable to avoid race from Reboot()
 	for {
 		select {
-		case <-p.purgeCtx.Done():
+		case <-purgeCtx.Done():
 			return
 		case <-ticker.C:
 		}
@@ -344,7 +345,10 @@ func (p *Pool) ReleaseTimeout(timeout time.Duration) error {
 	}
 }
 
-// Reboot reboots a closed pool.
+// Reboot reboots a closed pool, it does nothing if the pool is not closed.
+// If you intend to reboot a closed pool, use ReleaseTimeout() instead of
+// Release() to ensure that all workers are stopped and resource are released
+// before rebooting, otherwise you may run into data race.
 func (p *Pool) Reboot() {
 	if atomic.CompareAndSwapInt32(&p.state, CLOSED, OPENED) {
 		atomic.StoreInt32(&p.purgeDone, 0)
