@@ -47,7 +47,11 @@ func (w *goWorkerWithFunc) run() {
 	w.pool.addRunning(1)
 	go func() {
 		defer func() {
-			w.pool.addRunning(-1)
+			if w.pool.addRunning(-1) == 0 && w.pool.IsClosed() {
+				w.pool.once.Do(func() {
+					close(w.pool.allDone)
+				})
+			}
 			w.pool.workerCache.Put(w)
 			if p := recover(); p != nil {
 				if ph := w.pool.options.PanicHandler; ph != nil {

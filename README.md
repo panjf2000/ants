@@ -293,53 +293,12 @@ pool.Reboot()
 
 All tasks submitted to `ants` pool will not be guaranteed to be addressed in order, because those tasks scatter among a series of concurrent workers, thus those tasks would be executed concurrently.
 
-## 🧲 Benchmarks
-
-<div align="center"><img src="https://user-images.githubusercontent.com/7496278/51515466-c7ce9e00-1e4e-11e9-89c4-bd3785b3c667.png"/></div>
- In this benchmark result, the first and second benchmarks performed test cases with 1M tasks, and the rest of the benchmarks performed test cases with 10M tasks, both in unlimited goroutines and `ants` pool, and the capacity of this `ants` goroutine pool was limited to 50K.
-
-- BenchmarkGoroutine-4 represents the benchmarks with unlimited goroutines in Golang.
-
-- BenchmarkPoolGroutine-4 represents the benchmarks with an `ants` pool.
-
-### Benchmarks with Pool 
-
-![](https://user-images.githubusercontent.com/7496278/51515499-f187c500-1e4e-11e9-80e5-3df8f94fa70f.png)
-
-In the above benchmark result, the first and second benchmarks performed test cases with 1M tasks, and the rest of the benchmarks performed test cases with 10M tasks, both in unlimited goroutines and `ants` pool and the capacity of this `ants` goroutine-pool was limited to 50K.
-
-**As you can see, `ants` performs 2 times faster than goroutines without a pool (10M tasks) and it only consumes half the memory compared with goroutines without a pool. (both in 1M and 10M tasks)**
-
-### Benchmarks with PoolWithFunc
-
-![](https://user-images.githubusercontent.com/7496278/51515565-1e3bdc80-1e4f-11e9-8a08-452ab91d117e.png)
-
-### Throughput (it is suitable for scenarios where tasks are submitted asynchronously without waiting for the final results) 
-
-#### 100K tasks
-
-![](https://user-images.githubusercontent.com/7496278/51515590-36abf700-1e4f-11e9-91e4-7bd3dcb5f4a5.png)
-
-#### 1M tasks
-
-![](https://user-images.githubusercontent.com/7496278/51515596-44617c80-1e4f-11e9-89e3-01e19d2979a1.png)
-
-#### 10M tasks
-
-![](https://user-images.githubusercontent.com/7496278/52987732-537c2000-3437-11e9-86a6-177f00d7a1d6.png)
-
-## 📊 Performance Summary
-
-![](https://user-images.githubusercontent.com/7496278/63449727-3ae6d400-c473-11e9-81e3-8b3280d8288a.gif)
-
-**In conclusion, `ants` performs 2~6 times faster than goroutines without a pool and the memory consumption is reduced by 10 to 20 times.**
-
 ## 👏 Contributors
 
 Please read our [Contributing Guidelines](CONTRIBUTING.md) before opening a PR and thank you to all the developers who already made contributions to `ants`!
 
 <a href="https://github.com/panjf2000/ants/graphs/contributors">
-	<img src="https://contrib.rocks/image?repo=panjf2000/ants" />
+  <img src="https://contrib.rocks/image?repo=panjf2000/ants" />
 </a>
 
 ## 📄 License
@@ -359,7 +318,105 @@ The source code in `ants` is available under the [MIT License](/LICENSE).
 
 The following companies/organizations use `ants` in production.
 
-<a href="https://www.tencent.com"><img src="https://res.strikefreedom.top/static_res/logos/tencent_logo.png" width="250" align="middle"/></a>&nbsp;&nbsp;<a href="https://www.bytedance.com/" target="_blank"><img src="https://res.strikefreedom.top/static_res/logos/ByteDance_Logo.png" width="250" align="middle"/></a>&nbsp;&nbsp;<a href="https://tieba.baidu.com/" target="_blank"><img src="https://res.strikefreedom.top/static_res/logos/baidu-tieba-logo.png" width="300" align="middle"/></a>&nbsp;&nbsp;<a href="https://weibo.com/" target="_blank"><img src="https://res.strikefreedom.top/static_res/logos/weibo-logo.png" width="300" align="middle"/></a>&nbsp;&nbsp;<a href="https://www.tencentmusic.com/" target="_blank"><img src="https://res.strikefreedom.top/static_res/logos/tencent-music-logo.png" width="250" align="middle"/></a>&nbsp;&nbsp;<a href="https://www.futuhk.com/" target="_blank"><img src="https://res.strikefreedom.top/static_res/logos/futu-logo.png" width="250" align="middle"/></a>&nbsp;&nbsp;<a href="https://www.shopify.com/" target="_blank"><img src="https://res.strikefreedom.top/static_res/logos/shopify-logo.png" width="250" align="middle"/></a>&nbsp;&nbsp;<a href="https://www.wechat.com/en/" target="_blank"><img src="https://res.strikefreedom.top/static_res/logos/wechat-logo.png" width="250" align="middle"/></a><a href="https://www.baidu.com/" target="_blank"><img src="https://res.strikefreedom.top/static_res/logos/baidu-mobile.png" width="250" align="middle"/></a>&nbsp;&nbsp;<a href="https://www.360.com" target="_blank"><img src="https://res.strikefreedom.top/static_res/logos/360-logo.png" width="250" align="middle"/></a><a href="https://www.huaweicloud.com/intl/en-us/" target="_blank"><img src="https://res-static.hc-cdn.cn/cloudbu-site/china/zh-cn/%E7%BB%84%E4%BB%B6%E9%AA%8C%E8%AF%81/pep-common-header/logo-en.png" width="250" align="middle"/></a>&nbsp;&nbsp;<a href="https://www.matrixorigin.io" target="_blank"><img src="https://www.matrixorigin.io/_next/static/media/logo-light-en.42553c69.svg" width="250" align="middle"/></a>&nbsp;&nbsp;<a href="https://adguard-dns.io" target="_blank"><img src="https://cdn.adtidy.org/website/images/AdGuardDNS_black.svg" width="250" align="middle"/></a>&nbsp;&nbsp;<a href="https://bk.tencent.com" target="_blank"><img src="https://static.apiseven.com/2022/11/14/6371adab14119.png" width="250" align="middle"/></a>&nbsp;&nbsp;<a href="https://www.alibabacloud.com" target="_blank"><img src="https://res.strikefreedom.top/static_res/logos/aliyun-intl.png" width="250" align="middle"/></a>&nbsp;&nbsp;<a href="https://www.zuoyebang.com" target="_blank"><img src="https://res.strikefreedom.top/static_res/logos/zuoyebang-logo.jpeg" width="300" align="middle"/></a>
+<table>
+  <tbody>
+    <tr>
+      <td align="center" valign="middle">
+        <a href="https://www.tencent.com">
+          <img src="https://res.strikefreedom.top/static_res/logos/tencent_logo.png" width="250" />
+        </a>
+      </td>
+      <td align="center" valign="middle">
+        <a href="https://www.bytedance.com/" target="_blank">
+          <img src="https://res.strikefreedom.top/static_res/logos/ByteDance_Logo.png" width="250" />
+        </a>
+      </td>
+      <td align="center" valign="middle">
+        <a href="https://tieba.baidu.com/" target="_blank">
+          <img src="https://res.strikefreedom.top/static_res/logos/baidu-tieba-logo.png" width="300" />
+        </a>
+      </td>
+      <td align="center" valign="middle">
+        <a href="https://weibo.com/" target="_blank">
+          <img src="https://res.strikefreedom.top/static_res/logos/weibo-logo.png" width="300" />
+        </a>
+      </td>
+    </tr>
+    <tr>
+      <td align="center" valign="middle">
+        <a href="https://www.tencentmusic.com/" target="_blank">
+          <img src="https://res.strikefreedom.top/static_res/logos/tencent-music-logo.png" width="250" />
+        </a>
+      </td>
+      <td align="center" valign="middle">
+        <a href="https://www.futuhk.com/" target="_blank">
+          <img src="https://res.strikefreedom.top/static_res/logos/futu-logo.png" width="250" />
+        </a>
+      </td>
+      <td align="center" valign="middle">
+        <a href="https://www.shopify.com/" target="_blank">
+          <img src="https://res.strikefreedom.top/static_res/logos/shopify-logo.png" width="250" />
+        </a>
+      </td>
+      <td align="center" valign="middle">
+        <a href="https://www.wechat.com/en/" target="_blank">
+          <img src="https://res.strikefreedom.top/static_res/logos/wechat-logo.png" width="250" />
+        </a>
+      </td>
+    </tr>
+    <tr>
+      <td align="center" valign="middle">
+        <a href="https://www.baidu.com/" target="_blank">
+          <img src="https://res.strikefreedom.top/static_res/logos/baidu-mobile.png" width="250" />
+        </a>
+      </td>
+      <td align="center" valign="middle">
+        <a href="https://www.360.com" target="_blank">
+          <img src="https://res.strikefreedom.top/static_res/logos/360-logo.png" width="250" />
+        </a>
+      </td>
+      <td align="center" valign="middle">
+        <a href="https://www.huaweicloud.com/intl/en-us/" target="_blank">
+          <img src="https://res-static.hc-cdn.cn/cloudbu-site/china/zh-cn/%E7%BB%84%E4%BB%B6%E9%AA%8C%E8%AF%81/pep-common-header/logo-en.png" width="250" />
+        </a>
+      </td>
+      <td align="center" valign="middle">
+        <a href="https://www.matrixorigin.io" target="_blank">
+          <img src="https://www.matrixorigin.io/_next/static/media/logo-light-en.42553c69.svg" width="250" />
+        </a>
+      </td>
+    </tr>
+    <tr>
+      <td align="center" valign="middle">
+        <a href="https://adguard-dns.io" target="_blank">
+          <img src="https://cdn.adtidy.org/website/images/AdGuardDNS_black.svg" width="250" />
+        </a>
+      </td>
+      <td align="center" valign="middle">
+        <a href="https://bk.tencent.com" target="_blank">
+          <img src="https://static.apiseven.com/2022/11/14/6371adab14119.png" width="250" />
+        </a>
+      </td>
+      <td align="center" valign="middle">
+        <a href="https://www.alibabacloud.com" target="_blank">
+          <img src="https://res.strikefreedom.top/static_res/logos/aliyun-intl.png" width="250" />
+        </a>
+      </td>
+      <td align="center" valign="middle">
+        <a href="https://www.zuoyebang.com" target="_blank">
+          <img src="https://res.strikefreedom.top/static_res/logos/zuoyebang-logo.jpeg" width="300" />
+        </a>
+      </td>
+    </tr>
+    <tr>
+      <td align="center" valign="middle">
+        <a href="https://www.antgroup.com/en" target="_blank">
+          <img src="https://gw.alipayobjects.com/mdn/rms_27e257/afts/img/A*PLZaSZnCPAwAAAAAAAAAAAAAARQnAQ" width="250" />
+        </a>
+      </td>
+    </tr>
+  </tbody>
+</table>
 
 ### open-source software
 
@@ -422,7 +479,47 @@ Become a bronze sponsor with a monthly donation of $10 and get your logo on our 
 
 ## 💵 Patrons
 
-<a target="_blank" href="https://github.com/patrick-othmer"><img src="https://avatars1.githubusercontent.com/u/8964313" width="100" alt="Patrick Othmer" /></a>&nbsp;<a target="_blank" href="https://github.com/panjf2000/ants"><img src="https://avatars2.githubusercontent.com/u/50285334" width="100" alt="Jimmy" /></a>&nbsp;<a target="_blank" href="https://github.com/cafra"><img src="https://avatars0.githubusercontent.com/u/13758306" width="100" alt="ChenZhen" /></a>&nbsp;<a target="_blank" href="https://github.com/yangwenmai"><img src="https://avatars0.githubusercontent.com/u/1710912" width="100" alt="Mai Yang" /></a>&nbsp;<a target="_blank" href="https://github.com/BeijingWks"><img src="https://avatars3.githubusercontent.com/u/33656339" width="100" alt="王开帅" /></a>&nbsp;<a target="_blank" href="https://github.com/refs"><img src="https://avatars3.githubusercontent.com/u/6905948" width="100" alt="Unger Alejandro" /></a>&nbsp;<a target="_blank" href="https://github.com/Wuvist"><img src="https://avatars.githubusercontent.com/u/657796" width="100" alt="Weng Wei" /></a>
+<table>
+  <tbody>
+    <tr>
+      <td align="center" valign="middle">
+        <a target="_blank" href="https://github.com/patrick-othmer">
+          <img src="https://avatars1.githubusercontent.com/u/8964313" width="100" alt="Patrick Othmer" />
+        </a>
+      </td>
+      <td align="center" valign="middle">
+        <a target="_blank" href="https://github.com/panjf2000/ants">
+          <img src="https://avatars2.githubusercontent.com/u/50285334" width="100" alt="Jimmy" />
+        </a>
+      </td>
+      <td align="center" valign="middle">
+        <a target="_blank" href="https://github.com/cafra">
+          <img src="https://avatars0.githubusercontent.com/u/13758306" width="100" alt="ChenZhen" />
+        </a>
+      </td>
+      <td align="center" valign="middle">
+        <a target="_blank" href="https://github.com/yangwenmai">
+          <img src="https://avatars0.githubusercontent.com/u/1710912" width="100" alt="Mai Yang" />
+        </a>
+      </td>
+      <td align="center" valign="middle">
+        <a target="_blank" href="https://github.com/BeijingWks">
+          <img src="https://avatars3.githubusercontent.com/u/33656339" width="100" alt="王开帅" />
+        </a>
+      </td>
+      <td align="center" valign="middle">
+        <a target="_blank" href="https://github.com/refs">
+          <img src="https://avatars3.githubusercontent.com/u/6905948" width="100" alt="Unger Alejandro" />
+        </a>
+      </td>
+      <td align="center" valign="middle">
+        <a target="_blank" href="https://github.com/Wuvist">
+          <img src="https://avatars.githubusercontent.com/u/657796" width="100" alt="Weng Wei" />
+        </a>
+      </td>
+    </tr>
+  </tbody>
+</table>
 
 ## 🔋 Sponsorship
 

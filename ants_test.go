@@ -242,7 +242,7 @@ func TestPanicHandler(t *testing.T) {
 	c := atomic.LoadInt64(&panicCounter)
 	assert.EqualValuesf(t, 1, c, "panic handler didn't work, panicCounter: %d", c)
 	assert.EqualValues(t, 0, p0.Running(), "pool should be empty after panic")
-	p1, err := NewPoolWithFunc(10, func(p interface{}) { panic(p) }, WithPanicHandler(func(p interface{}) {
+	p1, err := NewPoolWithFunc(10, func(p interface{}) { panic(p) }, WithPanicHandler(func(_ interface{}) {
 		defer wg.Done()
 		atomic.AddInt64(&panicCounter, 1)
 	}))
@@ -274,7 +274,7 @@ func TestPanicHandlerPreMalloc(t *testing.T) {
 	c := atomic.LoadInt64(&panicCounter)
 	assert.EqualValuesf(t, 1, c, "panic handler didn't work, panicCounter: %d", c)
 	assert.EqualValues(t, 0, p0.Running(), "pool should be empty after panic")
-	p1, err := NewPoolWithFunc(10, func(p interface{}) { panic(p) }, WithPanicHandler(func(p interface{}) {
+	p1, err := NewPoolWithFunc(10, func(p interface{}) { panic(p) }, WithPanicHandler(func(_ interface{}) {
 		defer wg.Done()
 		atomic.AddInt64(&panicCounter, 1)
 	}))
@@ -503,7 +503,7 @@ func TestMaxBlockingSubmitWithFunc(t *testing.T) {
 
 func TestRebootDefaultPool(t *testing.T) {
 	defer Release()
-	Reboot()
+	Reboot() // should do nothing inside
 	var wg sync.WaitGroup
 	wg.Add(1)
 	_ = Submit(func() {
@@ -511,7 +511,7 @@ func TestRebootDefaultPool(t *testing.T) {
 		wg.Done()
 	})
 	wg.Wait()
-	Release()
+	assert.NoError(t, ReleaseTimeout(time.Second))
 	assert.EqualError(t, Submit(nil), ErrPoolClosed.Error(), "pool should be closed")
 	Reboot()
 	wg.Add(1)
@@ -530,7 +530,7 @@ func TestRebootNewPool(t *testing.T) {
 		wg.Done()
 	})
 	wg.Wait()
-	p.Release()
+	assert.NoError(t, p.ReleaseTimeout(time.Second))
 	assert.EqualError(t, p.Submit(nil), ErrPoolClosed.Error(), "pool should be closed")
 	p.Reboot()
 	wg.Add(1)
@@ -546,7 +546,7 @@ func TestRebootNewPool(t *testing.T) {
 	wg.Add(1)
 	_ = p1.Invoke(1)
 	wg.Wait()
-	p1.Release()
+	assert.NoError(t, p1.ReleaseTimeout(time.Second))
 	assert.EqualError(t, p1.Invoke(nil), ErrPoolClosed.Error(), "pool should be closed")
 	p1.Reboot()
 	wg.Add(1)
@@ -667,7 +667,7 @@ func TestWithDisablePurgePoolFunc(t *testing.T) {
 	var wg1, wg2 sync.WaitGroup
 	wg1.Add(numWorker)
 	wg2.Add(numWorker)
-	p, _ := NewPoolWithFunc(numWorker, func(i interface{}) {
+	p, _ := NewPoolWithFunc(numWorker, func(_ interface{}) {
 		wg1.Done()
 		<-sig
 		wg2.Done()
@@ -682,7 +682,7 @@ func TestWithDisablePurgeAndWithExpirationPoolFunc(t *testing.T) {
 	wg1.Add(numWorker)
 	wg2.Add(numWorker)
 	expiredDuration := time.Millisecond * 100
-	p, _ := NewPoolWithFunc(numWorker, func(i interface{}) {
+	p, _ := NewPoolWithFunc(numWorker, func(_ interface{}) {
 		wg1.Done()
 		<-sig
 		wg2.Done()
@@ -914,7 +914,7 @@ func TestPoolTuneScaleUp(t *testing.T) {
 	p.Release()
 
 	// test PoolWithFunc
-	pf, _ := NewPoolWithFunc(2, func(i interface{}) {
+	pf, _ := NewPoolWithFunc(2, func(_ interface{}) {
 		<-c
 	})
 	for i := 0; i < 2; i++ {
@@ -975,7 +975,7 @@ func TestReleaseTimeout(t *testing.T) {
 }
 
 func TestDefaultPoolReleaseTimeout(t *testing.T) {
-	Reboot()
+	Reboot() // should do nothing inside
 	for i := 0; i < 5; i++ {
 		_ = Submit(func() {
 			time.Sleep(time.Second)

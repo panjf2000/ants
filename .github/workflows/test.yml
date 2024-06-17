@@ -36,26 +36,41 @@ jobs:
     name: Run golangci-lint
     runs-on: ${{ matrix.os }}
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
       - name: Setup Go
         uses: actions/setup-go@v5
         with:
           go-version: '^1.16'
-
-      - name: Checkout repository
-        uses: actions/checkout@v4
+          cache: false
 
       - name: Setup and run golangci-lint
-        uses: golangci/golangci-lint-action@v3
+        uses: golangci/golangci-lint-action@v4
         with:
-          version: v1.55.2
+          version: v1.57.2
           args: --timeout 5m -v -E gofumpt -E gocritic -E misspell -E revive -E godot
   test:
     needs: lint
     strategy:
       fail-fast: false
       matrix:
-        go: [1.13, 1.21]
+        go: [1.13, 1.22]
         os: [ubuntu-latest, macos-latest, windows-latest]
+        include:
+          # TODO(panjf2000): There is an uncanny issue arising when downloading
+          # go modules on macOS 13 for Go1.13. So we use macOS 12 for now,
+          # but try to figure it out and use macOS once it's resolved.
+          # https://github.com/panjf2000/ants/actions/runs/9546726268/job/26310385582
+          - go: 1.13
+            os: macos-12
+        exclude:
+          # Starting macOS 14 GitHub Actions runners are arm-based,
+          # but Go didn't support arm64 until 1.16. Thus, we must
+          # replace the macOS 14 runner with macOS 12 runner for Go 1.13.
+          # Ref: https://github.com/actions/runner-images/issues/9741
+          - go: 1.13
+            os: macos-latest
     name: Go ${{ matrix.go }} @ ${{ matrix.os }}
     runs-on: ${{ matrix.os}}
     steps:
@@ -81,16 +96,6 @@ jobs:
           # Calculate the short SHA1 hash of the git commit
           echo "SHORT_SHA=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
           echo "GO_CACHE=$(go env GOCACHE)" >> $GITHUB_OUTPUT
-
-      - name: Cache go modules
-        uses: actions/cache@v4
-        with:
-          path: |
-            ${{ steps.go-env.outputs.GO_CACHE }}
-            ~/go/pkg/mod
-          key: ${{ runner.os }}-${{ matrix.go }}-go-ci-${{ hashFiles('**/go.sum') }}
-          restore-keys: |
-            ${{ runner.os }}-${{ matrix.go }}-go-ci
 
       - name: Run unit tests and integrated tests
         run: go test -v -race -coverprofile="codecov.report" -covermode=atomic

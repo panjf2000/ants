@@ -28,6 +28,8 @@ import (
 	"strings"
 	"sync/atomic"
 	"time"
+
+	"golang.org/x/sync/errgroup"
 )
 
 // LoadBalancingStrategy represents the type of load-balancing algorithm.
@@ -182,14 +184,35 @@ func (mp *MultiPool) ReleaseTimeout(timeout time.Duration) error {
 		return ErrPoolClosed
 	}
 
-	var errStr strings.Builder
+	errCh := make(chan error, len(mp.pools))
+	var wg errgroup.Group
 	for i, pool := range mp.pools {
-		if err := pool.ReleaseTimeout(timeout); err != nil {
-			errStr.WriteString(fmt.Sprintf("pool %d: %v\n", i, err))
-			if i < len(mp.pools)-1 {
-				errStr.WriteString(" | ")
-			}
-			return err
+		func(p *Pool, idx int) {
+			wg.Go(func() error {
+				err := p.ReleaseTimeout(timeout)
+				if err != nil {
+					err = fmt.Errorf("pool %d: %v", idx, err)
+				}
+				errCh <- err
+				return err
+			})
+		}(pool, i)
+	}
+
+	_ = wg.Wait()
+
+	var (
+		i      int
+		errStr strings.Builder
+	)
+	for err := range errCh {
+		i++
+		if i == len(mp.pools) {
+			break
+		}
+		if err != nil {
+			errStr.WriteString(err.Error())
+			errStr.WriteString(" | ")
 		}
 	}
 
@@ -197,7 +220,7 @@ func (mp *MultiPool) ReleaseTimeout(timeout time.Duration) error {
 		return nil
 	}
 
-	return errors.New(errStr.String())
+	return errors.New(strings.TrimSuffix(errStr.String(), " | "))
 }
 
 // Reboot reboots a released multi-pool.
