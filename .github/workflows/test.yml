@@ -55,8 +55,18 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        go: [1.13, 1.21]
+        go: [1.13, 1.22]
         os: [ubuntu-latest, macos-latest, windows-latest]
+        include:
+          - go: 1.13
+            os: macos-13
+        exclude:
+          # Starting macOS 14 GitHub Actions runners are arm-based,
+          # but Go didn't support arm64 until 1.16. Thus, we must
+          # replace the macOS 14 runner with macOS 13 runner for Go 1.13.
+          # Ref: https://github.com/actions/runner-images/issues/9741
+          - go: 1.13
+            os: macos-latest
     name: Go ${{ matrix.go }} @ ${{ matrix.os }}
     runs-on: ${{ matrix.os}}
     steps:
