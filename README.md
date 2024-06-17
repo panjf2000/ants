@@ -408,6 +408,13 @@ The following companies/organizations use `ants` in production.
         </a>
       </td>
     </tr>
+    <tr>
+      <td align="center" valign="middle">
+        <a href="https://www.antgroup.com/en" target="_blank">
+          <img src="https://gw.alipayobjects.com/mdn/rms_27e257/afts/img/A*PLZaSZnCPAwAAAAAAAAAAAAAARQnAQ" width="250" />
+        </a>
+      </td>
+    </tr>
   </tbody>
 </table>
 
