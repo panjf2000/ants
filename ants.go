@@ -97,8 +97,8 @@ var (
 )
 
 const (
-	nowTimeUpdateInterval  = 500 * time.Millisecond
-	releaseTimeoutInterval = 100 * time.Millisecond
+	nowTimeUpdateInterval = 500 * time.Millisecond
+	releaseTimeoutCount   = 10
 )
 
 // Logger is used for logging formatted messages.
