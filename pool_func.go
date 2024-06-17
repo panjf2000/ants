@@ -304,6 +304,7 @@ func (p *PoolWithFunc) ReleaseTimeout(timeout time.Duration) error {
 	}
 	p.Release()
 
+	interval := timeout / releaseTimeoutCount
 	endTime := time.Now().Add(timeout)
 	for time.Now().Before(endTime) {
 		if p.Running() == 0 &&
@@ -311,7 +312,7 @@ func (p *PoolWithFunc) ReleaseTimeout(timeout time.Duration) error {
 			atomic.LoadInt32(&p.ticktockDone) == 1 {
 			return nil
 		}
-		time.Sleep(releaseTimeoutInterval)
+		time.Sleep(interval)
 	}
 	return ErrTimeout
 }
