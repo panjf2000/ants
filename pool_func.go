@@ -311,7 +311,7 @@ func (p *PoolWithFunc) ReleaseTimeout(timeout time.Duration) error {
 			atomic.LoadInt32(&p.ticktockDone) == 1 {
 			return nil
 		}
-		time.Sleep(10 * time.Millisecond)
+		time.Sleep(releaseTimeoutInterval)
 	}
 	return ErrTimeout
 }
