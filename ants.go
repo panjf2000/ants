@@ -96,10 +96,7 @@ var (
 	defaultAntsPool, _ = NewPool(DefaultAntsPoolSize)
 )
 
-const (
-	nowTimeUpdateInterval = 500 * time.Millisecond
-	releaseTimeoutCount   = 10
-)
+const nowTimeUpdateInterval = 500 * time.Millisecond
 
 // Logger is used for logging formatted messages.
 type Logger interface {
