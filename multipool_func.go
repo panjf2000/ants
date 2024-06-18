@@ -191,16 +191,9 @@ func (mp *MultiPoolWithFunc) ReleaseTimeout(timeout time.Duration) error {
 
 	_ = wg.Wait()
 
-	var (
-		i      int
-		errStr strings.Builder
-	)
-	for err := range errCh {
-		i++
-		if i == len(mp.pools) {
-			break
-		}
-		if err != nil {
+	var errStr strings.Builder
+	for i := 0; i < len(mp.pools); i++ {
+		if err := <-errCh; err != nil {
 			errStr.WriteString(err.Error())
 			errStr.WriteString(" | ")
 		}
