@@ -367,7 +367,7 @@ The following companies/organizations use `ants` in production.
     <tr>
       <td align="center" valign="middle">
         <a href="https://www.baidu.com/" target="_blank">
-          <img src="https://res.strikefreedom.top/static_res/logos/baidu-mobile.png" width="250" />
+          <img src="https://res.strikefreedom.top/static_res/logos/baidu-mobile-logo.png" width="250" />
         </a>
       </td>
       <td align="center" valign="middle">
@@ -399,7 +399,7 @@ The following companies/organizations use `ants` in production.
       </td>
       <td align="center" valign="middle">
         <a href="https://www.alibabacloud.com" target="_blank">
-          <img src="https://res.strikefreedom.top/static_res/logos/aliyun-intl.png" width="250" />
+          <img src="https://res.strikefreedom.top/static_res/logos/aliyun-intl-logo.png" width="250" />
         </a>
       </td>
       <td align="center" valign="middle">
@@ -417,6 +417,8 @@ The following companies/organizations use `ants` in production.
     </tr>
   </tbody>
 </table>
+
+If your company is also using `ants` in production, please help us enrich this list by opening a pull request.
 
 ### open-source software
 

@@ -368,7 +368,7 @@ pool.Reboot()
     <tr>
       <td align="center" valign="middle">
         <a href="https://www.baidu.com/" target="_blank">
-          <img src="https://res.strikefreedom.top/static_res/logos/baidu-mobile.png" width="250" />
+          <img src="https://res.strikefreedom.top/static_res/logos/baidu-mobile-logo.png" width="250" />
         </a>
       </td>
       <td align="center" valign="middle">
@@ -400,7 +400,7 @@ pool.Reboot()
       </td>
       <td align="center" valign="middle">
         <a href="https://cn.aliyun.com" target="_blank">
-          <img src="https://res.strikefreedom.top/static_res/logos/aliyun-cn.png" width="250" />
+          <img src="https://res.strikefreedom.top/static_res/logos/aliyun-cn-logo.png" width="250" />
         </a>
       </td>
       <td align="center" valign="middle">
@@ -418,6 +418,8 @@ pool.Reboot()
     </tr>
   </tbody>
 </table>
+
+如果你的公司也在生产环境上使用 `ants`，欢迎提 PR 来丰富这份列表。
 
 ### 开源软件
 
