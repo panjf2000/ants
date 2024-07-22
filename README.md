@@ -316,7 +316,7 @@ The source code in `ants` is available under the [MIT License](/LICENSE).
 
 ### business companies
 
-The following companies/organizations use `ants` in production.
+Trusted by the following corporations/organizations.
 
 <table>
   <tbody>
@@ -419,11 +419,17 @@ The following companies/organizations use `ants` in production.
           <img src="https://res.strikefreedom.top/static_res/logos/zilliz-logo.png" width="250" />
         </a>
       </td>
+      </td>
+      <td align="center" valign="middle">
+        <a href="https://amap.com/" target="_blank">
+          <img src="https://res.strikefreedom.top/static_res/logos/amap-logo.png" width="250" />
+        </a>
+      </td>
     </tr>
   </tbody>
 </table>
 
-If your company is also using `ants` in production, please help us enrich this list by opening a pull request.
+If you're also using `ants` in production, please help us enrich this list by opening a pull request.
 
 ### open-source software
 

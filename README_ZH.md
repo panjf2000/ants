@@ -420,11 +420,16 @@ pool.Reboot()
           <img src="https://res.strikefreedom.top/static_res/logos/zilliz-logo.png" width="250" />
         </a>
       </td>
+      <td align="center" valign="middle">
+        <a href="https://amap.com/" target="_blank">
+          <img src="https://res.strikefreedom.top/static_res/logos/amap-logo.png" width="250" />
+        </a>
+      </td>
     </tr>
   </tbody>
 </table>
 
-如果你的公司也在生产环境上使用 `ants`，欢迎提 PR 来丰富这份列表。
+如果你也正在生产环境上使用 `ants`，欢迎提 PR 来丰富这份列表。
 
 ### 开源软件
 
