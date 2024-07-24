@@ -372,18 +372,17 @@ func (p *Pool) addWaiting(delta int) {
 // retrieveWorker returns an available worker to run the tasks.
 func (p *Pool) retrieveWorker() (w worker, err error) {
 	p.lock.Lock()
+	defer p.lock.Unlock()
 
 retry:
 	// First try to fetch the worker from the queue.
 	if w = p.workers.detach(); w != nil {
-		p.lock.Unlock()
 		return
 	}
 
 	// If the worker queue is empty, and we don't run out of the pool capacity,
 	// then just spawn a new worker goroutine.
 	if capacity := p.Cap(); capacity == -1 || capacity > p.Running() {
-		p.lock.Unlock()
 		w = p.workerCache.Get().(*goWorker)
 		w.run()
 		return
@@ -391,7 +390,6 @@ retry:
 
 	// Bail out early if it's in nonblocking mode or the number of pending callers reaches the maximum limit value.
 	if p.options.Nonblocking || (p.options.MaxBlockingTasks != 0 && p.Waiting() >= p.options.MaxBlockingTasks) {
-		p.lock.Unlock()
 		return nil, ErrPoolOverload
 	}
 
@@ -401,7 +399,6 @@ retry:
 	p.addWaiting(-1)
 
 	if p.IsClosed() {
-		p.lock.Unlock()
 		return nil, ErrPoolClosed
 	}
 
