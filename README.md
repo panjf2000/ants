@@ -314,7 +314,7 @@ The source code in `ants` is available under the [MIT License](/LICENSE).
 
 ## 🖥 Use cases
 
-### business companies
+### business corporations
 
 Trusted by the following corporations/organizations.
 
@@ -327,7 +327,7 @@ Trusted by the following corporations/organizations.
         </a>
       </td>
       <td align="center" valign="middle">
-        <a href="https://www.bytedance.com/" target="_blank">
+        <a href="https://www.bytedance.com/en/" target="_blank">
           <img src="https://res.strikefreedom.top/static_res/logos/ByteDance_Logo.png" width="250" />
         </a>
       </td>
@@ -344,12 +344,12 @@ Trusted by the following corporations/organizations.
     </tr>
     <tr>
       <td align="center" valign="middle">
-        <a href="https://www.tencentmusic.com/" target="_blank">
+        <a href="https://www.tencentmusic.com/en-us/" target="_blank">
           <img src="https://res.strikefreedom.top/static_res/logos/tencent-music-logo.png" width="250" />
         </a>
       </td>
       <td align="center" valign="middle">
-        <a href="https://www.futuhk.com/" target="_blank">
+        <a href="https://www.futuhk.com/en/" target="_blank">
           <img src="https://res.strikefreedom.top/static_res/logos/futu-logo.png" width="250" />
         </a>
       </td>
