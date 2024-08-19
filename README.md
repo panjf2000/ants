@@ -490,50 +490,6 @@ Become a bronze sponsor with a monthly donation of $10 and get your logo on our 
 <img src="https://raw.githubusercontent.com/panjf2000/illustrations/master/payments/AliPay.JPG" width="250" align="middle"/>&nbsp;&nbsp;
 <a href="https://www.paypal.me/R136a1X" target="_blank"><img src="https://raw.githubusercontent.com/panjf2000/illustrations/master/payments/PayPal.JPG" width="250" align="middle"/></a>&nbsp;&nbsp;
 
-## 💵 Patrons
-
-<table>
-  <tbody>
-    <tr>
-      <td align="center" valign="middle">
-        <a target="_blank" href="https://github.com/patrick-othmer">
-          <img src="https://avatars1.githubusercontent.com/u/8964313" width="100" alt="Patrick Othmer" />
-        </a>
-      </td>
-      <td align="center" valign="middle">
-        <a target="_blank" href="https://github.com/panjf2000/ants">
-          <img src="https://avatars2.githubusercontent.com/u/50285334" width="100" alt="Jimmy" />
-        </a>
-      </td>
-      <td align="center" valign="middle">
-        <a target="_blank" href="https://github.com/cafra">
-          <img src="https://avatars0.githubusercontent.com/u/13758306" width="100" alt="ChenZhen" />
-        </a>
-      </td>
-      <td align="center" valign="middle">
-        <a target="_blank" href="https://github.com/yangwenmai">
-          <img src="https://avatars0.githubusercontent.com/u/1710912" width="100" alt="Mai Yang" />
-        </a>
-      </td>
-      <td align="center" valign="middle">
-        <a target="_blank" href="https://github.com/BeijingWks">
-          <img src="https://avatars3.githubusercontent.com/u/33656339" width="100" alt="王开帅" />
-        </a>
-      </td>
-      <td align="center" valign="middle">
-        <a target="_blank" href="https://github.com/refs">
-          <img src="https://avatars3.githubusercontent.com/u/6905948" width="100" alt="Unger Alejandro" />
-        </a>
-      </td>
-      <td align="center" valign="middle">
-        <a target="_blank" href="https://github.com/Wuvist">
-          <img src="https://avatars.githubusercontent.com/u/657796" width="100" alt="Weng Wei" />
-        </a>
-      </td>
-    </tr>
-  </tbody>
-</table>
-
 ## 🔋 Sponsorship
 
 <p>
