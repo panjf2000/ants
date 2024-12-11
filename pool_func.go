@@ -67,10 +67,7 @@ func (p *PoolWithFunc) purgeStaleWorkers() {
 		isDormant = n == 0 || n == len(staleWorkers)
 		p.lock.Unlock()
 
-		// Notify obsolete workers to stop.
-		// This notification must be outside the p.lock, since w.task
-		// may be blocking and may consume a lot of time if many workers
-		// are located on non-local CPUs.
+		// Clean up the stale workers.
 		for i := range staleWorkers {
 			staleWorkers[i].finish()
 			staleWorkers[i] = nil
