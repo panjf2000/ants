@@ -284,6 +284,12 @@ p, _ := ants.NewPool(100000, ants.WithPreAlloc(true))
 pool.Release()
 ```
 
+或者
+
+```go
+pool.ReleaseTimeout(time.Second * 3)
+```
+
 ### 重启 Pool
 
 ```go
