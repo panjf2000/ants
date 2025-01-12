@@ -7,6 +7,7 @@
 <a title="Release" target="_blank" href="https://github.com/panjf2000/ants/releases"><img src="https://img.shields.io/github/v/release/panjf2000/ants.svg?color=161823&style=flat-square&logo=smartthings" /></a>
 <a title="Tag" target="_blank" href="https://github.com/panjf2000/ants/tags"><img src="https://img.shields.io/github/v/tag/panjf2000/ants?color=%23ff8936&logo=fitbit&style=flat-square" /></a>
 <br/>
+<a title="Minimum Go Version" target="_blank" href="https://github.com/panjf2000/gnet"><img src="https://img.shields.io/badge/go-%3E%3D1.18-30dff3?style=flat-square&logo=go" /></a>
 <a title="Go Report Card" target="_blank" href="https://goreportcard.com/report/github.com/panjf2000/ants"><img src="https://goreportcard.com/badge/github.com/panjf2000/ants?style=flat-square" /></a>
 <a title="Doc for ants" target="_blank" href="https://pkg.go.dev/github.com/panjf2000/ants/v2?tab=doc"><img src="https://img.shields.io/badge/go.dev-doc-007d9c?style=flat-square&logo=read-the-docs" /></a>
 <a title="Mentioned in Awesome Go" target="_blank" href="https://github.com/avelino/awesome-go#goroutines"><img src="https://awesome.re/mentioned-badge-flat.svg" /></a>
@@ -22,10 +23,11 @@ Library `ants` implements a goroutine pool with fixed capacity, managing and rec
 
 - Managing and recycling a massive number of goroutines automatically
 - Purging overdue goroutines periodically
-- Abundant APIs: submitting tasks, getting the number of running goroutines, tuning the capacity of the pool dynamically, releasing the pool, rebooting the pool
+- Abundant APIs: submitting tasks, getting the number of running goroutines, tuning the capacity of the pool dynamically, releasing the pool, rebooting the pool, etc.
 - Handle panic gracefully to prevent programs from crash
-- Efficient in memory usage and it even achieves [higher performance](#-performance-summary) than unlimited goroutines in Golang
+- Efficient in memory usage and it may even achieve ***higher performance*** than unlimited goroutines in Go
 - Nonblocking mechanism
+- Preallocated memory (ring buffer, optional)
 
 ## 💡 How `ants` works
 
@@ -60,205 +62,30 @@ go get -u github.com/panjf2000/ants/v2
 ```
 
 ## 🛠 How to use
-Just imagine that your program starts a massive number of goroutines, resulting in a huge consumption of memory. To mitigate that kind of situation, all you need to do is to import `ants` package and submit all your tasks to a default pool with fixed capacity, activated when package `ants` is imported:
+Check out [the examples](https://pkg.go.dev/github.com/panjf2000/ants/v2#pkg-examples) for basic usage.
 
-``` go
-package main
+### Functional options for pool
 
-import (
-	"fmt"
-	"sync"
-	"sync/atomic"
-	"time"
+`ants.Options`contains all optional configurations of the ants pool, which allows you to customize the goroutine pool by invoking option functions to set up each configuration in `NewPool`/`NewPoolWithFunc`/`NewPoolWithFuncGeneric` method.
 
-	"github.com/panjf2000/ants/v2"
-)
+Check out [ants.Options](https://pkg.go.dev/github.com/panjf2000/ants/v2#Options) and [ants.Option](https://pkg.go.dev/github.com/panjf2000/ants/v2#Option) for more details.
 
-var sum int32
+### Customize pool capacity
 
-func myFunc(i interface{}) {
-	n := i.(int32)
-	atomic.AddInt32(&sum, n)
-	fmt.Printf("run with %d\n", n)
-}
-
-func demoFunc() {
-	time.Sleep(10 * time.Millisecond)
-	fmt.Println("Hello World!")
-}
-
-func main() {
-	defer ants.Release()
-
-	runTimes := 1000
-
-	// Use the common pool.
-	var wg sync.WaitGroup
-	syncCalculateSum := func() {
-		demoFunc()
-		wg.Done()
-	}
-	for i := 0; i < runTimes; i++ {
-		wg.Add(1)
-		_ = ants.Submit(syncCalculateSum)
-	}
-	wg.Wait()
-	fmt.Printf("running goroutines: %d\n", ants.Running())
-	fmt.Printf("finish all tasks.\n")
-
-	// Use the pool with a function,
-	// set 10 to the capacity of goroutine pool and 1 second for expired duration.
-	p, _ := ants.NewPoolWithFunc(10, func(i interface{}) {
-		myFunc(i)
-		wg.Done()
-	})
-	defer p.Release()
-	// Submit tasks one by one.
-	for i := 0; i < runTimes; i++ {
-		wg.Add(1)
-		_ = p.Invoke(int32(i))
-	}
-	wg.Wait()
-	fmt.Printf("running goroutines: %d\n", p.Running())
-	fmt.Printf("finish all tasks, result is %d\n", sum)
-	if sum != 499500 {
-		panic("the final result is wrong!!!")
-	}
-
-	// Use the MultiPool and set the capacity of the 10 goroutine pools to unlimited.
-	// If you use -1 as the pool size parameter, the size will be unlimited.
-	// There are two load-balancing algorithms for pools: ants.RoundRobin and ants.LeastTasks.
-	mp, _ := ants.NewMultiPool(10, -1, ants.RoundRobin)
-	defer mp.ReleaseTimeout(5 * time.Second)
-	for i := 0; i < runTimes; i++ {
-		wg.Add(1)
-		_ = mp.Submit(syncCalculateSum)
-	}
-	wg.Wait()
-	fmt.Printf("running goroutines: %d\n", mp.Running())
-	fmt.Printf("finish all tasks.\n")
-
-	// Use the MultiPoolFunc and set the capacity of 10 goroutine pools to (runTimes/10).
-	mpf, _ := ants.NewMultiPoolWithFunc(10, runTimes/10, func(i interface{}) {
-		myFunc(i)
-		wg.Done()
-	}, ants.LeastTasks)
-	defer mpf.ReleaseTimeout(5 * time.Second)
-	for i := 0; i < runTimes; i++ {
-		wg.Add(1)
-		_ = mpf.Invoke(int32(i))
-	}
-	wg.Wait()
-	fmt.Printf("running goroutines: %d\n", mpf.Running())
-	fmt.Printf("finish all tasks, result is %d\n", sum)
-	if sum != 499500*2 {
-		panic("the final result is wrong!!!")
-	}
-}
-```
-
-###  Functional options for ants pool
-
-```go
-// Option represents the optional function.
-type Option func(opts *Options)
-
-// Options contains all options which will be applied when instantiating a ants pool.
-type Options struct {
-	// ExpiryDuration is a period for the scavenger goroutine to clean up those expired workers,
-	// the scavenger scans all workers every `ExpiryDuration` and clean up those workers that haven't been
-	// used for more than `ExpiryDuration`.
-	ExpiryDuration time.Duration
-
-	// PreAlloc indicates whether to make memory pre-allocation when initializing Pool.
-	PreAlloc bool
-
-	// Max number of goroutine blocking on pool.Submit.
-	// 0 (default value) means no such limit.
-	MaxBlockingTasks int
-
-	// When Nonblocking is true, Pool.Submit will never be blocked.
-	// ErrPoolOverload will be returned when Pool.Submit cannot be done at once.
-	// When Nonblocking is true, MaxBlockingTasks is inoperative.
-	Nonblocking bool
-
-	// PanicHandler is used to handle panics from each worker goroutine.
-	// if nil, panics will be thrown out again from worker goroutines.
-	PanicHandler func(interface{})
-
-	// Logger is the customized logger for logging info, if it is not set,
-	// default standard logger from log package is used.
-	Logger Logger
-}
-
-// WithOptions accepts the whole options config.
-func WithOptions(options Options) Option {
-	return func(opts *Options) {
-		*opts = options
-	}
-}
-
-// WithExpiryDuration sets up the interval time of cleaning up goroutines.
-func WithExpiryDuration(expiryDuration time.Duration) Option {
-	return func(opts *Options) {
-		opts.ExpiryDuration = expiryDuration
-	}
-}
-
-// WithPreAlloc indicates whether it should malloc for workers.
-func WithPreAlloc(preAlloc bool) Option {
-	return func(opts *Options) {
-		opts.PreAlloc = preAlloc
-	}
-}
-
-// WithMaxBlockingTasks sets up the maximum number of goroutines that are blocked when it reaches the capacity of pool.
-func WithMaxBlockingTasks(maxBlockingTasks int) Option {
-	return func(opts *Options) {
-		opts.MaxBlockingTasks = maxBlockingTasks
-	}
-}
-
-// WithNonblocking indicates that pool will return nil when there is no available workers.
-func WithNonblocking(nonblocking bool) Option {
-	return func(opts *Options) {
-		opts.Nonblocking = nonblocking
-	}
-}
-
-// WithPanicHandler sets up panic handler.
-func WithPanicHandler(panicHandler func(interface{})) Option {
-	return func(opts *Options) {
-		opts.PanicHandler = panicHandler
-	}
-}
-
-// WithLogger sets up a customized logger.
-func WithLogger(logger Logger) Option {
-	return func(opts *Options) {
-		opts.Logger = logger
-	}
-}
-```
-
-`ants.Options`contains all optional configurations of the ants pool, which allows you to customize the goroutine pool by invoking option functions to set up each configuration in `NewPool`/`NewPoolWithFunc`method.
-
-### Customize limited pool
-
-`ants` also supports customizing the capacity of the pool. You can invoke the `NewPool` method to instantiate a pool with a given capacity, as follows:
+`ants` supports customizing the capacity of the pool. You can call the `NewPool` method to instantiate a `Pool` with a given capacity, as follows:
 
 ``` go
 p, _ := ants.NewPool(10000)
 ```
 
 ### Submit tasks
-Tasks can be submitted by calling `ants.Submit(func())`
+Tasks can be submitted by calling `ants.Submit`
 ```go
 ants.Submit(func(){})
 ```
 
-### Tune pool capacity in runtime
-You can tune the capacity of  `ants` pool in runtime with `Tune(int)`:
+### Tune pool capacity at runtime
+You can tune the capacity of `ants` pool at runtime with `ants.Tune`:
 
 ``` go
 pool.Tune(1000) // Tune its capacity to 1000
@@ -272,20 +99,26 @@ Don't worry about the contention problems in this case, the method here is threa
 `ants` allows you to pre-allocate the memory of the goroutine queue in the pool, which may get a performance enhancement under some special certain circumstances such as the scenario that requires a pool with ultra-large capacity, meanwhile, each task in goroutine lasts for a long time, in this case, pre-mallocing will reduce a lot of memory allocation in goroutine queue.
 
 ```go
-// ants will pre-malloc the whole capacity of pool when you invoke this method
+// ants will pre-malloc the whole capacity of pool when calling ants.NewPool.
 p, _ := ants.NewPool(100000, ants.WithPreAlloc(true))
 ```
 
-### Release Pool
+### Release pool
 
 ```go
 pool.Release()
 ```
 
-### Reboot Pool
+or
 
 ```go
-// A pool that has been released can be still used once you invoke the Reboot().
+pool.ReleaseTimeout(time.Second * 3)
+```
+
+### Reboot pool
+
+```go
+// A pool that has been released can be still used after calling the Reboot().
 pool.Reboot()
 ```
 
@@ -314,20 +147,20 @@ The source code in `ants` is available under the [MIT License](/LICENSE).
 
 ## 🖥 Use cases
 
-### business companies
+### business corporations
 
-The following companies/organizations use `ants` in production.
+Trusted by the following corporations/organizations.
 
 <table>
   <tbody>
     <tr>
       <td align="center" valign="middle">
-        <a href="https://www.tencent.com">
+        <a href="https://www.tencent.com/">
           <img src="https://res.strikefreedom.top/static_res/logos/tencent_logo.png" width="250" />
         </a>
       </td>
       <td align="center" valign="middle">
-        <a href="https://www.bytedance.com/" target="_blank">
+        <a href="https://www.bytedance.com/en/" target="_blank">
           <img src="https://res.strikefreedom.top/static_res/logos/ByteDance_Logo.png" width="250" />
         </a>
       </td>
@@ -344,12 +177,12 @@ The following companies/organizations use `ants` in production.
     </tr>
     <tr>
       <td align="center" valign="middle">
-        <a href="https://www.tencentmusic.com/" target="_blank">
+        <a href="https://www.tencentmusic.com/en-us/" target="_blank">
           <img src="https://res.strikefreedom.top/static_res/logos/tencent-music-logo.png" width="250" />
         </a>
       </td>
       <td align="center" valign="middle">
-        <a href="https://www.futuhk.com/" target="_blank">
+        <a href="https://www.futuhk.com/en/" target="_blank">
           <img src="https://res.strikefreedom.top/static_res/logos/futu-logo.png" width="250" />
         </a>
       </td>
@@ -367,11 +200,11 @@ The following companies/organizations use `ants` in production.
     <tr>
       <td align="center" valign="middle">
         <a href="https://www.baidu.com/" target="_blank">
-          <img src="https://res.strikefreedom.top/static_res/logos/baidu-mobile.png" width="250" />
+          <img src="https://res.strikefreedom.top/static_res/logos/baidu-mobile-logo.png" width="250" />
         </a>
       </td>
       <td align="center" valign="middle">
-        <a href="https://www.360.com" target="_blank">
+        <a href="https://www.360.com/" target="_blank">
           <img src="https://res.strikefreedom.top/static_res/logos/360-logo.png" width="250" />
         </a>
       </td>
@@ -381,42 +214,55 @@ The following companies/organizations use `ants` in production.
         </a>
       </td>
       <td align="center" valign="middle">
-        <a href="https://www.matrixorigin.io" target="_blank">
+        <a href="https://www.matrixorigin.io/" target="_blank">
           <img src="https://www.matrixorigin.io/_next/static/media/logo-light-en.42553c69.svg" width="250" />
         </a>
       </td>
     </tr>
     <tr>
       <td align="center" valign="middle">
-        <a href="https://adguard-dns.io" target="_blank">
+        <a href="https://adguard-dns.io/" target="_blank">
           <img src="https://cdn.adtidy.org/website/images/AdGuardDNS_black.svg" width="250" />
         </a>
       </td>
       <td align="center" valign="middle">
-        <a href="https://bk.tencent.com" target="_blank">
+        <a href="https://bk.tencent.com/" target="_blank">
           <img src="https://static.apiseven.com/2022/11/14/6371adab14119.png" width="250" />
         </a>
       </td>
       <td align="center" valign="middle">
-        <a href="https://www.alibabacloud.com" target="_blank">
-          <img src="https://res.strikefreedom.top/static_res/logos/aliyun-intl.png" width="250" />
+        <a href="https://www.alibabacloud.com/" target="_blank">
+          <img src="https://res.strikefreedom.top/static_res/logos/aliyun-intl-logo.png" width="250" />
         </a>
       </td>
       <td align="center" valign="middle">
-        <a href="https://www.zuoyebang.com" target="_blank">
+        <a href="https://www.zuoyebang.com/" target="_blank">
           <img src="https://res.strikefreedom.top/static_res/logos/zuoyebang-logo.jpeg" width="300" />
         </a>
       </td>
     </tr>
     <tr>
       <td align="center" valign="middle">
-        <a href="https://www.antgroup.com/en" target="_blank">
-          <img src="https://gw.alipayobjects.com/mdn/rms_27e257/afts/img/A*PLZaSZnCPAwAAAAAAAAAAAAAARQnAQ" width="250" />
+        <a href="https://www.antgroup.com/en/" target="_blank">
+          <img src="https://res.strikefreedom.top/static_res/logos/ant-group-logo.png" width="250" />
+        </a>
+      </td>
+      <td align="center" valign="middle">
+        <a href="https://zilliz.com/" target="_blank">
+          <img src="https://res.strikefreedom.top/static_res/logos/zilliz-logo.png" width="250" />
+        </a>
+      </td>
+      </td>
+      <td align="center" valign="middle">
+        <a href="https://amap.com/" target="_blank">
+          <img src="https://res.strikefreedom.top/static_res/logos/amap-logo.png" width="250" />
         </a>
       </td>
     </tr>
   </tbody>
 </table>
+
+If you're also using `ants` in production, please help us enrich this list by opening a pull request.
 
 ### open-source software
 
@@ -425,6 +271,7 @@ The open-source projects below do concurrent programming with the help of `ants`
 - [gnet](https://github.com/panjf2000/gnet):  A high-performance, lightweight, non-blocking, event-driven networking framework written in pure Go.
 - [milvus](https://github.com/milvus-io/milvus): An open-source vector database for scalable similarity search and AI applications.
 - [nps](https://github.com/ehang-io/nps): A lightweight, high-performance, powerful intranet penetration proxy server, with a powerful web management terminal.
+- [TDengine](https://github.com/taosdata/TDengine): TDengine is an open source, high-performance, cloud native time-series database optimized for Internet of Things (IoT), Connected Cars, and Industrial IoT.
 - [siyuan](https://github.com/siyuan-note/siyuan): SiYuan is a local-first personal knowledge management system that supports complete offline use, as well as end-to-end encrypted synchronization.
 - [osmedeus](https://github.com/j3ssie/osmedeus): A Workflow Engine for Offensive Security.
 - [jitsu](https://github.com/jitsucom/jitsu/tree/master): An open-source Segment alternative. Fully-scriptable data ingestion engine for modern data teams. Set-up a real-time data pipeline in minutes, not days.
@@ -441,7 +288,7 @@ The open-source projects below do concurrent programming with the help of `ants`
 - [WatchAD2.0](https://github.com/Qihoo360/WatchAD2.0): WatchAD2.0 是 360 信息安全中心开发的一款针对域安全的日志分析与监控系统，它可以收集所有域控上的事件日志、网络流量，通过特征匹配、协议分析、历史行为、敏感操作和蜜罐账户等方式来检测各种已知与未知威胁，功能覆盖了大部分目前的常见内网域渗透手法。
 - [vanus](https://github.com/vanus-labs/vanus): Vanus is a Serverless, event streaming system with processing capabilities. It easily connects SaaS, Cloud Services, and Databases to help users build next-gen Event-driven Applications.
 - [trpc-go](https://github.com/trpc-group/trpc-go): A pluggable, high-performance RPC framework written in Golang.
-- [motan-go](https://github.com/weibocom/motan-go): a remote procedure call (RPC) framework for the rapid development of high-performance distributed services.
+- [motan-go](https://github.com/weibocom/motan-go): Motan is a cross-language remote procedure call(RPC) framework for rapid development of high performance distributed services. motan-go is the golang implementation of Motan.
 
 #### All use cases:
 
@@ -453,9 +300,9 @@ If you have `ants` integrated into projects, feel free to open a pull request re
 
 ## 🔋 JetBrains OS licenses
 
-`ants` had been being developed with GoLand under the **free JetBrains Open Source license(s)** granted by JetBrains s.r.o., hence I would like to express my thanks here.
+`ants` has been being developed with GoLand under the **free JetBrains Open Source license(s)** granted by JetBrains s.r.o., hence I would like to express my thanks here.
 
-<a href="https://www.jetbrains.com/?from=ants" target="_blank"><img src="https://raw.githubusercontent.com/panjf2000/illustrations/master/jetbrains/jetbrains-variant-4.png" width="250" align="middle"/></a>
+<a href="https://www.jetbrains.com/?from=ants" target="_blank"><img src="https://resources.jetbrains.com/storage/products/company/brand/logos/jetbrains.svg" alt="JetBrains logo."></a>
 
 ## 💰 Backers
 
@@ -476,50 +323,6 @@ Become a bronze sponsor with a monthly donation of $10 and get your logo on our 
 <img src="https://raw.githubusercontent.com/panjf2000/illustrations/master/payments/WeChatPay.JPG" width="250" align="middle"/>&nbsp;&nbsp;
 <img src="https://raw.githubusercontent.com/panjf2000/illustrations/master/payments/AliPay.JPG" width="250" align="middle"/>&nbsp;&nbsp;
 <a href="https://www.paypal.me/R136a1X" target="_blank"><img src="https://raw.githubusercontent.com/panjf2000/illustrations/master/payments/PayPal.JPG" width="250" align="middle"/></a>&nbsp;&nbsp;
-
-## 💵 Patrons
-
-<table>
-  <tbody>
-    <tr>
-      <td align="center" valign="middle">
-        <a target="_blank" href="https://github.com/patrick-othmer">
-          <img src="https://avatars1.githubusercontent.com/u/8964313" width="100" alt="Patrick Othmer" />
-        </a>
-      </td>
-      <td align="center" valign="middle">
-        <a target="_blank" href="https://github.com/panjf2000/ants">
-          <img src="https://avatars2.githubusercontent.com/u/50285334" width="100" alt="Jimmy" />
-        </a>
-      </td>
-      <td align="center" valign="middle">
-        <a target="_blank" href="https://github.com/cafra">
-          <img src="https://avatars0.githubusercontent.com/u/13758306" width="100" alt="ChenZhen" />
-        </a>
-      </td>
-      <td align="center" valign="middle">
-        <a target="_blank" href="https://github.com/yangwenmai">
-          <img src="https://avatars0.githubusercontent.com/u/1710912" width="100" alt="Mai Yang" />
-        </a>
-      </td>
-      <td align="center" valign="middle">
-        <a target="_blank" href="https://github.com/BeijingWks">
-          <img src="https://avatars3.githubusercontent.com/u/33656339" width="100" alt="王开帅" />
-        </a>
-      </td>
-      <td align="center" valign="middle">
-        <a target="_blank" href="https://github.com/refs">
-          <img src="https://avatars3.githubusercontent.com/u/6905948" width="100" alt="Unger Alejandro" />
-        </a>
-      </td>
-      <td align="center" valign="middle">
-        <a target="_blank" href="https://github.com/Wuvist">
-          <img src="https://avatars.githubusercontent.com/u/657796" width="100" alt="Weng Wei" />
-        </a>
-      </td>
-    </tr>
-  </tbody>
-</table>
 
 ## 🔋 Sponsorship
 

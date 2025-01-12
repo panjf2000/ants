@@ -7,6 +7,7 @@
 <a title="Release" target="_blank" href="https://github.com/panjf2000/ants/releases"><img src="https://img.shields.io/github/v/release/panjf2000/ants.svg?color=161823&style=flat-square&logo=smartthings" /></a>
 <a title="Tag" target="_blank" href="https://github.com/panjf2000/ants/tags"><img src="https://img.shields.io/github/v/tag/panjf2000/ants?color=%23ff8936&logo=fitbit&style=flat-square" /></a>
 <br/>
+<a title="Minimum Go Version" target="_blank" href="https://github.com/panjf2000/gnet"><img src="https://img.shields.io/badge/go-%3E%3D1.18-30dff3?style=flat-square&logo=go" /></a>
 <a title="Go Report Card" target="_blank" href="https://goreportcard.com/report/github.com/panjf2000/ants"><img src="https://goreportcard.com/badge/github.com/panjf2000/ants?style=flat-square" /></a>
 <a title="Doc for ants" target="_blank" href="https://pkg.go.dev/github.com/panjf2000/ants/v2?tab=doc"><img src="https://img.shields.io/badge/go.dev-doc-007d9c?style=flat-square&logo=read-the-docs" /></a>
 <a title="Mentioned in Awesome Go" target="_blank" href="https://github.com/avelino/awesome-go#goroutines"><img src="https://awesome.re/mentioned-badge-flat.svg" /></a>
@@ -16,16 +17,17 @@
 
 ## 📖 简介
 
-`ants`是一个高性能的 goroutine 池，实现了对大规模 goroutine 的调度管理、goroutine 复用，允许使用者在开发并发程序的时候限制 goroutine 数量，复用资源，达到更高效执行任务的效果。
+`ants` 是一个高性能的 goroutine 池，实现了对大规模 goroutine 的调度管理、goroutine 复用，允许使用者在开发并发程序的时候限制 goroutine 数量，复用资源，达到更高效执行任务的效果。
 
 ## 🚀 功能：
 
 - 自动调度海量的 goroutines，复用 goroutines
 - 定期清理过期的 goroutines，进一步节省资源
-- 提供了大量有用的接口：任务提交、获取运行中的 goroutine 数量、动态调整 Pool 大小、释放 Pool、重启 Pool
+- 提供了大量实用的接口：任务提交、获取运行中的 goroutine 数量、动态调整 Pool 大小、释放 Pool、重启 Pool 等
 - 优雅处理 panic，防止程序崩溃
-- 资源复用，极大节省内存使用量；在大规模批量并发任务场景下比原生 goroutine 并发具有[更高的性能](#-性能小结)
+- 资源复用，极大节省内存使用量；在大规模批量并发任务场景下甚至可能比 Go 语言的无限制 goroutine 并发具有***更高的性能***
 - 非阻塞机制
+- 预分配内存 (环形队列，可选)
 
 ## 💡 `ants` 是如何运行的
 
@@ -60,192 +62,17 @@ go get -u github.com/panjf2000/ants/v2
 ```
 
 ## 🛠 使用
-写 go 并发程序的时候如果程序会启动大量的 goroutine ，势必会消耗大量的系统资源（内存，CPU），通过使用 `ants`，可以实例化一个 goroutine 池，复用 goroutine ，节省资源，提升性能：
-
-``` go
-package main
-
-import (
-	"fmt"
-	"sync"
-	"sync/atomic"
-	"time"
-
-	"github.com/panjf2000/ants/v2"
-)
-
-var sum int32
-
-func myFunc(i interface{}) {
-	n := i.(int32)
-	atomic.AddInt32(&sum, n)
-	fmt.Printf("run with %d\n", n)
-}
-
-func demoFunc() {
-	time.Sleep(10 * time.Millisecond)
-	fmt.Println("Hello World!")
-}
-
-func main() {
-	defer ants.Release()
-
-	runTimes := 1000
-
-	// Use the common pool.
-	var wg sync.WaitGroup
-	syncCalculateSum := func() {
-		demoFunc()
-		wg.Done()
-	}
-	for i := 0; i < runTimes; i++ {
-		wg.Add(1)
-		_ = ants.Submit(syncCalculateSum)
-	}
-	wg.Wait()
-	fmt.Printf("running goroutines: %d\n", ants.Running())
-	fmt.Printf("finish all tasks.\n")
-
-	// Use the pool with a function,
-	// set 10 to the capacity of goroutine pool and 1 second for expired duration.
-	p, _ := ants.NewPoolWithFunc(10, func(i interface{}) {
-		myFunc(i)
-		wg.Done()
-	})
-	defer p.Release()
-	// Submit tasks one by one.
-	for i := 0; i < runTimes; i++ {
-		wg.Add(1)
-		_ = p.Invoke(int32(i))
-	}
-	wg.Wait()
-	fmt.Printf("running goroutines: %d\n", p.Running())
-	fmt.Printf("finish all tasks, result is %d\n", sum)
-	if sum != 499500 {
-		panic("the final result is wrong!!!")
-	}
-
-	// Use the MultiPool and set the capacity of the 10 goroutine pools to unlimited.
-	// If you use -1 as the pool size parameter, the size will be unlimited.
-	// There are two load-balancing algorithms for pools: ants.RoundRobin and ants.LeastTasks.
-	mp, _ := ants.NewMultiPool(10, -1, ants.RoundRobin)
-	defer mp.ReleaseTimeout(5 * time.Second)
-	for i := 0; i < runTimes; i++ {
-		wg.Add(1)
-		_ = mp.Submit(syncCalculateSum)
-	}
-	wg.Wait()
-	fmt.Printf("running goroutines: %d\n", mp.Running())
-	fmt.Printf("finish all tasks.\n")
-
-	// Use the MultiPoolFunc and set the capacity of 10 goroutine pools to (runTimes/10).
-	mpf, _ := ants.NewMultiPoolWithFunc(10, runTimes/10, func(i interface{}) {
-		myFunc(i)
-		wg.Done()
-	}, ants.LeastTasks)
-	defer mpf.ReleaseTimeout(5 * time.Second)
-	for i := 0; i < runTimes; i++ {
-		wg.Add(1)
-		_ = mpf.Invoke(int32(i))
-	}
-	wg.Wait()
-	fmt.Printf("running goroutines: %d\n", mpf.Running())
-	fmt.Printf("finish all tasks, result is %d\n", sum)
-	if sum != 499500*2 {
-		panic("the final result is wrong!!!")
-	}
-}
-```
+基本的使用请查看[示例](https://pkg.go.dev/github.com/panjf2000/ants/v2#pkg-examples).
 
 ### Pool 配置
 
-```go
-// Option represents the optional function.
-type Option func(opts *Options)
+通过在调用 `NewPool`/`NewPoolWithFunc`/`NewPoolWithFuncGeneric` 之时使用各种 optional function，可以设置 `ants.Options` 中各个配置项的值，然后用它来定制化 goroutine pool。
 
-// Options contains all options which will be applied when instantiating a ants pool.
-type Options struct {
-	// ExpiryDuration is a period for the scavenger goroutine to clean up those expired workers,
-	// the scavenger scans all workers every `ExpiryDuration` and clean up those workers that haven't been
-	// used for more than `ExpiryDuration`.
-	ExpiryDuration time.Duration
-
-	// PreAlloc indicates whether to make memory pre-allocation when initializing Pool.
-	PreAlloc bool
-
-	// Max number of goroutine blocking on pool.Submit.
-	// 0 (default value) means no such limit.
-	MaxBlockingTasks int
-
-	// When Nonblocking is true, Pool.Submit will never be blocked.
-	// ErrPoolOverload will be returned when Pool.Submit cannot be done at once.
-	// When Nonblocking is true, MaxBlockingTasks is inoperative.
-	Nonblocking bool
-
-	// PanicHandler is used to handle panics from each worker goroutine.
-	// if nil, panics will be thrown out again from worker goroutines.
-	PanicHandler func(interface{})
-
-	// Logger is the customized logger for logging info, if it is not set,
-	// default standard logger from log package is used.
-	Logger Logger
-}
-
-// WithOptions accepts the whole options config.
-func WithOptions(options Options) Option {
-	return func(opts *Options) {
-		*opts = options
-	}
-}
-
-// WithExpiryDuration sets up the interval time of cleaning up goroutines.
-func WithExpiryDuration(expiryDuration time.Duration) Option {
-	return func(opts *Options) {
-		opts.ExpiryDuration = expiryDuration
-	}
-}
-
-// WithPreAlloc indicates whether it should malloc for workers.
-func WithPreAlloc(preAlloc bool) Option {
-	return func(opts *Options) {
-		opts.PreAlloc = preAlloc
-	}
-}
-
-// WithMaxBlockingTasks sets up the maximum number of goroutines that are blocked when it reaches the capacity of pool.
-func WithMaxBlockingTasks(maxBlockingTasks int) Option {
-	return func(opts *Options) {
-		opts.MaxBlockingTasks = maxBlockingTasks
-	}
-}
-
-// WithNonblocking indicates that pool will return nil when there is no available workers.
-func WithNonblocking(nonblocking bool) Option {
-	return func(opts *Options) {
-		opts.Nonblocking = nonblocking
-	}
-}
-
-// WithPanicHandler sets up panic handler.
-func WithPanicHandler(panicHandler func(interface{})) Option {
-	return func(opts *Options) {
-		opts.PanicHandler = panicHandler
-	}
-}
-
-// WithLogger sets up a customized logger.
-func WithLogger(logger Logger) Option {
-	return func(opts *Options) {
-		opts.Logger = logger
-	}
-}
-```
-
-通过在调用`NewPool`/`NewPoolWithFunc`之时使用各种 optional function，可以设置`ants.Options`中各个配置项的值，然后用它来定制化 goroutine pool.
+更多细节请查看 [ants.Options](https://pkg.go.dev/github.com/panjf2000/ants/v2#Options) 和 [ants.Option](https://pkg.go.dev/github.com/panjf2000/ants/v2#Option)
 
 
-### 自定义池
-`ants`支持实例化使用者自己的一个 Pool ，指定具体的池容量；通过调用 `NewPool` 方法可以实例化一个新的带有指定容量的 Pool ，如下：
+### 自定义 pool 容量
+`ants` 支持实例化使用者自己的一个 Pool，指定具体的 pool 容量；通过调用 `NewPool` 方法可以实例化一个新的带有指定容量的 `Pool`，如下：
 
 ``` go
 p, _ := ants.NewPool(10000)
@@ -253,13 +80,13 @@ p, _ := ants.NewPool(10000)
 
 ### 任务提交
 
-提交任务通过调用 `ants.Submit(func())`方法：
+提交任务通过调用 `ants.Submit` 方法：
 ```go
 ants.Submit(func(){})
 ```
 
 ### 动态调整 goroutine 池容量
-需要动态调整 goroutine 池容量可以通过调用`Tune(int)`：
+需要动态调整 pool 容量可以通过调用 `ants.Tune`：
 
 ``` go
 pool.Tune(1000) // Tune its capacity to 1000
@@ -270,10 +97,10 @@ pool.Tune(100000) // Tune its capacity to 100000
 
 ### 预先分配 goroutine 队列内存
 
-`ants`允许你预先把整个池的容量分配内存， 这个功能可以在某些特定的场景下提高 goroutine 池的性能。比如， 有一个场景需要一个超大容量的池，而且每个 goroutine 里面的任务都是耗时任务，这种情况下，预先分配 goroutine 队列内存将会减少不必要的内存重新分配。
+`ants` 支持预先为 pool 分配容量的内存， 这个功能可以在某些特定的场景下提高 goroutine 池的性能。比如， 有一个场景需要一个超大容量的池，而且每个 goroutine 里面的任务都是耗时任务，这种情况下，预先分配 goroutine 队列内存将会减少不必要的内存重新分配。
 
 ```go
-// ants will pre-malloc the whole capacity of pool when you invoke this function
+// 提前分配的 pool 容量的内存空间
 p, _ := ants.NewPool(100000, ants.WithPreAlloc(true))
 ```
 
@@ -281,6 +108,12 @@ p, _ := ants.NewPool(100000, ants.WithPreAlloc(true))
 
 ```go
 pool.Release()
+```
+
+或者
+
+```go
+pool.ReleaseTimeout(time.Second * 3)
 ```
 
 ### 重启 Pool
@@ -323,7 +156,7 @@ pool.Reboot()
   <tbody>
     <tr>
       <td align="center" valign="middle">
-        <a href="https://www.tencent.com">
+        <a href="https://www.tencent.com/">
           <img src="https://res.strikefreedom.top/static_res/logos/tencent_logo.png" width="250" />
         </a>
       </td>
@@ -368,56 +201,68 @@ pool.Reboot()
     <tr>
       <td align="center" valign="middle">
         <a href="https://www.baidu.com/" target="_blank">
-          <img src="https://res.strikefreedom.top/static_res/logos/baidu-mobile.png" width="250" />
+          <img src="https://res.strikefreedom.top/static_res/logos/baidu-mobile-logo.png" width="250" />
         </a>
       </td>
       <td align="center" valign="middle">
-        <a href="https://www.360.com" target="_blank">
+        <a href="https://www.360.com/" target="_blank">
           <img src="https://res.strikefreedom.top/static_res/logos/360-logo.png" width="250" />
         </a>
       </td>
       <td align="center" valign="middle">
-        <a href="https://www.huaweicloud.com" target="_blank">
+        <a href="https://www.huaweicloud.com/" target="_blank">
           <img src="https://res-static.hc-cdn.cn/cloudbu-site/china/zh-cn/wangxue/header/logo.svg" width="250" />
         </a>
       </td>
       <td align="center" valign="middle">
-        <a href="https://matrixorigin.cn" target="_blank">
+        <a href="https://matrixorigin.cn/" target="_blank">
           <img src="https://matrixorigin.cn/_next/static/media/logo-light-zh.a2a8f3c0.svg" width="250" />
         </a>
       </td>
     </tr>
     <tr>
       <td align="center" valign="middle">
-        <a href="https://adguard-dns.io" target="_blank">
+        <a href="https://adguard-dns.io/" target="_blank">
           <img src="https://cdn.adtidy.org/website/images/AdGuardDNS_black.svg" width="250" />
         </a>
       </td>
       <td align="center" valign="middle">
-        <a href="https://bk.tencent.com" target="_blank">
+        <a href="https://bk.tencent.com/" target="_blank">
           <img src="https://static.apiseven.com/2022/11/14/6371adab14119.png" width="250" />
         </a>
       </td>
       <td align="center" valign="middle">
-        <a href="https://cn.aliyun.com" target="_blank">
-          <img src="https://res.strikefreedom.top/static_res/logos/aliyun-cn.png" width="250" />
+        <a href="https://cn.aliyun.com/" target="_blank">
+          <img src="https://res.strikefreedom.top/static_res/logos/aliyun-cn-logo.png" width="250" />
         </a>
       </td>
       <td align="center" valign="middle">
-        <a href="https://www.zuoyebang.com" target="_blank">
+        <a href="https://www.zuoyebang.com/" target="_blank">
           <img src="https://res.strikefreedom.top/static_res/logos/zuoyebang-logo.jpeg" width="300" />
         </a>
       </td>
     </tr>
     <tr>
       <td align="center" valign="middle">
-        <a href="https://www.antgroup.com" target="_blank">
-          <img src="https://gw.alipayobjects.com/mdn/rms_27e257/afts/img/A*PLZaSZnCPAwAAAAAAAAAAAAAARQnAQ" width="250" />
+        <a href="https://www.antgroup.com/" target="_blank">
+          <img src="https://res.strikefreedom.top/static_res/logos/ant-group-logo.png" width="250" />
+        </a>
+      </td>
+      <td align="center" valign="middle">
+        <a href="https://zilliz.com/" target="_blank">
+          <img src="https://res.strikefreedom.top/static_res/logos/zilliz-logo.png" width="250" />
+        </a>
+      </td>
+      <td align="center" valign="middle">
+        <a href="https://amap.com/" target="_blank">
+          <img src="https://res.strikefreedom.top/static_res/logos/amap-logo.png" width="250" />
         </a>
       </td>
     </tr>
   </tbody>
 </table>
+
+如果你也正在生产环境上使用 `ants`，欢迎提 PR 来丰富这份列表。
 
 ### 开源软件
 
@@ -426,6 +271,7 @@ pool.Reboot()
 - [gnet](https://github.com/panjf2000/gnet):  gnet 是一个高性能、轻量级、非阻塞的事件驱动 Go 网络框架。
 - [milvus](https://github.com/milvus-io/milvus): 一个高度灵活、可靠且速度极快的云原生开源向量数据库。
 - [nps](https://github.com/ehang-io/nps): 一款轻量级、高性能、功能强大的内网穿透代理服务器。
+- [TDengine](https://github.com/taosdata/TDengine): TDengine 是一款开源、高性能、云原生的时序数据库 (Time-Series Database, TSDB)。TDengine 能被广泛运用于物联网、工业互联网、车联网、IT 运维、金融等领域。
 - [siyuan](https://github.com/siyuan-note/siyuan): 思源笔记是一款本地优先的个人知识管理系统，支持完全离线使用，同时也支持端到端加密同步。
 - [osmedeus](https://github.com/j3ssie/osmedeus): A Workflow Engine for Offensive Security.
 - [jitsu](https://github.com/jitsucom/jitsu/tree/master): An open-source Segment alternative. Fully-scriptable data ingestion engine for modern data teams. Set-up a real-time data pipeline in minutes, not days.
@@ -442,7 +288,7 @@ pool.Reboot()
 - [WatchAD2.0](https://github.com/Qihoo360/WatchAD2.0): WatchAD2.0 是 360 信息安全中心开发的一款针对域安全的日志分析与监控系统，它可以收集所有域控上的事件日志、网络流量，通过特征匹配、协议分析、历史行为、敏感操作和蜜罐账户等方式来检测各种已知与未知威胁，功能覆盖了大部分目前的常见内网域渗透手法。
 - [vanus](https://github.com/vanus-labs/vanus): Vanus is a Serverless, event streaming system with processing capabilities. It easily connects SaaS, Cloud Services, and Databases to help users build next-gen Event-driven Applications.
 - [trpc-go](https://github.com/trpc-group/trpc-go): 一个 Go 实现的可插拔的高性能 RPC 框架。
-- [motan-go](https://github.com/weibocom/motan-go): 一套高性能、易于使用的分布式远程服务调用(RPC)框架。motan-go 是 motan 的 Go 语言实现。
+- [motan-go](https://github.com/weibocom/motan-go): Motan 是一套高性能、易于使用的分布式远程服务调用 (RPC) 框架。motan-go 是 motan 的 Go 语言实现。
 
 #### 所有案例:
 
@@ -456,7 +302,7 @@ pool.Reboot()
 
 `ants` 项目一直以来都是在 JetBrains 公司旗下的 GoLand 集成开发环境中进行开发，基于 **free JetBrains Open Source license(s)** 正版免费授权，在此表达我的谢意。
 
-<a href="https://www.jetbrains.com/?from=ants" target="_blank"><img src="https://raw.githubusercontent.com/panjf2000/illustrations/master/jetbrains/jetbrains-variant-4.png" width="250" align="middle"/></a>
+<a href="https://www.jetbrains.com/?from=ants" target="_blank"><img src="https://resources.jetbrains.com/storage/products/company/brand/logos/jetbrains.svg" alt="JetBrains logo."></a>
 
 ## 💰 支持
 
@@ -477,50 +323,6 @@ pool.Reboot()
 <img src="https://raw.githubusercontent.com/panjf2000/illustrations/master/payments/WeChatPay.JPG" width="250" align="middle"/>&nbsp;&nbsp;
 <img src="https://raw.githubusercontent.com/panjf2000/illustrations/master/payments/AliPay.JPG" width="250" align="middle"/>&nbsp;&nbsp;
 <a href="https://www.paypal.me/R136a1X" target="_blank"><img src="https://raw.githubusercontent.com/panjf2000/illustrations/master/payments/PayPal.JPG" width="250" align="middle"/></a>&nbsp;&nbsp;
-
-## 资助者
-
-<table>
-  <tbody>
-    <tr>
-      <td align="center" valign="middle">
-        <a target="_blank" href="https://github.com/patrick-othmer">
-          <img src="https://avatars1.githubusercontent.com/u/8964313" width="100" alt="Patrick Othmer" />
-        </a>
-      </td>
-      <td align="center" valign="middle">
-        <a target="_blank" href="https://github.com/panjf2000/ants">
-          <img src="https://avatars2.githubusercontent.com/u/50285334" width="100" alt="Jimmy" />
-        </a>
-      </td>
-      <td align="center" valign="middle">
-        <a target="_blank" href="https://github.com/cafra">
-          <img src="https://avatars0.githubusercontent.com/u/13758306" width="100" alt="ChenZhen" />
-        </a>
-      </td>
-      <td align="center" valign="middle">
-        <a target="_blank" href="https://github.com/yangwenmai">
-          <img src="https://avatars0.githubusercontent.com/u/1710912" width="100" alt="Mai Yang" />
-        </a>
-      </td>
-      <td align="center" valign="middle">
-        <a target="_blank" href="https://github.com/BeijingWks">
-          <img src="https://avatars3.githubusercontent.com/u/33656339" width="100" alt="王开帅" />
-        </a>
-      </td>
-      <td align="center" valign="middle">
-        <a target="_blank" href="https://github.com/refs">
-          <img src="https://avatars3.githubusercontent.com/u/6905948" width="100" alt="Unger Alejandro" />
-        </a>
-      </td>
-      <td align="center" valign="middle">
-        <a target="_blank" href="https://github.com/Wuvist">
-          <img src="https://avatars.githubusercontent.com/u/657796" width="100" alt="Weng Wei" />
-        </a>
-      </td>
-    </tr>
-  </tbody>
-</table>
 
 ## 🔋 赞助商
 

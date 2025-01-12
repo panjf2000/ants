@@ -15,7 +15,7 @@ import (
 Benchmark result for three types of locks:
 	goos: darwin
 	goarch: arm64
-	pkg: github.com/panjf2000/ants/v2/internal/sync
+	pkg: github.com/panjf2000/ants/v2/pkg/sync
 	BenchmarkMutex-10              	10452573	       111.1 ns/op	       0 B/op	       0 allocs/op
 	BenchmarkSpinLock-10           	58953211	        18.01 ns/op	       0 B/op	       0 allocs/op
 	BenchmarkBackOffSpinLock-10    	100000000	        10.81 ns/op	       0 B/op	       0 allocs/op
