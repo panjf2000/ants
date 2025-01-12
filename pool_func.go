@@ -28,7 +28,7 @@ import (
 	"sync/atomic"
 	"time"
 
-	syncx "github.com/panjf2000/ants/v2/internal/sync"
+	syncx "github.com/panjf2000/ants/v2/pkg/sync"
 )
 
 // PoolWithFunc accepts the tasks and process them concurrently,
