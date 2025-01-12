@@ -6,15 +6,17 @@ import (
 	"testing"
 	"time"
 
-	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestNewLoopQueue(t *testing.T) {
 	size := 100
 	q := newWorkerLoopQueue(size)
-	assert.EqualValues(t, 0, q.len(), "Len error")
-	assert.Equal(t, true, q.isEmpty(), "IsEmpty error")
-	assert.Nil(t, q.detach(), "Dequeue error")
+	require.EqualValues(t, 0, q.len(), "Len error")
+	require.Equal(t, true, q.isEmpty(), "IsEmpty error")
+	require.Nil(t, q.detach(), "Dequeue error")
+
+	require.Nil(t, newWorkerLoopQueue(0))
 }
 
 func TestLoopQueue(t *testing.T) {
@@ -27,9 +29,9 @@ func TestLoopQueue(t *testing.T) {
 			break
 		}
 	}
-	assert.EqualValues(t, 5, q.len(), "Len error")
+	require.EqualValues(t, 5, q.len(), "Len error")
 	_ = q.detach()
-	assert.EqualValues(t, 4, q.len(), "Len error")
+	require.EqualValues(t, 4, q.len(), "Len error")
 
 	time.Sleep(time.Second)
 
@@ -39,13 +41,13 @@ func TestLoopQueue(t *testing.T) {
 			break
 		}
 	}
-	assert.EqualValues(t, 10, q.len(), "Len error")
+	require.EqualValues(t, 10, q.len(), "Len error")
 
 	err := q.insert(&goWorker{lastUsed: time.Now()})
-	assert.Error(t, err, "Enqueue, error")
+	require.Error(t, err, "Enqueue, error")
 
 	q.refresh(time.Second)
-	assert.EqualValuesf(t, 6, q.len(), "Len error: %d", q.len())
+	require.EqualValuesf(t, 6, q.len(), "Len error: %d", q.len())
 }
 
 func TestRotatedQueueSearch(t *testing.T) {
@@ -57,18 +59,18 @@ func TestRotatedQueueSearch(t *testing.T) {
 
 	_ = q.insert(&goWorker{lastUsed: time.Now()})
 
-	assert.EqualValues(t, 0, q.binarySearch(time.Now()), "index should be 0")
-	assert.EqualValues(t, -1, q.binarySearch(expiry1), "index should be -1")
+	require.EqualValues(t, 0, q.binarySearch(time.Now()), "index should be 0")
+	require.EqualValues(t, -1, q.binarySearch(expiry1), "index should be -1")
 
 	// 2
 	expiry2 := time.Now()
 	_ = q.insert(&goWorker{lastUsed: time.Now()})
 
-	assert.EqualValues(t, -1, q.binarySearch(expiry1), "index should be -1")
+	require.EqualValues(t, -1, q.binarySearch(expiry1), "index should be -1")
 
-	assert.EqualValues(t, 0, q.binarySearch(expiry2), "index should be 0")
+	require.EqualValues(t, 0, q.binarySearch(expiry2), "index should be 0")
 
-	assert.EqualValues(t, 1, q.binarySearch(time.Now()), "index should be 1")
+	require.EqualValues(t, 1, q.binarySearch(time.Now()), "index should be 1")
 
 	// more
 	for i := 0; i < 5; i++ {
@@ -83,7 +85,7 @@ func TestRotatedQueueSearch(t *testing.T) {
 		err = q.insert(&goWorker{lastUsed: time.Now()})
 	}
 
-	assert.EqualValues(t, 7, q.binarySearch(expiry3), "index should be 7")
+	require.EqualValues(t, 7, q.binarySearch(expiry3), "index should be 7")
 
 	// rotate
 	for i := 0; i < 6; i++ {
@@ -98,7 +100,7 @@ func TestRotatedQueueSearch(t *testing.T) {
 	}
 	//	head = 6, tail = 5, insert direction ->
 	// [expiry4, time, time, time,  time, nil/tail,  time/head, time, time, time]
-	assert.EqualValues(t, 0, q.binarySearch(expiry4), "index should be 0")
+	require.EqualValues(t, 0, q.binarySearch(expiry4), "index should be 0")
 
 	for i := 0; i < 3; i++ {
 		_ = q.detach()
@@ -108,17 +110,17 @@ func TestRotatedQueueSearch(t *testing.T) {
 
 	//	head = 6, tail = 5, insert direction ->
 	// [expiry4, time, time, time,  time, expiry5,  nil/tail, nil, nil, time/head]
-	assert.EqualValues(t, 5, q.binarySearch(expiry5), "index should be 5")
+	require.EqualValues(t, 5, q.binarySearch(expiry5), "index should be 5")
 
 	for i := 0; i < 3; i++ {
 		_ = q.insert(&goWorker{lastUsed: time.Now()})
 	}
 	//	head = 9, tail = 9, insert direction ->
 	// [expiry4, time, time, time,  time, expiry5,  time, time, time, time/head/tail]
-	assert.EqualValues(t, -1, q.binarySearch(expiry2), "index should be -1")
+	require.EqualValues(t, -1, q.binarySearch(expiry2), "index should be -1")
 
-	assert.EqualValues(t, 9, q.binarySearch(q.items[9].lastUsedTime()), "index should be 9")
-	assert.EqualValues(t, 8, q.binarySearch(time.Now()), "index should be 8")
+	require.EqualValues(t, 9, q.binarySearch(q.items[9].lastUsedTime()), "index should be 9")
+	require.EqualValues(t, 8, q.binarySearch(time.Now()), "index should be 8")
 }
 
 func TestRetrieveExpiry(t *testing.T) {
@@ -139,7 +141,7 @@ func TestRetrieveExpiry(t *testing.T) {
 	}
 	workers := q.refresh(u)
 
-	assert.EqualValues(t, expirew, workers, "expired workers aren't right")
+	require.EqualValues(t, expirew, workers, "expired workers aren't right")
 
 	// test [ time, time, time, time, time, time+1s, time+1s, time+1s, time+1s, time+1s]
 	time.Sleep(u)
@@ -152,7 +154,7 @@ func TestRetrieveExpiry(t *testing.T) {
 
 	workers2 := q.refresh(u)
 
-	assert.EqualValues(t, expirew, workers2, "expired workers aren't right")
+	require.EqualValues(t, expirew, workers2, "expired workers aren't right")
 
 	// test [ time+1s, time+1s, time+1s, nil, nil, time+1s, time+1s, time+1s, time+1s, time+1s]
 	for i := 0; i < size/2; i++ {
@@ -172,5 +174,5 @@ func TestRetrieveExpiry(t *testing.T) {
 
 	workers3 := q.refresh(u)
 
-	assert.EqualValues(t, expirew, workers3, "expired workers aren't right")
+	require.EqualValues(t, expirew, workers3, "expired workers aren't right")
 }

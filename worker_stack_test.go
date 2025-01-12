@@ -6,15 +6,15 @@ import (
 	"testing"
 	"time"
 
-	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestNewWorkerStack(t *testing.T) {
 	size := 100
 	q := newWorkerStack(size)
-	assert.EqualValues(t, 0, q.len(), "Len error")
-	assert.Equal(t, true, q.isEmpty(), "IsEmpty error")
-	assert.Nil(t, q.detach(), "Dequeue error")
+	require.EqualValues(t, 0, q.len(), "Len error")
+	require.Equal(t, true, q.isEmpty(), "IsEmpty error")
+	require.Nil(t, q.detach(), "Dequeue error")
 }
 
 func TestWorkerStack(t *testing.T) {
@@ -26,7 +26,7 @@ func TestWorkerStack(t *testing.T) {
 			break
 		}
 	}
-	assert.EqualValues(t, 5, q.len(), "Len error")
+	require.EqualValues(t, 5, q.len(), "Len error")
 
 	expired := time.Now()
 
@@ -43,9 +43,9 @@ func TestWorkerStack(t *testing.T) {
 			t.Fatal("Enqueue error")
 		}
 	}
-	assert.EqualValues(t, 12, q.len(), "Len error")
+	require.EqualValues(t, 12, q.len(), "Len error")
 	q.refresh(time.Second)
-	assert.EqualValues(t, 6, q.len(), "Len error")
+	require.EqualValues(t, 6, q.len(), "Len error")
 }
 
 // It seems that something wrong with time.Now() on Windows, not sure whether it is a bug on Windows,
@@ -58,18 +58,18 @@ func TestSearch(t *testing.T) {
 
 	_ = q.insert(&goWorker{lastUsed: time.Now()})
 
-	assert.EqualValues(t, 0, q.binarySearch(0, q.len()-1, time.Now()), "index should be 0")
-	assert.EqualValues(t, -1, q.binarySearch(0, q.len()-1, expiry1), "index should be -1")
+	require.EqualValues(t, 0, q.binarySearch(0, q.len()-1, time.Now()), "index should be 0")
+	require.EqualValues(t, -1, q.binarySearch(0, q.len()-1, expiry1), "index should be -1")
 
 	// 2
 	expiry2 := time.Now()
 	_ = q.insert(&goWorker{lastUsed: time.Now()})
 
-	assert.EqualValues(t, -1, q.binarySearch(0, q.len()-1, expiry1), "index should be -1")
+	require.EqualValues(t, -1, q.binarySearch(0, q.len()-1, expiry1), "index should be -1")
 
-	assert.EqualValues(t, 0, q.binarySearch(0, q.len()-1, expiry2), "index should be 0")
+	require.EqualValues(t, 0, q.binarySearch(0, q.len()-1, expiry2), "index should be 0")
 
-	assert.EqualValues(t, 1, q.binarySearch(0, q.len()-1, time.Now()), "index should be 1")
+	require.EqualValues(t, 1, q.binarySearch(0, q.len()-1, time.Now()), "index should be 1")
 
 	// more
 	for i := 0; i < 5; i++ {
@@ -84,5 +84,5 @@ func TestSearch(t *testing.T) {
 		_ = q.insert(&goWorker{lastUsed: time.Now()})
 	}
 
-	assert.EqualValues(t, 7, q.binarySearch(0, q.len()-1, expiry3), "index should be 7")
+	require.EqualValues(t, 7, q.binarySearch(0, q.len()-1, expiry3), "index should be 7")
 }

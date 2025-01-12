@@ -31,6 +31,8 @@ import (
 // it starts a goroutine that accepts tasks and
 // performs function calls.
 type goWorker struct {
+	worker
+
 	// pool who owns this worker.
 	pool *Pool
 
@@ -90,8 +92,4 @@ func (w *goWorker) setLastUsedTime(t time.Time) {
 
 func (w *goWorker) inputFunc(fn func()) {
 	w.task <- fn
-}
-
-func (w *goWorker) inputArg(any) {
-	panic("unreachable")
 }

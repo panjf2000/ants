@@ -1078,17 +1078,22 @@ func TestReleaseWhenRunningPoolWithFuncGeneric(t *testing.T) {
 
 func TestRestCodeCoverage(t *testing.T) {
 	_, err := NewPool(-1, WithExpiryDuration(-1))
-	t.Log(err)
+	require.ErrorIs(t, err, ErrInvalidPoolExpiry)
 	_, err = NewPool(1, WithExpiryDuration(-1))
-	t.Log(err)
+	require.ErrorIs(t, err, ErrInvalidPoolExpiry)
 	_, err = NewPoolWithFunc(-1, demoPoolFunc, WithExpiryDuration(-1))
-	t.Log(err)
+	require.ErrorIs(t, err, ErrInvalidPoolExpiry)
 	_, err = NewPoolWithFunc(1, demoPoolFunc, WithExpiryDuration(-1))
-	t.Log(err)
+	require.ErrorIs(t, err, ErrInvalidPoolExpiry)
+	_, err = NewPoolWithFunc(1, nil, WithExpiryDuration(-1))
+	require.ErrorIs(t, err, ErrLackPoolFunc)
 	_, err = NewPoolWithFuncGeneric(-1, demoPoolFuncInt, WithExpiryDuration(-1))
-	t.Log(err)
+	require.ErrorIs(t, err, ErrInvalidPoolExpiry)
 	_, err = NewPoolWithFuncGeneric(1, demoPoolFuncInt, WithExpiryDuration(-1))
-	t.Log(err)
+	require.ErrorIs(t, err, ErrInvalidPoolExpiry)
+	var fn func(i int)
+	_, err = NewPoolWithFuncGeneric(1, fn, WithExpiryDuration(-1))
+	require.ErrorIs(t, err, ErrLackPoolFunc)
 
 	options := Options{}
 	options.ExpiryDuration = time.Duration(10) * time.Second
@@ -1345,8 +1350,12 @@ func TestDefaultPoolReleaseTimeout(t *testing.T) {
 }
 
 func TestMultiPool(t *testing.T) {
-	_, err := NewMultiPool(10, -1, 8)
+	_, err := NewMultiPool(-1, 10, 8)
+	require.ErrorIs(t, err, ErrInvalidMultiPoolSize)
+	_, err = NewMultiPool(10, -1, 8)
 	require.ErrorIs(t, err, ErrInvalidLoadBalancingStrategy)
+	_, err = NewMultiPool(10, 10, RoundRobin, WithExpiryDuration(-1))
+	require.ErrorIs(t, err, ErrInvalidPoolExpiry)
 
 	mp, err := NewMultiPool(10, 5, RoundRobin)
 	testFn := func() {
@@ -1381,6 +1390,8 @@ func TestMultiPool(t *testing.T) {
 		}
 		atomic.StoreInt32(&stopLongRunningFunc, 1)
 		require.NoError(t, mp.ReleaseTimeout(3*time.Second))
+		require.ErrorIs(t, mp.ReleaseTimeout(3*time.Second), ErrPoolClosed)
+		require.ErrorIs(t, mp.Submit(nil), ErrPoolClosed)
 		require.Zero(t, mp.Running())
 		require.True(t, mp.IsClosed())
 		atomic.StoreInt32(&stopLongRunningFunc, 0)
@@ -1400,8 +1411,12 @@ func TestMultiPool(t *testing.T) {
 }
 
 func TestMultiPoolWithFunc(t *testing.T) {
-	_, err := NewMultiPoolWithFunc(10, -1, longRunningPoolFunc, 8)
+	_, err := NewMultiPoolWithFunc(-1, 10, longRunningPoolFunc, 8)
+	require.ErrorIs(t, err, ErrInvalidMultiPoolSize)
+	_, err = NewMultiPoolWithFunc(10, -1, longRunningPoolFunc, 8)
 	require.ErrorIs(t, err, ErrInvalidLoadBalancingStrategy)
+	_, err = NewMultiPoolWithFunc(10, 10, longRunningPoolFunc, RoundRobin, WithExpiryDuration(-1))
+	require.ErrorIs(t, err, ErrInvalidPoolExpiry)
 
 	ch := make(chan struct{})
 	mp, err := NewMultiPoolWithFunc(10, 5, longRunningPoolFunc, RoundRobin)
@@ -1437,6 +1452,8 @@ func TestMultiPoolWithFunc(t *testing.T) {
 		}
 		close(ch)
 		require.NoError(t, mp.ReleaseTimeout(3*time.Second))
+		require.ErrorIs(t, mp.ReleaseTimeout(3*time.Second), ErrPoolClosed)
+		require.ErrorIs(t, mp.Invoke(nil), ErrPoolClosed)
 		require.Zero(t, mp.Running())
 		require.True(t, mp.IsClosed())
 		ch = make(chan struct{})
@@ -1456,8 +1473,12 @@ func TestMultiPoolWithFunc(t *testing.T) {
 }
 
 func TestMultiPoolWithFuncGeneric(t *testing.T) {
-	_, err := NewMultiPoolWithFuncGeneric(10, -1, longRunningPoolFuncCh, 8)
+	_, err := NewMultiPoolWithFuncGeneric(-1, 10, longRunningPoolFuncCh, 8)
+	require.ErrorIs(t, err, ErrInvalidMultiPoolSize)
+	_, err = NewMultiPoolWithFuncGeneric(10, -1, longRunningPoolFuncCh, 8)
 	require.ErrorIs(t, err, ErrInvalidLoadBalancingStrategy)
+	_, err = NewMultiPoolWithFuncGeneric(10, 10, longRunningPoolFuncCh, RoundRobin, WithExpiryDuration(-1))
+	require.ErrorIs(t, err, ErrInvalidPoolExpiry)
 
 	ch := make(chan struct{})
 	mp, err := NewMultiPoolWithFuncGeneric(10, 5, longRunningPoolFuncCh, RoundRobin)
@@ -1493,6 +1514,8 @@ func TestMultiPoolWithFuncGeneric(t *testing.T) {
 		}
 		close(ch)
 		require.NoError(t, mp.ReleaseTimeout(3*time.Second))
+		require.ErrorIs(t, mp.ReleaseTimeout(3*time.Second), ErrPoolClosed)
+		require.ErrorIs(t, mp.Invoke(nil), ErrPoolClosed)
 		require.Zero(t, mp.Running())
 		require.True(t, mp.IsClosed())
 		ch = make(chan struct{})

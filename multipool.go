@@ -25,6 +25,7 @@ package ants
 import (
 	"errors"
 	"fmt"
+	"math"
 	"strings"
 	"sync/atomic"
 	"time"
@@ -58,6 +59,10 @@ type MultiPool struct {
 // NewMultiPool instantiates a MultiPool with a size of the pool list and a size
 // per pool, and the load-balancing strategy.
 func NewMultiPool(size, sizePerPool int, lbs LoadBalancingStrategy, options ...Option) (*MultiPool, error) {
+	if size <= 0 {
+		return nil, ErrInvalidMultiPoolSize
+	}
+
 	if lbs != RoundRobin && lbs != LeastTasks {
 		return nil, ErrInvalidLoadBalancingStrategy
 	}
@@ -69,16 +74,13 @@ func NewMultiPool(size, sizePerPool int, lbs LoadBalancingStrategy, options ...O
 		}
 		pools[i] = pool
 	}
-	return &MultiPool{pools: pools, lbs: lbs}, nil
+	return &MultiPool{pools: pools, index: math.MaxUint32, lbs: lbs}, nil
 }
 
 func (mp *MultiPool) next(lbs LoadBalancingStrategy) (idx int) {
 	switch lbs {
 	case RoundRobin:
-		if idx = int((atomic.AddUint32(&mp.index, 1) - 1) % uint32(len(mp.pools))); idx == -1 {
-			idx = 0
-		}
-		return
+		return int(atomic.AddUint32(&mp.index, 1) % uint32(len(mp.pools)))
 	case LeastTasks:
 		leastTasks := 1<<31 - 1
 		for i, pool := range mp.pools {
