@@ -25,7 +25,7 @@ Library `ants` implements a goroutine pool with fixed capacity, managing and rec
 - Purging overdue goroutines periodically
 - Abundant APIs: submitting tasks, getting the number of running goroutines, tuning the capacity of the pool dynamically, releasing the pool, rebooting the pool, etc.
 - Handle panic gracefully to prevent programs from crash
-- Efficient in memory usage and it may even achieve ***higher performance*** than unlimited goroutines in Golang
+- Efficient in memory usage and it may even achieve ***higher performance*** than unlimited goroutines in Go
 - Nonblocking mechanism
 - Preallocated memory (ring buffer, optional)
 
@@ -62,205 +62,30 @@ go get -u github.com/panjf2000/ants/v2
 ```
 
 ## 🛠 How to use
-Just imagine that your program starts a massive number of goroutines, resulting in a huge consumption of memory. To mitigate that kind of situation, all you need to do is to import `ants` package and submit all your tasks to a default pool with fixed capacity, activated when package `ants` is imported:
+Check out [the examples](https://pkg.go.dev/github.com/panjf2000/ants/v2#pkg-examples) for basic usage.
 
-``` go
-package main
+### Functional options for pool
 
-import (
-	"fmt"
-	"sync"
-	"sync/atomic"
-	"time"
+`ants.Options`contains all optional configurations of the ants pool, which allows you to customize the goroutine pool by invoking option functions to set up each configuration in `NewPool`/`NewPoolWithFunc`/`NewPoolWithFuncGeneric` method.
 
-	"github.com/panjf2000/ants/v2"
-)
+Check out [ants.Options](https://pkg.go.dev/github.com/panjf2000/ants/v2#Options) and [ants.Option](https://pkg.go.dev/github.com/panjf2000/ants/v2#Option) for more details.
 
-var sum int32
+### Customize pool capacity
 
-func myFunc(i any) {
-	n := i.(int32)
-	atomic.AddInt32(&sum, n)
-	fmt.Printf("run with %d\n", n)
-}
-
-func demoFunc() {
-	time.Sleep(10 * time.Millisecond)
-	fmt.Println("Hello World!")
-}
-
-func main() {
-	defer ants.Release()
-
-	runTimes := 1000
-
-	// Use the common pool.
-	var wg sync.WaitGroup
-	syncCalculateSum := func() {
-		demoFunc()
-		wg.Done()
-	}
-	for i := 0; i < runTimes; i++ {
-		wg.Add(1)
-		_ = ants.Submit(syncCalculateSum)
-	}
-	wg.Wait()
-	fmt.Printf("running goroutines: %d\n", ants.Running())
-	fmt.Printf("finish all tasks.\n")
-
-	// Use the pool with a function,
-	// set 10 to the capacity of goroutine pool and 1 second for expired duration.
-	p, _ := ants.NewPoolWithFunc(10, func(i any) {
-		myFunc(i)
-		wg.Done()
-	})
-	defer p.Release()
-	// Submit tasks one by one.
-	for i := 0; i < runTimes; i++ {
-		wg.Add(1)
-		_ = p.Invoke(int32(i))
-	}
-	wg.Wait()
-	fmt.Printf("running goroutines: %d\n", p.Running())
-	fmt.Printf("finish all tasks, result is %d\n", sum)
-	if sum != 499500 {
-		panic("the final result is wrong!!!")
-	}
-
-	// Use the MultiPool and set the capacity of the 10 goroutine pools to unlimited.
-	// If you use -1 as the pool size parameter, the size will be unlimited.
-	// There are two load-balancing algorithms for pools: ants.RoundRobin and ants.LeastTasks.
-	mp, _ := ants.NewMultiPool(10, -1, ants.RoundRobin)
-	defer mp.ReleaseTimeout(5 * time.Second)
-	for i := 0; i < runTimes; i++ {
-		wg.Add(1)
-		_ = mp.Submit(syncCalculateSum)
-	}
-	wg.Wait()
-	fmt.Printf("running goroutines: %d\n", mp.Running())
-	fmt.Printf("finish all tasks.\n")
-
-	// Use the MultiPoolFunc and set the capacity of 10 goroutine pools to (runTimes/10).
-	mpf, _ := ants.NewMultiPoolWithFunc(10, runTimes/10, func(i any) {
-		myFunc(i)
-		wg.Done()
-	}, ants.LeastTasks)
-	defer mpf.ReleaseTimeout(5 * time.Second)
-	for i := 0; i < runTimes; i++ {
-		wg.Add(1)
-		_ = mpf.Invoke(int32(i))
-	}
-	wg.Wait()
-	fmt.Printf("running goroutines: %d\n", mpf.Running())
-	fmt.Printf("finish all tasks, result is %d\n", sum)
-	if sum != 499500*2 {
-		panic("the final result is wrong!!!")
-	}
-}
-```
-
-###  Functional options for ants pool
-
-```go
-// Option represents the optional function.
-type Option func(opts *Options)
-
-// Options contains all options which will be applied when instantiating a ants pool.
-type Options struct {
-	// ExpiryDuration is a period for the scavenger goroutine to clean up those expired workers,
-	// the scavenger scans all workers every `ExpiryDuration` and clean up those workers that haven't been
-	// used for more than `ExpiryDuration`.
-	ExpiryDuration time.Duration
-
-	// PreAlloc indicates whether to make memory pre-allocation when initializing Pool.
-	PreAlloc bool
-
-	// Max number of goroutine blocking on pool.Submit.
-	// 0 (default value) means no such limit.
-	MaxBlockingTasks int
-
-	// When Nonblocking is true, Pool.Submit will never be blocked.
-	// ErrPoolOverload will be returned when Pool.Submit cannot be done at once.
-	// When Nonblocking is true, MaxBlockingTasks is inoperative.
-	Nonblocking bool
-
-	// PanicHandler is used to handle panics from each worker goroutine.
-	// if nil, panics will be thrown out again from worker goroutines.
-	PanicHandler func(any)
-
-	// Logger is the customized logger for logging info, if it is not set,
-	// default standard logger from log package is used.
-	Logger Logger
-}
-
-// WithOptions accepts the whole options config.
-func WithOptions(options Options) Option {
-	return func(opts *Options) {
-		*opts = options
-	}
-}
-
-// WithExpiryDuration sets up the interval time of cleaning up goroutines.
-func WithExpiryDuration(expiryDuration time.Duration) Option {
-	return func(opts *Options) {
-		opts.ExpiryDuration = expiryDuration
-	}
-}
-
-// WithPreAlloc indicates whether it should malloc for workers.
-func WithPreAlloc(preAlloc bool) Option {
-	return func(opts *Options) {
-		opts.PreAlloc = preAlloc
-	}
-}
-
-// WithMaxBlockingTasks sets up the maximum number of goroutines that are blocked when it reaches the capacity of pool.
-func WithMaxBlockingTasks(maxBlockingTasks int) Option {
-	return func(opts *Options) {
-		opts.MaxBlockingTasks = maxBlockingTasks
-	}
-}
-
-// WithNonblocking indicates that pool will return nil when there is no available workers.
-func WithNonblocking(nonblocking bool) Option {
-	return func(opts *Options) {
-		opts.Nonblocking = nonblocking
-	}
-}
-
-// WithPanicHandler sets up panic handler.
-func WithPanicHandler(panicHandler func(any)) Option {
-	return func(opts *Options) {
-		opts.PanicHandler = panicHandler
-	}
-}
-
-// WithLogger sets up a customized logger.
-func WithLogger(logger Logger) Option {
-	return func(opts *Options) {
-		opts.Logger = logger
-	}
-}
-```
-
-`ants.Options`contains all optional configurations of the ants pool, which allows you to customize the goroutine pool by invoking option functions to set up each configuration in `NewPool`/`NewPoolWithFunc`method.
-
-### Customize limited pool
-
-`ants` also supports customizing the capacity of the pool. You can invoke the `NewPool` method to instantiate a pool with a given capacity, as follows:
+`ants` supports customizing the capacity of the pool. You can call the `NewPool` method to instantiate a `Pool` with a given capacity, as follows:
 
 ``` go
 p, _ := ants.NewPool(10000)
 ```
 
 ### Submit tasks
-Tasks can be submitted by calling `ants.Submit(func())`
+Tasks can be submitted by calling `ants.Submit`
 ```go
 ants.Submit(func(){})
 ```
 
-### Tune pool capacity in runtime
-You can tune the capacity of  `ants` pool in runtime with `Tune(int)`:
+### Tune pool capacity at runtime
+You can tune the capacity of `ants` pool at runtime with `ants.Tune`:
 
 ``` go
 pool.Tune(1000) // Tune its capacity to 1000
@@ -274,11 +99,11 @@ Don't worry about the contention problems in this case, the method here is threa
 `ants` allows you to pre-allocate the memory of the goroutine queue in the pool, which may get a performance enhancement under some special certain circumstances such as the scenario that requires a pool with ultra-large capacity, meanwhile, each task in goroutine lasts for a long time, in this case, pre-mallocing will reduce a lot of memory allocation in goroutine queue.
 
 ```go
-// ants will pre-malloc the whole capacity of pool when you invoke this method
+// ants will pre-malloc the whole capacity of pool when calling ants.NewPool.
 p, _ := ants.NewPool(100000, ants.WithPreAlloc(true))
 ```
 
-### Release Pool
+### Release pool
 
 ```go
 pool.Release()
@@ -290,10 +115,10 @@ or
 pool.ReleaseTimeout(time.Second * 3)
 ```
 
-### Reboot Pool
+### Reboot pool
 
 ```go
-// A pool that has been released can be still used once you invoke the Reboot().
+// A pool that has been released can be still used after calling the Reboot().
 pool.Reboot()
 ```
 
