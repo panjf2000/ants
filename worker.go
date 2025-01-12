@@ -84,10 +84,14 @@ func (w *goWorker) lastUsedTime() time.Time {
 	return w.lastUsed
 }
 
+func (w *goWorker) setLastUsedTime(t time.Time) {
+	w.lastUsed = t
+}
+
 func (w *goWorker) inputFunc(fn func()) {
 	w.task <- fn
 }
 
-func (w *goWorker) inputParam(interface{}) {
+func (w *goWorker) inputParam(any) {
 	panic("unreachable")
 }

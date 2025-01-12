@@ -46,7 +46,7 @@ type MultiPoolWithFunc struct {
 
 // NewMultiPoolWithFunc instantiates a MultiPoolWithFunc with a size of the pool list and a size
 // per pool, and the load-balancing strategy.
-func NewMultiPoolWithFunc(size, sizePerPool int, fn func(interface{}), lbs LoadBalancingStrategy, options ...Option) (*MultiPoolWithFunc, error) {
+func NewMultiPoolWithFunc(size, sizePerPool int, fn func(any), lbs LoadBalancingStrategy, options ...Option) (*MultiPoolWithFunc, error) {
 	if lbs != RoundRobin && lbs != LeastTasks {
 		return nil, ErrInvalidLoadBalancingStrategy
 	}
@@ -82,7 +82,7 @@ func (mp *MultiPoolWithFunc) next(lbs LoadBalancingStrategy) (idx int) {
 }
 
 // Invoke submits a task to a pool selected by the load-balancing strategy.
-func (mp *MultiPoolWithFunc) Invoke(args interface{}) (err error) {
+func (mp *MultiPoolWithFunc) Invoke(args any) (err error) {
 	if mp.IsClosed() {
 		return ErrPoolClosed
 	}

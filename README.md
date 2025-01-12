@@ -7,7 +7,7 @@
 <a title="Release" target="_blank" href="https://github.com/panjf2000/ants/releases"><img src="https://img.shields.io/github/v/release/panjf2000/ants.svg?color=161823&style=flat-square&logo=smartthings" /></a>
 <a title="Tag" target="_blank" href="https://github.com/panjf2000/ants/tags"><img src="https://img.shields.io/github/v/tag/panjf2000/ants?color=%23ff8936&logo=fitbit&style=flat-square" /></a>
 <br/>
-<a title="Minimum Go Version" target="_blank" href="https://github.com/panjf2000/gnet"><img src="https://img.shields.io/badge/go-%3E%3D1.16-30dff3?style=flat-square&logo=go" /></a>
+<a title="Minimum Go Version" target="_blank" href="https://github.com/panjf2000/gnet"><img src="https://img.shields.io/badge/go-%3E%3D1.18-30dff3?style=flat-square&logo=go" /></a>
 <a title="Go Report Card" target="_blank" href="https://goreportcard.com/report/github.com/panjf2000/ants"><img src="https://goreportcard.com/badge/github.com/panjf2000/ants?style=flat-square" /></a>
 <a title="Doc for ants" target="_blank" href="https://pkg.go.dev/github.com/panjf2000/ants/v2?tab=doc"><img src="https://img.shields.io/badge/go.dev-doc-007d9c?style=flat-square&logo=read-the-docs" /></a>
 <a title="Mentioned in Awesome Go" target="_blank" href="https://github.com/avelino/awesome-go#goroutines"><img src="https://awesome.re/mentioned-badge-flat.svg" /></a>
@@ -78,7 +78,7 @@ import (
 
 var sum int32
 
-func myFunc(i interface{}) {
+func myFunc(i any) {
 	n := i.(int32)
 	atomic.AddInt32(&sum, n)
 	fmt.Printf("run with %d\n", n)
@@ -110,7 +110,7 @@ func main() {
 
 	// Use the pool with a function,
 	// set 10 to the capacity of goroutine pool and 1 second for expired duration.
-	p, _ := ants.NewPoolWithFunc(10, func(i interface{}) {
+	p, _ := ants.NewPoolWithFunc(10, func(i any) {
 		myFunc(i)
 		wg.Done()
 	})
@@ -141,7 +141,7 @@ func main() {
 	fmt.Printf("finish all tasks.\n")
 
 	// Use the MultiPoolFunc and set the capacity of 10 goroutine pools to (runTimes/10).
-	mpf, _ := ants.NewMultiPoolWithFunc(10, runTimes/10, func(i interface{}) {
+	mpf, _ := ants.NewMultiPoolWithFunc(10, runTimes/10, func(i any) {
 		myFunc(i)
 		wg.Done()
 	}, ants.LeastTasks)
@@ -186,7 +186,7 @@ type Options struct {
 
 	// PanicHandler is used to handle panics from each worker goroutine.
 	// if nil, panics will be thrown out again from worker goroutines.
-	PanicHandler func(interface{})
+	PanicHandler func(any)
 
 	// Logger is the customized logger for logging info, if it is not set,
 	// default standard logger from log package is used.
@@ -229,7 +229,7 @@ func WithNonblocking(nonblocking bool) Option {
 }
 
 // WithPanicHandler sets up panic handler.
-func WithPanicHandler(panicHandler func(interface{})) Option {
+func WithPanicHandler(panicHandler func(any)) Option {
 	return func(opts *Options) {
 		opts.PanicHandler = panicHandler
 	}

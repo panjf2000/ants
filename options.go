@@ -34,7 +34,7 @@ type Options struct {
 
 	// PanicHandler is used to handle panics from each worker goroutine.
 	// if nil, panics will be thrown out again from worker goroutines.
-	PanicHandler func(interface{})
+	PanicHandler func(any)
 
 	// Logger is the customized logger for logging info, if it is not set,
 	// default standard logger from log package is used.
@@ -80,7 +80,7 @@ func WithNonblocking(nonblocking bool) Option {
 }
 
 // WithPanicHandler sets up panic handler.
-func WithPanicHandler(panicHandler func(interface{})) Option {
+func WithPanicHandler(panicHandler func(any)) Option {
 	return func(opts *Options) {
 		opts.PanicHandler = panicHandler
 	}

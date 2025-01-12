@@ -43,7 +43,7 @@ func demoFunc() {
 	time.Sleep(time.Duration(BenchParam) * time.Millisecond)
 }
 
-func demoPoolFunc(args interface{}) {
+func demoPoolFunc(args any) {
 	n := args.(int)
 	time.Sleep(time.Duration(n) * time.Millisecond)
 }
@@ -58,7 +58,7 @@ func longRunningFunc() {
 
 var stopLongRunningPoolFunc int32
 
-func longRunningPoolFunc(arg interface{}) {
+func longRunningPoolFunc(arg any) {
 	if ch, ok := arg.(chan struct{}); ok {
 		<-ch
 		return

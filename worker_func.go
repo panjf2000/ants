@@ -35,7 +35,7 @@ type goWorkerWithFunc struct {
 	pool *PoolWithFunc
 
 	// args is a job should be done.
-	args chan interface{}
+	args chan any
 
 	// lastUsed will be updated when putting a worker back into queue.
 	lastUsed time.Time
@@ -84,10 +84,14 @@ func (w *goWorkerWithFunc) lastUsedTime() time.Time {
 	return w.lastUsed
 }
 
+func (w *goWorkerWithFunc) setLastUsedTime(t time.Time) {
+	w.lastUsed = t
+}
+
 func (w *goWorkerWithFunc) inputFunc(func()) {
 	panic("unreachable")
 }
 
-func (w *goWorkerWithFunc) inputParam(arg interface{}) {
+func (w *goWorkerWithFunc) inputParam(arg any) {
 	w.args <- arg
 }
