@@ -93,7 +93,7 @@ func TestAntsPoolWaitToGetWorkerPreMalloc(t *testing.T) {
 // TestAntsPoolWithFuncWaitToGetWorker is used to test waiting to get worker.
 func TestAntsPoolWithFuncWaitToGetWorker(t *testing.T) {
 	var wg sync.WaitGroup
-	p, _ := NewPoolWithFunc(AntsSize, func(i interface{}) {
+	p, _ := NewPoolWithFunc(AntsSize, func(i any) {
 		demoPoolFunc(i)
 		wg.Done()
 	})
@@ -113,7 +113,7 @@ func TestAntsPoolWithFuncWaitToGetWorker(t *testing.T) {
 
 func TestAntsPoolWithFuncWaitToGetWorkerPreMalloc(t *testing.T) {
 	var wg sync.WaitGroup
-	p, _ := NewPoolWithFunc(AntsSize, func(i interface{}) {
+	p, _ := NewPoolWithFunc(AntsSize, func(i any) {
 		demoPoolFunc(i)
 		wg.Done()
 	}, WithPreAlloc(true))
@@ -227,7 +227,7 @@ func TestAntsPool(t *testing.T) {
 func TestPanicHandler(t *testing.T) {
 	var panicCounter int64
 	var wg sync.WaitGroup
-	p0, err := NewPool(10, WithPanicHandler(func(p interface{}) {
+	p0, err := NewPool(10, WithPanicHandler(func(p any) {
 		defer wg.Done()
 		atomic.AddInt64(&panicCounter, 1)
 		t.Logf("catch panic with PanicHandler: %v", p)
@@ -242,7 +242,7 @@ func TestPanicHandler(t *testing.T) {
 	c := atomic.LoadInt64(&panicCounter)
 	assert.EqualValuesf(t, 1, c, "panic handler didn't work, panicCounter: %d", c)
 	assert.EqualValues(t, 0, p0.Running(), "pool should be empty after panic")
-	p1, err := NewPoolWithFunc(10, func(p interface{}) { panic(p) }, WithPanicHandler(func(_ interface{}) {
+	p1, err := NewPoolWithFunc(10, func(p any) { panic(p) }, WithPanicHandler(func(_ any) {
 		defer wg.Done()
 		atomic.AddInt64(&panicCounter, 1)
 	}))
@@ -259,7 +259,7 @@ func TestPanicHandler(t *testing.T) {
 func TestPanicHandlerPreMalloc(t *testing.T) {
 	var panicCounter int64
 	var wg sync.WaitGroup
-	p0, err := NewPool(10, WithPreAlloc(true), WithPanicHandler(func(p interface{}) {
+	p0, err := NewPool(10, WithPreAlloc(true), WithPanicHandler(func(p any) {
 		defer wg.Done()
 		atomic.AddInt64(&panicCounter, 1)
 		t.Logf("catch panic with PanicHandler: %v", p)
@@ -274,7 +274,7 @@ func TestPanicHandlerPreMalloc(t *testing.T) {
 	c := atomic.LoadInt64(&panicCounter)
 	assert.EqualValuesf(t, 1, c, "panic handler didn't work, panicCounter: %d", c)
 	assert.EqualValues(t, 0, p0.Running(), "pool should be empty after panic")
-	p1, err := NewPoolWithFunc(10, func(p interface{}) { panic(p) }, WithPanicHandler(func(_ interface{}) {
+	p1, err := NewPoolWithFunc(10, func(p any) { panic(p) }, WithPanicHandler(func(_ any) {
 		defer wg.Done()
 		atomic.AddInt64(&panicCounter, 1)
 	}))
@@ -296,7 +296,7 @@ func TestPoolPanicWithoutHandler(t *testing.T) {
 		panic("Oops!")
 	})
 
-	p1, err := NewPoolWithFunc(10, func(p interface{}) {
+	p1, err := NewPoolWithFunc(10, func(p any) {
 		panic(p)
 	})
 	assert.NoErrorf(t, err, "create new pool with func failed: %v", err)
@@ -312,7 +312,7 @@ func TestPoolPanicWithoutHandlerPreMalloc(t *testing.T) {
 		panic("Oops!")
 	})
 
-	p1, err := NewPoolWithFunc(10, func(p interface{}) {
+	p1, err := NewPoolWithFunc(10, func(p any) {
 		panic(p)
 	})
 
@@ -345,7 +345,7 @@ func TestPurgePool(t *testing.T) {
 	assert.Equalf(t, 0, p.Running(), "pool should be empty after purge, but got %d", p.Running())
 
 	ch = make(chan struct{})
-	f := func(i interface{}) {
+	f := func(i any) {
 		<-ch
 		d := i.(int) % 100
 		time.Sleep(time.Duration(d) * time.Millisecond)
@@ -445,7 +445,7 @@ func TestMaxBlockingSubmit(t *testing.T) {
 func TestNonblockingSubmitWithFunc(t *testing.T) {
 	poolSize := 10
 	var wg sync.WaitGroup
-	p, err := NewPoolWithFunc(poolSize, func(i interface{}) {
+	p, err := NewPoolWithFunc(poolSize, func(i any) {
 		longRunningPoolFunc(i)
 		wg.Done()
 	}, WithNonblocking(true))
@@ -537,7 +537,7 @@ func TestRebootNewPool(t *testing.T) {
 	assert.NoError(t, p.Submit(func() { wg.Done() }), "pool should be rebooted")
 	wg.Wait()
 
-	p1, err := NewPoolWithFunc(10, func(i interface{}) {
+	p1, err := NewPoolWithFunc(10, func(i any) {
 		demoPoolFunc(i)
 		wg.Done()
 	})
@@ -667,7 +667,7 @@ func TestWithDisablePurgePoolFunc(t *testing.T) {
 	var wg1, wg2 sync.WaitGroup
 	wg1.Add(numWorker)
 	wg2.Add(numWorker)
-	p, _ := NewPoolWithFunc(numWorker, func(_ interface{}) {
+	p, _ := NewPoolWithFunc(numWorker, func(_ any) {
 		wg1.Done()
 		<-sig
 		wg2.Done()
@@ -682,7 +682,7 @@ func TestWithDisablePurgeAndWithExpirationPoolFunc(t *testing.T) {
 	wg1.Add(numWorker)
 	wg2.Add(numWorker)
 	expiredDuration := time.Millisecond * 100
-	p, _ := NewPoolWithFunc(numWorker, func(_ interface{}) {
+	p, _ := NewPoolWithFunc(numWorker, func(_ any) {
 		wg1.Done()
 		<-sig
 		wg2.Done()
@@ -692,7 +692,7 @@ func TestWithDisablePurgeAndWithExpirationPoolFunc(t *testing.T) {
 
 func TestInfinitePoolWithFunc(t *testing.T) {
 	c := make(chan struct{})
-	p, _ := NewPoolWithFunc(-1, func(i interface{}) {
+	p, _ := NewPoolWithFunc(-1, func(i any) {
 		demoPoolFunc(i)
 		<-c
 	})
@@ -759,7 +759,7 @@ func TestReleaseWhenRunningPool(t *testing.T) {
 
 func TestReleaseWhenRunningPoolWithFunc(t *testing.T) {
 	var wg sync.WaitGroup
-	p, _ := NewPoolWithFunc(1, func(i interface{}) {
+	p, _ := NewPoolWithFunc(1, func(i any) {
 		t.Log("do task", i)
 		time.Sleep(1 * time.Second)
 	})
@@ -914,7 +914,7 @@ func TestPoolTuneScaleUp(t *testing.T) {
 	p.Release()
 
 	// test PoolWithFunc
-	pf, _ := NewPoolWithFunc(2, func(_ interface{}) {
+	pf, _ := NewPoolWithFunc(2, func(_ any) {
 		<-c
 	})
 	for i := 0; i < 2; i++ {
@@ -962,7 +962,7 @@ func TestReleaseTimeout(t *testing.T) {
 	assert.NoError(t, err)
 
 	var pf *PoolWithFunc
-	pf, _ = NewPoolWithFunc(10, func(i interface{}) {
+	pf, _ = NewPoolWithFunc(10, func(i any) {
 		dur := i.(time.Duration)
 		time.Sleep(dur)
 	})

@@ -17,8 +17,9 @@ type worker interface {
 	run()
 	finish()
 	lastUsedTime() time.Time
+	setLastUsedTime(t time.Time)
 	inputFunc(func())
-	inputParam(interface{})
+	inputParam(any)
 }
 
 type workerQueue interface {
