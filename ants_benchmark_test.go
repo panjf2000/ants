@@ -48,6 +48,10 @@ func demoPoolFunc(args any) {
 	time.Sleep(time.Duration(n) * time.Millisecond)
 }
 
+func demoPoolFuncInt(n int) {
+	time.Sleep(time.Duration(n) * time.Millisecond)
+}
+
 var stopLongRunningFunc int32
 
 func longRunningFunc() {
@@ -56,16 +60,12 @@ func longRunningFunc() {
 	}
 }
 
-var stopLongRunningPoolFunc int32
-
 func longRunningPoolFunc(arg any) {
-	if ch, ok := arg.(chan struct{}); ok {
-		<-ch
-		return
-	}
-	for atomic.LoadInt32(&stopLongRunningPoolFunc) == 0 {
-		runtime.Gosched()
-	}
+	<-arg.(chan struct{})
+}
+
+func longRunningPoolFuncCh(ch chan struct{}) {
+	<-ch
 }
 
 func BenchmarkGoroutines(b *testing.B) {

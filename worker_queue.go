@@ -5,13 +5,8 @@ import (
 	"time"
 )
 
-var (
-	// errQueueIsFull will be returned when the worker queue is full.
-	errQueueIsFull = errors.New("the queue is full")
-
-	// errQueueIsReleased will be returned when trying to insert item to a released worker queue.
-	errQueueIsReleased = errors.New("the queue length is zero")
-)
+// errQueueIsFull will be returned when the worker queue is full.
+var errQueueIsFull = errors.New("the queue is full")
 
 type worker interface {
 	run()
@@ -19,7 +14,7 @@ type worker interface {
 	lastUsedTime() time.Time
 	setLastUsedTime(t time.Time)
 	inputFunc(func())
-	inputParam(any)
+	inputArg(any)
 }
 
 type workerQueue interface {

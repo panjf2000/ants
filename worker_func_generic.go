@@ -1,6 +1,6 @@
 // MIT License
 
-// Copyright (c) 2018 Andy Pan
+// Copyright (c) 2025 Andy Pan
 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -27,17 +27,20 @@ import (
 	"time"
 )
 
-// goWorker is the actual executor who runs the tasks,
+// goWorkerWithFunc is the actual executor who runs the tasks,
 // it starts a goroutine that accepts tasks and
 // performs function calls.
-type goWorker struct {
+type goWorkerWithFuncGeneric[T any] struct {
 	worker
 
 	// pool who owns this worker.
-	pool *Pool
+	pool *PoolWithFuncGeneric[T]
 
-	// task is a job should be done.
-	task chan func()
+	// arg is a job should be done.
+	arg chan T
+
+	// exit signals the goroutine to exit.
+	exit chan struct{}
 
 	// lastUsed will be updated when putting a worker back into queue.
 	lastUsed time.Time
@@ -45,7 +48,7 @@ type goWorker struct {
 
 // run starts a goroutine to repeat the process
 // that performs the function calls.
-func (w *goWorker) run() {
+func (w *goWorkerWithFuncGeneric[T]) run() {
 	w.pool.addRunning(1)
 	go func() {
 		defer func() {
@@ -66,30 +69,28 @@ func (w *goWorker) run() {
 			w.pool.cond.Signal()
 		}()
 
-		for fn := range w.task {
-			if fn == nil {
+		for {
+			select {
+			case <-w.exit:
 				return
-			}
-			fn()
-			if ok := w.pool.revertWorker(w); !ok {
-				return
+			case arg := <-w.arg:
+				w.pool.fn(arg)
+				if ok := w.pool.revertWorker(w); !ok {
+					return
+				}
 			}
 		}
 	}()
 }
 
-func (w *goWorker) finish() {
-	w.task <- nil
+func (w *goWorkerWithFuncGeneric[T]) finish() {
+	w.exit <- struct{}{}
 }
 
-func (w *goWorker) lastUsedTime() time.Time {
+func (w *goWorkerWithFuncGeneric[T]) lastUsedTime() time.Time {
 	return w.lastUsed
 }
 
-func (w *goWorker) setLastUsedTime(t time.Time) {
+func (w *goWorkerWithFuncGeneric[T]) setLastUsedTime(t time.Time) {
 	w.lastUsed = t
-}
-
-func (w *goWorker) inputFunc(fn func()) {
-	w.task <- fn
 }

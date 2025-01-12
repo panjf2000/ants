@@ -1,6 +1,6 @@
 // MIT License
 
-// Copyright (c) 2023 Andy Pan
+// Copyright (c) 2025 Andy Pan
 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -33,32 +33,17 @@ import (
 	"golang.org/x/sync/errgroup"
 )
 
-// LoadBalancingStrategy represents the type of load-balancing algorithm.
-type LoadBalancingStrategy int
-
-const (
-	// RoundRobin distributes task to a list of pools in rotation.
-	RoundRobin LoadBalancingStrategy = 1 << (iota + 1)
-
-	// LeastTasks always selects the pool with the least number of pending tasks.
-	LeastTasks
-)
-
-// MultiPool consists of multiple pools, from which you will benefit the
-// performance improvement on basis of the fine-grained locking that reduces
-// the lock contention.
-// MultiPool is a good fit for the scenario where you have a large number of
-// tasks to submit, and you don't want the single pool to be the bottleneck.
-type MultiPool struct {
-	pools []*Pool
+// MultiPoolWithFuncGeneric is the generic version of MultiPoolWithFunc.
+type MultiPoolWithFuncGeneric[T any] struct {
+	pools []*PoolWithFuncGeneric[T]
 	index uint32
 	state int32
 	lbs   LoadBalancingStrategy
 }
 
-// NewMultiPool instantiates a MultiPool with a size of the pool list and a size
+// NewMultiPoolWithFuncGeneric instantiates a MultiPoolWithFunc with a size of the pool list and a size
 // per pool, and the load-balancing strategy.
-func NewMultiPool(size, sizePerPool int, lbs LoadBalancingStrategy, options ...Option) (*MultiPool, error) {
+func NewMultiPoolWithFuncGeneric[T any](size, sizePerPool int, fn func(T), lbs LoadBalancingStrategy, options ...Option) (*MultiPoolWithFuncGeneric[T], error) {
 	if size <= 0 {
 		return nil, ErrInvalidMultiPoolSize
 	}
@@ -66,18 +51,18 @@ func NewMultiPool(size, sizePerPool int, lbs LoadBalancingStrategy, options ...O
 	if lbs != RoundRobin && lbs != LeastTasks {
 		return nil, ErrInvalidLoadBalancingStrategy
 	}
-	pools := make([]*Pool, size)
+	pools := make([]*PoolWithFuncGeneric[T], size)
 	for i := 0; i < size; i++ {
-		pool, err := NewPool(sizePerPool, options...)
+		pool, err := NewPoolWithFuncGeneric(sizePerPool, fn, options...)
 		if err != nil {
 			return nil, err
 		}
 		pools[i] = pool
 	}
-	return &MultiPool{pools: pools, index: math.MaxUint32, lbs: lbs}, nil
+	return &MultiPoolWithFuncGeneric[T]{pools: pools, index: math.MaxUint32, lbs: lbs}, nil
 }
 
-func (mp *MultiPool) next(lbs LoadBalancingStrategy) (idx int) {
+func (mp *MultiPoolWithFuncGeneric[T]) next(lbs LoadBalancingStrategy) (idx int) {
 	switch lbs {
 	case RoundRobin:
 		return int(atomic.AddUint32(&mp.index, 1) % uint32(len(mp.pools)))
@@ -94,22 +79,23 @@ func (mp *MultiPool) next(lbs LoadBalancingStrategy) (idx int) {
 	return -1
 }
 
-// Submit submits a task to a pool selected by the load-balancing strategy.
-func (mp *MultiPool) Submit(task func()) (err error) {
+// Invoke submits a task to a pool selected by the load-balancing strategy.
+func (mp *MultiPoolWithFuncGeneric[T]) Invoke(args T) (err error) {
 	if mp.IsClosed() {
 		return ErrPoolClosed
 	}
-	if err = mp.pools[mp.next(mp.lbs)].Submit(task); err == nil {
+
+	if err = mp.pools[mp.next(mp.lbs)].Invoke(args); err == nil {
 		return
 	}
 	if err == ErrPoolOverload && mp.lbs == RoundRobin {
-		return mp.pools[mp.next(LeastTasks)].Submit(task)
+		return mp.pools[mp.next(LeastTasks)].Invoke(args)
 	}
 	return
 }
 
 // Running returns the number of the currently running workers across all pools.
-func (mp *MultiPool) Running() (n int) {
+func (mp *MultiPoolWithFuncGeneric[T]) Running() (n int) {
 	for _, pool := range mp.pools {
 		n += pool.Running()
 	}
@@ -117,7 +103,7 @@ func (mp *MultiPool) Running() (n int) {
 }
 
 // RunningByIndex returns the number of the currently running workers in the specific pool.
-func (mp *MultiPool) RunningByIndex(idx int) (int, error) {
+func (mp *MultiPoolWithFuncGeneric[T]) RunningByIndex(idx int) (int, error) {
 	if idx < 0 || idx >= len(mp.pools) {
 		return -1, ErrInvalidPoolIndex
 	}
@@ -125,7 +111,7 @@ func (mp *MultiPool) RunningByIndex(idx int) (int, error) {
 }
 
 // Free returns the number of available workers across all pools.
-func (mp *MultiPool) Free() (n int) {
+func (mp *MultiPoolWithFuncGeneric[T]) Free() (n int) {
 	for _, pool := range mp.pools {
 		n += pool.Free()
 	}
@@ -133,7 +119,7 @@ func (mp *MultiPool) Free() (n int) {
 }
 
 // FreeByIndex returns the number of available workers in the specific pool.
-func (mp *MultiPool) FreeByIndex(idx int) (int, error) {
+func (mp *MultiPoolWithFuncGeneric[T]) FreeByIndex(idx int) (int, error) {
 	if idx < 0 || idx >= len(mp.pools) {
 		return -1, ErrInvalidPoolIndex
 	}
@@ -141,7 +127,7 @@ func (mp *MultiPool) FreeByIndex(idx int) (int, error) {
 }
 
 // Waiting returns the number of the currently waiting tasks across all pools.
-func (mp *MultiPool) Waiting() (n int) {
+func (mp *MultiPoolWithFuncGeneric[T]) Waiting() (n int) {
 	for _, pool := range mp.pools {
 		n += pool.Waiting()
 	}
@@ -149,7 +135,7 @@ func (mp *MultiPool) Waiting() (n int) {
 }
 
 // WaitingByIndex returns the number of the currently waiting tasks in the specific pool.
-func (mp *MultiPool) WaitingByIndex(idx int) (int, error) {
+func (mp *MultiPoolWithFuncGeneric[T]) WaitingByIndex(idx int) (int, error) {
 	if idx < 0 || idx >= len(mp.pools) {
 		return -1, ErrInvalidPoolIndex
 	}
@@ -157,7 +143,7 @@ func (mp *MultiPool) WaitingByIndex(idx int) (int, error) {
 }
 
 // Cap returns the capacity of this multi-pool.
-func (mp *MultiPool) Cap() (n int) {
+func (mp *MultiPoolWithFuncGeneric[T]) Cap() (n int) {
 	for _, pool := range mp.pools {
 		n += pool.Cap()
 	}
@@ -168,20 +154,20 @@ func (mp *MultiPool) Cap() (n int) {
 //
 // Note that this method doesn't resize the overall
 // capacity of multi-pool.
-func (mp *MultiPool) Tune(size int) {
+func (mp *MultiPoolWithFuncGeneric[T]) Tune(size int) {
 	for _, pool := range mp.pools {
 		pool.Tune(size)
 	}
 }
 
 // IsClosed indicates whether the multi-pool is closed.
-func (mp *MultiPool) IsClosed() bool {
+func (mp *MultiPoolWithFuncGeneric[T]) IsClosed() bool {
 	return atomic.LoadInt32(&mp.state) == CLOSED
 }
 
 // ReleaseTimeout closes the multi-pool with a timeout,
 // it waits all pools to be closed before timing out.
-func (mp *MultiPool) ReleaseTimeout(timeout time.Duration) error {
+func (mp *MultiPoolWithFuncGeneric[T]) ReleaseTimeout(timeout time.Duration) error {
 	if !atomic.CompareAndSwapInt32(&mp.state, OPENED, CLOSED) {
 		return ErrPoolClosed
 	}
@@ -189,7 +175,7 @@ func (mp *MultiPool) ReleaseTimeout(timeout time.Duration) error {
 	errCh := make(chan error, len(mp.pools))
 	var wg errgroup.Group
 	for i, pool := range mp.pools {
-		func(p *Pool, idx int) {
+		func(p *PoolWithFuncGeneric[T], idx int) {
 			wg.Go(func() error {
 				err := p.ReleaseTimeout(timeout)
 				if err != nil {
@@ -219,7 +205,7 @@ func (mp *MultiPool) ReleaseTimeout(timeout time.Duration) error {
 }
 
 // Reboot reboots a released multi-pool.
-func (mp *MultiPool) Reboot() {
+func (mp *MultiPoolWithFuncGeneric[T]) Reboot() {
 	if atomic.CompareAndSwapInt32(&mp.state, CLOSED, OPENED) {
 		atomic.StoreUint32(&mp.index, 0)
 		for _, pool := range mp.pools {

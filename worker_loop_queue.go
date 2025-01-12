@@ -12,6 +12,9 @@ type loopQueue struct {
 }
 
 func newWorkerLoopQueue(size int) *loopQueue {
+	if size <= 0 {
+		return nil
+	}
 	return &loopQueue{
 		items: make([]worker, size),
 		size:  size,
@@ -39,10 +42,6 @@ func (wq *loopQueue) isEmpty() bool {
 }
 
 func (wq *loopQueue) insert(w worker) error {
-	if wq.size == 0 {
-		return errQueueIsReleased
-	}
-
 	if wq.isFull {
 		return errQueueIsFull
 	}

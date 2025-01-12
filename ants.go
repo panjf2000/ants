@@ -84,6 +84,9 @@ var (
 	// ErrInvalidLoadBalancingStrategy will be returned when trying to create a MultiPool with an invalid load-balancing strategy.
 	ErrInvalidLoadBalancingStrategy = errors.New("invalid load-balancing strategy")
 
+	// ErrInvalidMultiPoolSize  will be returned when trying to create a MultiPool with an invalid size.
+	ErrInvalidMultiPoolSize = errors.New("invalid size for multiple pool")
+
 	// workerChanCap determines whether the channel of a worker should be a buffered channel
 	// to get the best performance. Inspired by fasthttp at
 	// https://github.com/valyala/fasthttp/blob/master/workerpool.go#L139
@@ -387,6 +390,7 @@ func (p *poolCommon) Release() {
 	p.lock.Lock()
 	p.workers.reset()
 	p.lock.Unlock()
+
 	// There might be some callers waiting in retrieveWorker(), so we need to wake them up to prevent
 	// those callers blocking infinitely.
 	p.cond.Broadcast()

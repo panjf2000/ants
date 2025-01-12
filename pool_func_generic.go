@@ -1,6 +1,6 @@
 // MIT License
 
-// Copyright (c) 2018 Andy Pan
+// Copyright (c) 2025 Andy Pan
 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -22,34 +22,29 @@
 
 package ants
 
-// PoolWithFunc is like Pool but accepts a unified function for all goroutines to execute.
-type PoolWithFunc struct {
+// PoolWithFuncGeneric is the generic version of PoolWithFunc.
+type PoolWithFuncGeneric[T any] struct {
 	*poolCommon
 
 	// fn is the unified function for processing tasks.
-	fn func(any)
+	fn func(T)
 }
 
-// Invoke passes arguments to the pool.
-//
-// Note that you are allowed to call Pool.Invoke() from the current Pool.Invoke(),
-// but what calls for special attention is that you will get blocked with the last
-// Pool.Invoke() call once the current Pool runs out of its capacity, and to avoid this,
-// you should instantiate a PoolWithFunc with ants.WithNonblocking(true).
-func (p *PoolWithFunc) Invoke(arg any) error {
+// Invoke passes the argument to the pool to start a new task.
+func (p *PoolWithFuncGeneric[T]) Invoke(arg T) error {
 	if p.IsClosed() {
 		return ErrPoolClosed
 	}
 
 	w, err := p.retrieveWorker()
 	if w != nil {
-		w.inputArg(arg)
+		w.(*goWorkerWithFuncGeneric[T]).arg <- arg
 	}
 	return err
 }
 
-// NewPoolWithFunc instantiates a PoolWithFunc with customized options.
-func NewPoolWithFunc(size int, pf func(any), options ...Option) (*PoolWithFunc, error) {
+// NewPoolWithFuncGeneric instantiates a PoolWithFuncGeneric[T] with customized options.
+func NewPoolWithFuncGeneric[T any](size int, pf func(T), options ...Option) (*PoolWithFuncGeneric[T], error) {
 	if pf == nil {
 		return nil, ErrLackPoolFunc
 	}
@@ -59,15 +54,16 @@ func NewPoolWithFunc(size int, pf func(any), options ...Option) (*PoolWithFunc, 
 		return nil, err
 	}
 
-	pool := &PoolWithFunc{
+	pool := &PoolWithFuncGeneric[T]{
 		poolCommon: pc,
 		fn:         pf,
 	}
 
 	pool.workerCache.New = func() any {
-		return &goWorkerWithFunc{
+		return &goWorkerWithFuncGeneric[T]{
 			pool: pool,
-			arg:  make(chan any, workerChanCap),
+			arg:  make(chan T, workerChanCap),
+			exit: make(chan struct{}, 1),
 		}
 	}
 
