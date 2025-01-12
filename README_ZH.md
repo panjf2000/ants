@@ -17,7 +17,7 @@
 
 ## 📖 简介
 
-`ants`是一个高性能的 goroutine 池，实现了对大规模 goroutine 的调度管理、goroutine 复用，允许使用者在开发并发程序的时候限制 goroutine 数量，复用资源，达到更高效执行任务的效果。
+`ants` 是一个高性能的 goroutine 池，实现了对大规模 goroutine 的调度管理、goroutine 复用，允许使用者在开发并发程序的时候限制 goroutine 数量，复用资源，达到更高效执行任务的效果。
 
 ## 🚀 功能：
 
@@ -25,7 +25,7 @@
 - 定期清理过期的 goroutines，进一步节省资源
 - 提供了大量实用的接口：任务提交、获取运行中的 goroutine 数量、动态调整 Pool 大小、释放 Pool、重启 Pool 等
 - 优雅处理 panic，防止程序崩溃
-- 资源复用，极大节省内存使用量；在大规模批量并发任务场景下甚至可能比原生 goroutine 并发具有***更高的性能***
+- 资源复用，极大节省内存使用量；在大规模批量并发任务场景下甚至可能比 Go 语言的无限制 goroutine 并发具有***更高的性能***
 - 非阻塞机制
 - 预分配内存 (环形队列，可选)
 
@@ -62,192 +62,17 @@ go get -u github.com/panjf2000/ants/v2
 ```
 
 ## 🛠 使用
-写 go 并发程序的时候如果程序会启动大量的 goroutine ，势必会消耗大量的系统资源（内存，CPU），通过使用 `ants`，可以实例化一个 goroutine 池，复用 goroutine ，节省资源，提升性能：
-
-``` go
-package main
-
-import (
-	"fmt"
-	"sync"
-	"sync/atomic"
-	"time"
-
-	"github.com/panjf2000/ants/v2"
-)
-
-var sum int32
-
-func myFunc(i any) {
-	n := i.(int32)
-	atomic.AddInt32(&sum, n)
-	fmt.Printf("run with %d\n", n)
-}
-
-func demoFunc() {
-	time.Sleep(10 * time.Millisecond)
-	fmt.Println("Hello World!")
-}
-
-func main() {
-	defer ants.Release()
-
-	runTimes := 1000
-
-	// Use the common pool.
-	var wg sync.WaitGroup
-	syncCalculateSum := func() {
-		demoFunc()
-		wg.Done()
-	}
-	for i := 0; i < runTimes; i++ {
-		wg.Add(1)
-		_ = ants.Submit(syncCalculateSum)
-	}
-	wg.Wait()
-	fmt.Printf("running goroutines: %d\n", ants.Running())
-	fmt.Printf("finish all tasks.\n")
-
-	// Use the pool with a function,
-	// set 10 to the capacity of goroutine pool and 1 second for expired duration.
-	p, _ := ants.NewPoolWithFunc(10, func(i any) {
-		myFunc(i)
-		wg.Done()
-	})
-	defer p.Release()
-	// Submit tasks one by one.
-	for i := 0; i < runTimes; i++ {
-		wg.Add(1)
-		_ = p.Invoke(int32(i))
-	}
-	wg.Wait()
-	fmt.Printf("running goroutines: %d\n", p.Running())
-	fmt.Printf("finish all tasks, result is %d\n", sum)
-	if sum != 499500 {
-		panic("the final result is wrong!!!")
-	}
-
-	// Use the MultiPool and set the capacity of the 10 goroutine pools to unlimited.
-	// If you use -1 as the pool size parameter, the size will be unlimited.
-	// There are two load-balancing algorithms for pools: ants.RoundRobin and ants.LeastTasks.
-	mp, _ := ants.NewMultiPool(10, -1, ants.RoundRobin)
-	defer mp.ReleaseTimeout(5 * time.Second)
-	for i := 0; i < runTimes; i++ {
-		wg.Add(1)
-		_ = mp.Submit(syncCalculateSum)
-	}
-	wg.Wait()
-	fmt.Printf("running goroutines: %d\n", mp.Running())
-	fmt.Printf("finish all tasks.\n")
-
-	// Use the MultiPoolFunc and set the capacity of 10 goroutine pools to (runTimes/10).
-	mpf, _ := ants.NewMultiPoolWithFunc(10, runTimes/10, func(i any) {
-		myFunc(i)
-		wg.Done()
-	}, ants.LeastTasks)
-	defer mpf.ReleaseTimeout(5 * time.Second)
-	for i := 0; i < runTimes; i++ {
-		wg.Add(1)
-		_ = mpf.Invoke(int32(i))
-	}
-	wg.Wait()
-	fmt.Printf("running goroutines: %d\n", mpf.Running())
-	fmt.Printf("finish all tasks, result is %d\n", sum)
-	if sum != 499500*2 {
-		panic("the final result is wrong!!!")
-	}
-}
-```
+基本的使用请查看[示例](https://pkg.go.dev/github.com/panjf2000/ants/v2#pkg-examples).
 
 ### Pool 配置
 
-```go
-// Option represents the optional function.
-type Option func(opts *Options)
+通过在调用 `NewPool`/`NewPoolWithFunc`/`NewPoolWithFuncGeneric` 之时使用各种 optional function，可以设置 `ants.Options` 中各个配置项的值，然后用它来定制化 goroutine pool。
 
-// Options contains all options which will be applied when instantiating a ants pool.
-type Options struct {
-	// ExpiryDuration is a period for the scavenger goroutine to clean up those expired workers,
-	// the scavenger scans all workers every `ExpiryDuration` and clean up those workers that haven't been
-	// used for more than `ExpiryDuration`.
-	ExpiryDuration time.Duration
-
-	// PreAlloc indicates whether to make memory pre-allocation when initializing Pool.
-	PreAlloc bool
-
-	// Max number of goroutine blocking on pool.Submit.
-	// 0 (default value) means no such limit.
-	MaxBlockingTasks int
-
-	// When Nonblocking is true, Pool.Submit will never be blocked.
-	// ErrPoolOverload will be returned when Pool.Submit cannot be done at once.
-	// When Nonblocking is true, MaxBlockingTasks is inoperative.
-	Nonblocking bool
-
-	// PanicHandler is used to handle panics from each worker goroutine.
-	// if nil, panics will be thrown out again from worker goroutines.
-	PanicHandler func(any)
-
-	// Logger is the customized logger for logging info, if it is not set,
-	// default standard logger from log package is used.
-	Logger Logger
-}
-
-// WithOptions accepts the whole options config.
-func WithOptions(options Options) Option {
-	return func(opts *Options) {
-		*opts = options
-	}
-}
-
-// WithExpiryDuration sets up the interval time of cleaning up goroutines.
-func WithExpiryDuration(expiryDuration time.Duration) Option {
-	return func(opts *Options) {
-		opts.ExpiryDuration = expiryDuration
-	}
-}
-
-// WithPreAlloc indicates whether it should malloc for workers.
-func WithPreAlloc(preAlloc bool) Option {
-	return func(opts *Options) {
-		opts.PreAlloc = preAlloc
-	}
-}
-
-// WithMaxBlockingTasks sets up the maximum number of goroutines that are blocked when it reaches the capacity of pool.
-func WithMaxBlockingTasks(maxBlockingTasks int) Option {
-	return func(opts *Options) {
-		opts.MaxBlockingTasks = maxBlockingTasks
-	}
-}
-
-// WithNonblocking indicates that pool will return nil when there is no available workers.
-func WithNonblocking(nonblocking bool) Option {
-	return func(opts *Options) {
-		opts.Nonblocking = nonblocking
-	}
-}
-
-// WithPanicHandler sets up panic handler.
-func WithPanicHandler(panicHandler func(any)) Option {
-	return func(opts *Options) {
-		opts.PanicHandler = panicHandler
-	}
-}
-
-// WithLogger sets up a customized logger.
-func WithLogger(logger Logger) Option {
-	return func(opts *Options) {
-		opts.Logger = logger
-	}
-}
-```
-
-通过在调用`NewPool`/`NewPoolWithFunc`之时使用各种 optional function，可以设置`ants.Options`中各个配置项的值，然后用它来定制化 goroutine pool.
+更多细节请查看 [ants.Options](https://pkg.go.dev/github.com/panjf2000/ants/v2#Options) 和 [ants.Option](https://pkg.go.dev/github.com/panjf2000/ants/v2#Option)
 
 
-### 自定义池
-`ants`支持实例化使用者自己的一个 Pool ，指定具体的池容量；通过调用 `NewPool` 方法可以实例化一个新的带有指定容量的 Pool ，如下：
+### 自定义 pool 容量
+`ants` 支持实例化使用者自己的一个 Pool，指定具体的 pool 容量；通过调用 `NewPool` 方法可以实例化一个新的带有指定容量的 `Pool`，如下：
 
 ``` go
 p, _ := ants.NewPool(10000)
@@ -255,13 +80,13 @@ p, _ := ants.NewPool(10000)
 
 ### 任务提交
 
-提交任务通过调用 `ants.Submit(func())`方法：
+提交任务通过调用 `ants.Submit` 方法：
 ```go
 ants.Submit(func(){})
 ```
 
 ### 动态调整 goroutine 池容量
-需要动态调整 goroutine 池容量可以通过调用`Tune(int)`：
+需要动态调整 pool 容量可以通过调用 `ants.Tune`：
 
 ``` go
 pool.Tune(1000) // Tune its capacity to 1000
@@ -272,10 +97,10 @@ pool.Tune(100000) // Tune its capacity to 100000
 
 ### 预先分配 goroutine 队列内存
 
-`ants`允许你预先把整个池的容量分配内存， 这个功能可以在某些特定的场景下提高 goroutine 池的性能。比如， 有一个场景需要一个超大容量的池，而且每个 goroutine 里面的任务都是耗时任务，这种情况下，预先分配 goroutine 队列内存将会减少不必要的内存重新分配。
+`ants` 支持预先为 pool 分配容量的内存， 这个功能可以在某些特定的场景下提高 goroutine 池的性能。比如， 有一个场景需要一个超大容量的池，而且每个 goroutine 里面的任务都是耗时任务，这种情况下，预先分配 goroutine 队列内存将会减少不必要的内存重新分配。
 
 ```go
-// ants will pre-malloc the whole capacity of pool when you invoke this function
+// 提前分配的 pool 容量的内存空间
 p, _ := ants.NewPool(100000, ants.WithPreAlloc(true))
 ```
 
