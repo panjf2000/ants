@@ -64,11 +64,11 @@ func (w *goWorker) run() {
 			w.pool.cond.Signal()
 		}()
 
-		for f := range w.task {
-			if f == nil {
+		for fn := range w.task {
+			if fn == nil {
 				return
 			}
-			f()
+			fn()
 			if ok := w.pool.revertWorker(w); !ok {
 				return
 			}
@@ -92,6 +92,6 @@ func (w *goWorker) inputFunc(fn func()) {
 	w.task <- fn
 }
 
-func (w *goWorker) inputParam(any) {
+func (w *goWorker) inputArg(any) {
 	panic("unreachable")
 }

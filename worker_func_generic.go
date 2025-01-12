@@ -1,6 +1,6 @@
 // MIT License
 
-// Copyright (c) 2018 Andy Pan
+// Copyright (c) 2025 Andy Pan
 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -30,12 +30,15 @@ import (
 // goWorkerWithFunc is the actual executor who runs the tasks,
 // it starts a goroutine that accepts tasks and
 // performs function calls.
-type goWorkerWithFunc struct {
+type goWorkerWithFuncGeneric[T any] struct {
 	// pool who owns this worker.
-	pool *PoolWithFunc
+	pool *PoolWithFuncGeneric[T]
 
-	// arg is the argument for the function.
-	arg chan any
+	// arg is a job should be done.
+	arg chan T
+
+	// exit signals the goroutine to exit.
+	exit chan struct{}
 
 	// lastUsed will be updated when putting a worker back into queue.
 	lastUsed time.Time
@@ -43,7 +46,7 @@ type goWorkerWithFunc struct {
 
 // run starts a goroutine to repeat the process
 // that performs the function calls.
-func (w *goWorkerWithFunc) run() {
+func (w *goWorkerWithFuncGeneric[T]) run() {
 	w.pool.addRunning(1)
 	go func() {
 		defer func() {
@@ -64,34 +67,36 @@ func (w *goWorkerWithFunc) run() {
 			w.pool.cond.Signal()
 		}()
 
-		for arg := range w.arg {
-			if arg == nil {
+		for {
+			select {
+			case <-w.exit:
 				return
-			}
-			w.pool.fn(arg)
-			if ok := w.pool.revertWorker(w); !ok {
-				return
+			case arg := <-w.arg:
+				w.pool.fn(arg)
+				if ok := w.pool.revertWorker(w); !ok {
+					return
+				}
 			}
 		}
 	}()
 }
 
-func (w *goWorkerWithFunc) finish() {
-	w.arg <- nil
+func (w *goWorkerWithFuncGeneric[T]) finish() {
+	w.exit <- struct{}{}
 }
 
-func (w *goWorkerWithFunc) lastUsedTime() time.Time {
+func (w *goWorkerWithFuncGeneric[T]) lastUsedTime() time.Time {
 	return w.lastUsed
 }
 
-func (w *goWorkerWithFunc) setLastUsedTime(t time.Time) {
+func (w *goWorkerWithFuncGeneric[T]) setLastUsedTime(t time.Time) {
 	w.lastUsed = t
 }
 
-func (w *goWorkerWithFunc) inputFunc(func()) {
+func (w *goWorkerWithFuncGeneric[T]) inputFunc(func()) {
 	panic("unreachable")
 }
 
-func (w *goWorkerWithFunc) inputArg(arg any) {
-	w.arg <- arg
+func (w *goWorkerWithFuncGeneric[T]) inputArg(any) {
+	panic("unreachable")
 }

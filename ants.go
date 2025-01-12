@@ -387,6 +387,7 @@ func (p *poolCommon) Release() {
 	p.lock.Lock()
 	p.workers.reset()
 	p.lock.Unlock()
+
 	// There might be some callers waiting in retrieveWorker(), so we need to wake them up to prevent
 	// those callers blocking infinitely.
 	p.cond.Broadcast()
