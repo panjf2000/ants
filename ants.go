@@ -20,6 +20,13 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
+// Package ants implements an efficient and reliable goroutine pool for Go.
+//
+// With ants, Go applications are able to limit the number of active goroutines,
+// recycle goroutines efficiently, and reduce the memory footprint significantly.
+// Package ants is extremely useful in the scenarios where a massive number of
+// goroutines are created and destroyed frequently, such as highly-concurrent
+// batch processing systems, HTTP servers, services of asynchronous tasks, etc.
 package ants
 
 import (

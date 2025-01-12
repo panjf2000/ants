@@ -87,7 +87,7 @@ jobs:
         run: go test -v -race -coverprofile="codecov.report" -covermode=atomic
 
       - name: Upload code coverage report to Codecov
-        uses: codecov/codecov-action@v4
+        uses: codecov/codecov-action@v5
         with:
           file: ./codecov.report
           flags: unittests

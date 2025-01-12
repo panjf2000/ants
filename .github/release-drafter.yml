@@ -44,7 +44,7 @@ autolabeler:
     title:
       - /fix/i
       - /bug/i
-      - /patch/i
+      - /resolve/i
   - label: docs
     files:
       - '*.md'
@@ -52,6 +52,15 @@ autolabeler:
       - /doc/i
       - /README/i
   - label: enhancement
+    title:
+      - /opt:/i
+      - /refactor/i
+      - /optimize/i
+      - /improve/i
+      - /update/i
+      - /remove/i
+      - /delete/i
+  - label: optimization
     title:
       - /opt:/i
       - /refactor/i
@@ -75,7 +84,7 @@ autolabeler:
   - label: chores
     title:
       - /chore/i
-      - /\bmisc\b/i
+      - /misc/i
       - /cleanup/i
       - /clean up/i
   - label: major
