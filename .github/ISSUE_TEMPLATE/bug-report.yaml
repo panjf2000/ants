@@ -91,8 +91,8 @@ body:
   - type: textarea
     id: code
     attributes:
-      label: Code snippets (optional)
-      description: Helpful code snippets can really speed up the process of locating root cause and fixing the bug.
+      label: Reproducer
+      description: Please provide the minimal code to reproduce the bug.
       render: go
   - type: textarea
     id: how-to-reproduce

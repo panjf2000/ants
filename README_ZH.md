@@ -161,7 +161,7 @@ pool.Reboot()
         </a>
       </td>
       <td align="center" valign="middle">
-        <a href="https://www.bytedance.com/" target="_blank">
+        <a href="https://www.bytedance.com/zh/" target="_blank">
           <img src="https://res.strikefreedom.top/static_res/logos/ByteDance_Logo.png" width="250" />
         </a>
       </td>
