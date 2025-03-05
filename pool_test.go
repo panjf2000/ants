@@ -68,10 +68,10 @@ func TestNewPoolWithPreAlloc(t *testing.T) {
 	require.EqualValues(t, 499500, sum, "The result should be 499500")
 
 	atomic.StoreInt32(&sum, 0)
-	wg.Add(runTimes)
 	_ = pool.ReleaseTimeout(time.Second)
 	pool.Reboot()
 
+	wg.Add(runTimes)
 	for i := 0; i < runTimes; i++ {
 		j := i
 		_ = pool.Submit(func() {

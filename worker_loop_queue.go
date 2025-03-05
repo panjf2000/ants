@@ -170,8 +170,6 @@ retry:
 		w.finish()
 		goto retry
 	}
-	wq.items = wq.items[:0]
-	wq.size = 0
 	wq.head = 0
 	wq.tail = 0
 }

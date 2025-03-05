@@ -441,15 +441,20 @@ func (p *poolCommon) ReleaseTimeout(timeout time.Duration) error {
 // before rebooting, otherwise you may run into data race.
 func (p *poolCommon) Reboot() {
 	if atomic.CompareAndSwapInt32(&p.state, CLOSED, OPENED) {
+		// if pre-allocation is enabled, we need to recreate all the workers when reboot
+		if p.options.PreAlloc {
+			for i := 0; i < p.Cap(); i++ {
+				w := p.workerCache.Get().(worker)
+				_ = p.workers.insert(w)
+				w.run()
+			}
+		}
 		atomic.StoreInt32(&p.purgeDone, 0)
 		p.goPurge()
 		atomic.StoreInt32(&p.ticktockDone, 0)
 		p.goTicktock()
 		p.allDone = make(chan struct{})
 		p.once = &sync.Once{}
-		if p.options.PreAlloc {
-			p.workers = newWorkerQueue(queueTypeLoopQueue, int(p.capacity))
-		}
 	}
 }
 
@@ -464,18 +469,17 @@ func (p *poolCommon) addWaiting(delta int) {
 // retrieveWorker returns an available worker to run the tasks.
 func (p *poolCommon) retrieveWorker() (w worker, err error) {
 	p.lock.Lock()
+	defer p.lock.Unlock()
 
 retry:
 	// First try to fetch the worker from the queue.
 	if w = p.workers.detach(); w != nil {
-		p.lock.Unlock()
 		return
 	}
 
 	// If the worker queue is empty, and we don't run out of the pool capacity,
 	// then just spawn a new worker goroutine.
 	if capacity := p.Cap(); capacity == -1 || capacity > p.Running() {
-		p.lock.Unlock()
 		w = p.workerCache.Get().(worker)
 		w.run()
 		return
@@ -483,7 +487,6 @@ retry:
 
 	// Bail out early if it's in nonblocking mode or the number of pending callers reaches the maximum limit value.
 	if p.options.Nonblocking || (p.options.MaxBlockingTasks != 0 && p.Waiting() >= p.options.MaxBlockingTasks) {
-		p.lock.Unlock()
 		return nil, ErrPoolOverload
 	}
 
@@ -493,7 +496,6 @@ retry:
 	p.addWaiting(-1)
 
 	if p.IsClosed() {
-		p.lock.Unlock()
 		return nil, ErrPoolClosed
 	}
 
@@ -510,19 +512,16 @@ func (p *poolCommon) revertWorker(worker worker) bool {
 	worker.setLastUsedTime(p.nowTime())
 
 	p.lock.Lock()
+	defer p.lock.Unlock()
 	// To avoid memory leaks, add a double check in the lock scope.
 	// Issue: https://github.com/panjf2000/ants/issues/113
 	if p.IsClosed() {
-		p.lock.Unlock()
 		return false
 	}
 	if err := p.workers.insert(worker); err != nil {
-		p.lock.Unlock()
 		return false
 	}
 	// Notify the invoker stuck in 'retrieveWorker()' of there is an available worker in the worker queue.
 	p.cond.Signal()
-	p.lock.Unlock()
-
 	return true
 }
