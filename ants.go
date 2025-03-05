@@ -447,6 +447,9 @@ func (p *poolCommon) Reboot() {
 		p.goTicktock()
 		p.allDone = make(chan struct{})
 		p.once = &sync.Once{}
+		if p.options.PreAlloc {
+			p.workers = newWorkerQueue(queueTypeLoopQueue, int(p.capacity))
+		}
 	}
 }
 
