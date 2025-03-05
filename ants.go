@@ -441,14 +441,6 @@ func (p *poolCommon) ReleaseTimeout(timeout time.Duration) error {
 // before rebooting, otherwise you may run into data race.
 func (p *poolCommon) Reboot() {
 	if atomic.CompareAndSwapInt32(&p.state, CLOSED, OPENED) {
-		// if pre-allocation is enabled, we need to recreate all the workers when reboot
-		if p.options.PreAlloc {
-			for i := 0; i < p.Cap(); i++ {
-				w := p.workerCache.Get().(worker)
-				_ = p.workers.insert(w)
-				w.run()
-			}
-		}
 		atomic.StoreInt32(&p.purgeDone, 0)
 		p.goPurge()
 		atomic.StoreInt32(&p.ticktockDone, 0)
