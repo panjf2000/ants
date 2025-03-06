@@ -1535,3 +1535,67 @@ func TestMultiPoolWithFuncGeneric(t *testing.T) {
 
 	mp.Tune(10)
 }
+
+func TestRebootNewPoolCalc(t *testing.T) {
+	atomic.StoreInt32(&sum, 0)
+	runTimes := 1000
+	wg.Add(runTimes)
+
+	pool, _ := ants.NewPool(10)
+	defer pool.Release()
+	// Use the default pool.
+	for i := 0; i < runTimes; i++ {
+		j := i
+		_ = pool.Submit(func() {
+			incSumInt(int32(j))
+		})
+	}
+	wg.Wait()
+	require.EqualValues(t, 499500, sum, "The result should be 499500")
+
+	atomic.StoreInt32(&sum, 0)
+	wg.Add(runTimes)
+	_ = pool.ReleaseTimeout(time.Second) // use both Release and ReleaseTimeout will occur panic
+	pool.Reboot()
+
+	for i := 0; i < runTimes; i++ {
+		j := i
+		_ = pool.Submit(func() {
+			incSumInt(int32(j))
+		})
+	}
+	wg.Wait()
+	require.EqualValues(t, 499500, sum, "The result should be 499500")
+}
+
+func TestRebootNewPoolWithPreAllocCalc(t *testing.T) {
+	atomic.StoreInt32(&sum, 0)
+	runTimes := 1000
+	wg.Add(runTimes)
+
+	pool, _ := ants.NewPool(10, ants.WithPreAlloc(true))
+	defer pool.Release()
+	// Use the default pool.
+	for i := 0; i < runTimes; i++ {
+		j := i
+		_ = pool.Submit(func() {
+			incSumInt(int32(j))
+		})
+	}
+	wg.Wait()
+	require.EqualValues(t, 499500, sum, "The result should be 499500")
+
+	atomic.StoreInt32(&sum, 0)
+	_ = pool.ReleaseTimeout(time.Second)
+	pool.Reboot()
+
+	wg.Add(runTimes)
+	for i := 0; i < runTimes; i++ {
+		j := i
+		_ = pool.Submit(func() {
+			incSumInt(int32(j))
+		})
+	}
+	wg.Wait()
+	require.EqualValues(t, 499500, sum, "The result should be 499500")
+}
