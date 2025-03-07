@@ -1541,7 +1541,8 @@ func TestRebootNewPoolCalc(t *testing.T) {
 	runTimes := 1000
 	wg.Add(runTimes)
 
-	pool, _ := ants.NewPool(10)
+	pool, err := ants.NewPool(10)
+	require.NoError(t, err)
 	defer pool.Release()
 	// Use the default pool.
 	for i := 0; i < runTimes; i++ {
@@ -1555,7 +1556,8 @@ func TestRebootNewPoolCalc(t *testing.T) {
 
 	atomic.StoreInt32(&sum, 0)
 	wg.Add(runTimes)
-	_ = pool.ReleaseTimeout(time.Second) // use both Release and ReleaseTimeout will occur panic
+	err = pool.ReleaseTimeout(time.Second) // use both Release and ReleaseTimeout will occur panic
+	require.NoError(t, err)
 	pool.Reboot()
 
 	for i := 0; i < runTimes; i++ {
@@ -1573,7 +1575,8 @@ func TestRebootNewPoolWithPreAllocCalc(t *testing.T) {
 	runTimes := 1000
 	wg.Add(runTimes)
 
-	pool, _ := ants.NewPool(10, ants.WithPreAlloc(true))
+	pool, err := ants.NewPool(10, ants.WithPreAlloc(true))
+	require.NoError(t, err)
 	defer pool.Release()
 	// Use the default pool.
 	for i := 0; i < runTimes; i++ {
@@ -1586,7 +1589,8 @@ func TestRebootNewPoolWithPreAllocCalc(t *testing.T) {
 	require.EqualValues(t, 499500, sum, "The result should be 499500")
 
 	atomic.StoreInt32(&sum, 0)
-	_ = pool.ReleaseTimeout(time.Second)
+	err = pool.ReleaseTimeout(time.Second)
+	require.NoError(t, err)
 	pool.Reboot()
 
 	wg.Add(runTimes)
