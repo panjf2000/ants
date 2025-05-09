@@ -264,6 +264,17 @@ func (p *poolCommon) purgeStaleWorkers() {
 		p.lock.Lock()
 		staleWorkers := p.workers.refresh(p.options.ExpiryDuration)
 		n := p.Running()
+
+		excess := n - p.options.MinWorkers
+		if excess <= 0 {
+			p.lock.Unlock()
+			continue
+		}
+
+		if len(staleWorkers) > excess {
+			staleWorkers = staleWorkers[:excess]
+		}
+
 		isDormant = n == 0 || n == len(staleWorkers)
 		p.lock.Unlock()
 
