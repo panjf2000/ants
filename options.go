@@ -55,7 +55,9 @@ type Options struct {
 	Nonblocking bool
 
 	// PanicHandler is used to handle panics from each worker goroutine.
-	// if nil, panics will be thrown out again from worker goroutines.
+	// If nil, the default behavior is to capture the value given to panic
+	// and resume normal execution and print that value along with the
+	// stack trace of the goroutine
 	PanicHandler func(any)
 
 	// Logger is the customized logger for logging info, if it is not set,
@@ -66,7 +68,7 @@ type Options struct {
 	DisablePurge bool
 }
 
-// WithOptions accepts the whole options config.
+// WithOptions accepts the whole Options config.
 func WithOptions(options Options) Option {
 	return func(opts *Options) {
 		*opts = options
