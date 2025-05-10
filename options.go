@@ -49,6 +49,10 @@ type Options struct {
 	// 0 (default value) means no such limit.
 	MaxBlockingTasks int
 
+	// MinWorkers is the minimum number of goroutines to keep alive in the Pool.
+	// 0 (default value) or negative numbers means no such limit.
+	MinWorkers int
+
 	// When Nonblocking is true, Pool.Submit will never be blocked.
 	// ErrPoolOverload will be returned when Pool.Submit cannot be done at once.
 	// When Nonblocking is true, MaxBlockingTasks is inoperative.
@@ -93,6 +97,14 @@ func WithPreAlloc(preAlloc bool) Option {
 func WithMaxBlockingTasks(maxBlockingTasks int) Option {
 	return func(opts *Options) {
 		opts.MaxBlockingTasks = maxBlockingTasks
+	}
+}
+
+// WithMinWorkers sets up the minimum number of worker goroutines to keep alive in the pool.
+// Works only WithExpiryDuration.
+func WithMinWorkers(minWorkers int) Option {
+	return func(opts *Options) {
+		opts.MinWorkers = minWorkers
 	}
 }
 

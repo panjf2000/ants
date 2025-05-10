@@ -522,6 +522,57 @@ func TestPurgePreMallocPool(t *testing.T) {
 	require.EqualValues(t, 0, p2.Running(), "all p should be purged")
 }
 
+func TestMinWorkers(t *testing.T) {
+	size := 10
+	expiry := 50 * time.Millisecond
+
+	tests := []struct {
+		name       string
+		minWorkers int
+		wantAlive  int
+	}{
+		{
+			name:       "positive",
+			minWorkers: 5,
+			wantAlive:  5,
+		},
+		{
+			name:       "zero",
+			minWorkers: 0,
+			wantAlive:  0,
+		},
+		{
+			name:       "negative",
+			minWorkers: -83,
+			wantAlive:  0,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			p, err := ants.NewPool(
+				size,
+				ants.WithMinWorkers(tc.minWorkers),
+				ants.WithExpiryDuration(expiry),
+			)
+			require.NoError(t, err)
+			defer p.Release()
+
+			for i := 0; i < size; i++ {
+				require.NoError(t, p.Submit(func() {}))
+			}
+
+			time.Sleep(3 * expiry)
+
+			require.EqualValues(
+				t, tc.wantAlive, p.Running(),
+				"expected %d workers remaining for MinWorkers=%d, got %d",
+				tc.wantAlive, tc.minWorkers, p.Running(),
+			)
+		})
+	}
+}
+
 func TestNonblockingSubmit(t *testing.T) {
 	poolSize := 10
 	p, err := ants.NewPool(poolSize, ants.WithNonblocking(true))
