@@ -148,7 +148,7 @@ pool.Reboot()
 
 ## 🖥 用户案例
 
-### 商业公司
+### 商业公司和开源组织
 
 以下公司/组织在生产环境上使用了 `ants`。
 
@@ -258,10 +258,21 @@ pool.Reboot()
           <img src="https://res.strikefreedom.top/static_res/logos/amap-logo.png" width="250" />
         </a>
       </td>
+      <td align="center" valign="middle">
+        <a href="https://www.apache.org/" target="_blank">
+          <img src="https://res.strikefreedom.top/static_res/logos/asf-estd-1999-logo.jpg" width="250" />
+        </a>
+      </td>
     </tr>
+		<tr>
+      <td align="center" valign="middle">
+        <a href="https://www.coze.cn/" target="_blank">
+          <img src="https://res.strikefreedom.top/static_res/logos/coze-logo-cn.png" width="250" />
+        </a>
+      </td>
+		</tr>
   </tbody>
 </table>
-
 如果你也正在生产环境上使用 `ants`，欢迎提 PR 来丰富这份列表。
 
 ### 开源软件
@@ -273,6 +284,8 @@ pool.Reboot()
 - [nps](https://github.com/ehang-io/nps): 一款轻量级、高性能、功能强大的内网穿透代理服务器。
 - [TDengine](https://github.com/taosdata/TDengine): TDengine 是一款开源、高性能、云原生的时序数据库 (Time-Series Database, TSDB)。TDengine 能被广泛运用于物联网、工业互联网、车联网、IT 运维、金融等领域。
 - [siyuan](https://github.com/siyuan-note/siyuan): 思源笔记是一款本地优先的个人知识管理系统，支持完全离线使用，同时也支持端到端加密同步。
+- [BillionMail](https://github.com/aaPanel/BillionMail): BillionMail 是一个未来的开源邮件服务器和电子邮件营销平台，旨在帮助企业和个人轻松管理他们的电子邮件营销活动。
+- [coze-loop](https://github.com/coze-dev/coze-loop): Coze Loop 是一个面向开发者，专注于 AI Agent 开发与运维的平台级解决方案。
 - [osmedeus](https://github.com/j3ssie/osmedeus): A Workflow Engine for Offensive Security.
 - [jitsu](https://github.com/jitsucom/jitsu/tree/master): An open-source Segment alternative. Fully-scriptable data ingestion engine for modern data teams. Set-up a real-time data pipeline in minutes, not days.
 - [triangula](https://github.com/RH12503/triangula): Generate high-quality triangulated and polygonal art from images.
