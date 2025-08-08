@@ -317,25 +317,31 @@ pool.Reboot()
 
 <a href="https://www.jetbrains.com/?from=ants" target="_blank"><img src="https://resources.jetbrains.com/storage/products/company/brand/logos/jetbrains.svg" alt="JetBrains logo."></a>
 
-## 💰 支持
-
-如果有意向，可以通过每个月定量的少许捐赠来支持这个项目。
-
-<a href="https://opencollective.com/ants#backers" target="_blank"><img src="https://opencollective.com/ants/backers.svg"></a>
-
-## 💎 赞助
-
-每月定量捐赠 10 刀即可成为本项目的赞助者，届时您的 logo 或者 link 可以展示在本项目的 README 上。
-
-<a href="https://opencollective.com/ants#sponsors" target="_blank"><img src="https://opencollective.com/ants/sponsors.svg"></a>
-
 ## ☕️ 打赏
 
 > 当您通过以下方式进行捐赠时，请务必留下姓名、GitHub 账号或其他社交媒体账号，以便我将其添加到捐赠者名单中，以表谢意。
 
-<img src="https://raw.githubusercontent.com/panjf2000/illustrations/master/payments/WeChatPay.JPG" width="250" align="middle"/>&nbsp;&nbsp;
-<img src="https://raw.githubusercontent.com/panjf2000/illustrations/master/payments/AliPay.JPG" width="250" align="middle"/>&nbsp;&nbsp;
-<a href="https://www.paypal.me/R136a1X" target="_blank"><img src="https://raw.githubusercontent.com/panjf2000/illustrations/master/payments/PayPal.JPG" width="250" align="middle"/></a>&nbsp;&nbsp;
+<table>
+  <tbody>
+    <tr>
+      <td align="center" valign="middle">
+        <a target="_blank" href="https://buymeacoffee.com/panjf2000">
+          <img src="https://res.strikefreedom.top/static_res/logos/bmc_qr.png" width="250" alt="By me coffee" />
+        </a>
+      </td>
+      <td align="center" valign="middle">
+        <a target="_blank" href="https://www.patreon.com/panjf2000">
+          <img src="https://res.strikefreedom.top/static_res/logos/patreon_logo.png" width="250" alt="Patreon" />
+        </a>
+      </td>
+      <td align="center" valign="middle">
+        <a target="_blank" href="https://opencollective.com/panjf2000">
+          <img src="https://res.strikefreedom.top/static_res/logos/open-collective-logo.png" width="250" alt="OpenCollective" />
+        </a>
+      </td>
+    </tr>
+  </tbody>
+</table>
 
 ## 🔋 赞助商
 

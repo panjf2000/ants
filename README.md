@@ -318,25 +318,31 @@ If you have `ants` integrated into projects, feel free to open a pull request re
 
 <a href="https://www.jetbrains.com/?from=ants" target="_blank"><img src="https://resources.jetbrains.com/storage/products/company/brand/logos/jetbrains.svg" alt="JetBrains logo."></a>
 
-## 💰 Backers
-
-Support us with a monthly donation and help us continue our activities.
-
-<a href="https://opencollective.com/ants#backers" target="_blank"><img src="https://opencollective.com/ants/backers.svg"></a>
-
-## 💎 Sponsors
-
-Become a bronze sponsor with a monthly donation of $10 and get your logo on our README on GitHub.
-
-<a href="https://opencollective.com/ants#sponsors" target="_blank"><img src="https://opencollective.com/ants/sponsors.svg"></a>
-
 ## ☕️ Buy me a coffee
 
 > Please be sure to leave your name, GitHub account, or other social media accounts when you donate by the following means so that I can add it to the list of donors as a token of my appreciation.
 
-<img src="https://raw.githubusercontent.com/panjf2000/illustrations/master/payments/WeChatPay.JPG" width="250" align="middle"/>&nbsp;&nbsp;
-<img src="https://raw.githubusercontent.com/panjf2000/illustrations/master/payments/AliPay.JPG" width="250" align="middle"/>&nbsp;&nbsp;
-<a href="https://www.paypal.me/R136a1X" target="_blank"><img src="https://raw.githubusercontent.com/panjf2000/illustrations/master/payments/PayPal.JPG" width="250" align="middle"/></a>&nbsp;&nbsp;
+<table>
+  <tbody>
+    <tr>
+      <td align="center" valign="middle">
+        <a target="_blank" href="https://buymeacoffee.com/panjf2000">
+          <img src="https://res.strikefreedom.top/static_res/logos/bmc_qr.png" width="250" alt="By me coffee" />
+        </a>
+      </td>
+      <td align="center" valign="middle">
+        <a target="_blank" href="https://www.patreon.com/panjf2000">
+          <img src="https://res.strikefreedom.top/static_res/logos/patreon_logo.png" width="250" alt="Patreon" />
+        </a>
+      </td>
+      <td align="center" valign="middle">
+        <a target="_blank" href="https://opencollective.com/panjf2000">
+          <img src="https://res.strikefreedom.top/static_res/logos/open-collective-logo.png" width="250" alt="OpenCollective" />
+        </a>
+      </td>
+    </tr>
+  </tbody>
+</table>
 
 ## 🔋 Sponsorship
 
