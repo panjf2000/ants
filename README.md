@@ -286,6 +286,7 @@ The open-source projects below do concurrent programming with the help of `ants`
 - [TDengine](https://github.com/taosdata/TDengine): TDengine is an open source, high-performance, cloud native time-series database optimized for Internet of Things (IoT), Connected Cars, and Industrial IoT.
 - [siyuan](https://github.com/siyuan-note/siyuan): SiYuan is a local-first personal knowledge management system that supports complete offline use, as well as end-to-end encrypted synchronization.
 - [BillionMail](https://github.com/aaPanel/BillionMail): A future open-source Mail server, Email marketing platform designed to help businesses and individuals manage their email campaigns with ease.
+- [WeKnora](https://github.com/Tencent/WeKnora): An LLM-powered framework designed for deep document understanding and semantic retrieval, especially for handling complex, heterogeneous documents.
 - [coze-loop](https://github.com/coze-dev/coze-loop): A developer-oriented, platform-level solution focused on the development and operation of AI agents.
 - [osmedeus](https://github.com/j3ssie/osmedeus): A Workflow Engine for Offensive Security.
 - [jitsu](https://github.com/jitsucom/jitsu/tree/master): An open-source Segment alternative. Fully-scriptable data ingestion engine for modern data teams. Set-up a real-time data pipeline in minutes, not days.
