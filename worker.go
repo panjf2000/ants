@@ -46,7 +46,6 @@ type goWorker struct {
 // run starts a goroutine to repeat the process
 // that performs the function calls.
 func (w *goWorker) run() {
-	w.pool.addRunning(1)
 	go func() {
 		defer func() {
 			if w.pool.addRunning(-1) == 0 && w.pool.IsClosed() {

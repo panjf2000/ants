@@ -49,7 +49,6 @@ type goWorkerWithFuncGeneric[T any] struct {
 // run starts a goroutine to repeat the process
 // that performs the function calls.
 func (w *goWorkerWithFuncGeneric[T]) run() {
-	w.pool.addRunning(1)
 	go func() {
 		defer func() {
 			if w.pool.addRunning(-1) == 0 && w.pool.IsClosed() {
