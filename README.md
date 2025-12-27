@@ -328,7 +328,7 @@ If you have `ants` integrated into projects, feel free to open a pull request re
     <tr>
       <td align="center" valign="middle">
         <a target="_blank" href="https://buymeacoffee.com/panjf2000">
-          <img src="https://res.strikefreedom.top/static_res/logos/bmc_qr.png" width="250" alt="By me coffee" />
+          <img src="https://res.strikefreedom.top/static_res/logos/bmc_qr.png" width="250" alt="Buy me a coffee" />
         </a>
       </td>
       <td align="center" valign="middle">
