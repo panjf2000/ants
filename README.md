@@ -270,7 +270,7 @@ Trusted by the following corporations/organizations.
           <img src="https://res.strikefreedom.top/static_res/logos/coze-logo.png" width="250" />
         </a>
       </td>
-		</tr>
+    </tr>
   </tbody>
 </table>
 
