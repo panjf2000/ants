@@ -148,7 +148,7 @@ pool.Reboot()
 
 ## 🖥 用户案例
 
-### 商业公司
+### 商业公司和开源组织
 
 以下公司/组织在生产环境上使用了 `ants`。
 
@@ -258,10 +258,21 @@ pool.Reboot()
           <img src="https://res.strikefreedom.top/static_res/logos/amap-logo.png" width="250" />
         </a>
       </td>
+      <td align="center" valign="middle">
+        <a href="https://www.apache.org/" target="_blank">
+          <img src="https://res.strikefreedom.top/static_res/logos/asf-estd-1999-logo.jpg" width="250" />
+        </a>
+      </td>
+    </tr>
+    <tr>
+      <td align="center" valign="middle">
+        <a href="https://www.coze.cn/" target="_blank">
+          <img src="https://res.strikefreedom.top/static_res/logos/coze-logo-cn.png" width="250" />
+        </a>
+      </td>
     </tr>
   </tbody>
 </table>
-
 如果你也正在生产环境上使用 `ants`，欢迎提 PR 来丰富这份列表。
 
 ### 开源软件
@@ -273,6 +284,9 @@ pool.Reboot()
 - [nps](https://github.com/ehang-io/nps): 一款轻量级、高性能、功能强大的内网穿透代理服务器。
 - [TDengine](https://github.com/taosdata/TDengine): TDengine 是一款开源、高性能、云原生的时序数据库 (Time-Series Database, TSDB)。TDengine 能被广泛运用于物联网、工业互联网、车联网、IT 运维、金融等领域。
 - [siyuan](https://github.com/siyuan-note/siyuan): 思源笔记是一款本地优先的个人知识管理系统，支持完全离线使用，同时也支持端到端加密同步。
+- [BillionMail](https://github.com/aaPanel/BillionMail): BillionMail 是一个未来的开源邮件服务器和电子邮件营销平台，旨在帮助企业和个人轻松管理他们的电子邮件营销活动。
+- [WeKnora](https://github.com/Tencent/WeKnora): 一款基于大语言模型（LLM）的文档理解与语义检索框架，专为结构复杂、内容异构的文档场景而打造。
+- [coze-loop](https://github.com/coze-dev/coze-loop): Coze Loop 是一个面向开发者，专注于 AI Agent 开发与运维的平台级解决方案。
 - [osmedeus](https://github.com/j3ssie/osmedeus): A Workflow Engine for Offensive Security.
 - [jitsu](https://github.com/jitsucom/jitsu/tree/master): An open-source Segment alternative. Fully-scriptable data ingestion engine for modern data teams. Set-up a real-time data pipeline in minutes, not days.
 - [triangula](https://github.com/RH12503/triangula): Generate high-quality triangulated and polygonal art from images.
@@ -304,25 +318,31 @@ pool.Reboot()
 
 <a href="https://www.jetbrains.com/?from=ants" target="_blank"><img src="https://resources.jetbrains.com/storage/products/company/brand/logos/jetbrains.svg" alt="JetBrains logo."></a>
 
-## 💰 支持
-
-如果有意向，可以通过每个月定量的少许捐赠来支持这个项目。
-
-<a href="https://opencollective.com/ants#backers" target="_blank"><img src="https://opencollective.com/ants/backers.svg"></a>
-
-## 💎 赞助
-
-每月定量捐赠 10 刀即可成为本项目的赞助者，届时您的 logo 或者 link 可以展示在本项目的 README 上。
-
-<a href="https://opencollective.com/ants#sponsors" target="_blank"><img src="https://opencollective.com/ants/sponsors.svg"></a>
-
 ## ☕️ 打赏
 
 > 当您通过以下方式进行捐赠时，请务必留下姓名、GitHub 账号或其他社交媒体账号，以便我将其添加到捐赠者名单中，以表谢意。
 
-<img src="https://raw.githubusercontent.com/panjf2000/illustrations/master/payments/WeChatPay.JPG" width="250" align="middle"/>&nbsp;&nbsp;
-<img src="https://raw.githubusercontent.com/panjf2000/illustrations/master/payments/AliPay.JPG" width="250" align="middle"/>&nbsp;&nbsp;
-<a href="https://www.paypal.me/R136a1X" target="_blank"><img src="https://raw.githubusercontent.com/panjf2000/illustrations/master/payments/PayPal.JPG" width="250" align="middle"/></a>&nbsp;&nbsp;
+<table>
+  <tbody>
+    <tr>
+      <td align="center" valign="middle">
+        <a target="_blank" href="https://buymeacoffee.com/panjf2000">
+          <img src="https://res.strikefreedom.top/static_res/logos/bmc_qr.png" width="250" alt="Buy me coffee" />
+        </a>
+      </td>
+      <td align="center" valign="middle">
+        <a target="_blank" href="https://www.patreon.com/panjf2000">
+          <img src="https://res.strikefreedom.top/static_res/logos/patreon_logo.png" width="250" alt="Patreon" />
+        </a>
+      </td>
+      <td align="center" valign="middle">
+        <a target="_blank" href="https://opencollective.com/panjf2000">
+          <img src="https://res.strikefreedom.top/static_res/logos/open-collective-logo.png" width="250" alt="OpenCollective" />
+        </a>
+      </td>
+    </tr>
+  </tbody>
+</table>
 
 ## 🔋 赞助商
 

@@ -472,9 +472,9 @@ retry:
 	// If the worker queue is empty, and we don't run out of the pool capacity,
 	// then just spawn a new worker goroutine.
 	if capacity := p.Cap(); capacity == -1 || capacity > p.Running() {
-		p.lock.Unlock()
 		w = p.workerCache.Get().(worker)
 		w.run()
+		p.lock.Unlock()
 		return
 	}
 
