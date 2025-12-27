@@ -264,7 +264,7 @@ Trusted by the following corporations/organizations.
         </a>
       </td>
     </tr>
-		<tr>
+    <tr>
       <td align="center" valign="middle">
         <a href="https://www.coze.com/" target="_blank">
           <img src="https://res.strikefreedom.top/static_res/logos/coze-logo.png" width="250" />
