@@ -191,7 +191,7 @@ type poolCommon struct {
 	ticktockCtx  context.Context
 	stopTicktock context.CancelFunc
 
-	now atomic.Value
+	now int64
 
 	options *Options
 }
@@ -303,7 +303,7 @@ func (p *poolCommon) ticktock() {
 			break
 		}
 
-		p.now.Store(time.Now())
+		atomic.StoreInt64(&p.now, time.Now().UnixNano())
 	}
 }
 
@@ -318,13 +318,13 @@ func (p *poolCommon) goPurge() {
 }
 
 func (p *poolCommon) goTicktock() {
-	p.now.Store(time.Now())
+	atomic.StoreInt64(&p.now, time.Now().UnixNano())
 	p.ticktockCtx, p.stopTicktock = context.WithCancel(context.Background())
 	go p.ticktock()
 }
 
 func (p *poolCommon) nowTime() time.Time {
-	return p.now.Load().(time.Time)
+	return time.Unix(0, atomic.LoadInt64(&p.now))
 }
 
 // Running returns the number of workers currently running.
