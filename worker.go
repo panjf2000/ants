@@ -24,7 +24,6 @@ package ants
 
 import (
 	"runtime/debug"
-	"sync/atomic"
 )
 
 // goWorker is the actual executor who runs the tasks,
@@ -41,6 +40,9 @@ type goWorker struct {
 
 	// task is a job should be done.
 	task chan func()
+
+	// lastUsed will be updated when putting a worker back into queue.
+	lastUsed int64
 }
 
 // run starts a goroutine to repeat the process
@@ -83,11 +85,11 @@ func (w *goWorker) finish() {
 }
 
 func (w *goWorker) lastUsedTime() int64 {
-	return atomic.LoadInt64(&w.lastUsed)
+	return w.lastUsed
 }
 
 func (w *goWorker) setLastUsedTime(t int64) {
-	atomic.StoreInt64(&w.lastUsed, t)
+	w.lastUsed = t
 }
 
 func (w *goWorker) inputFunc(fn func()) {

@@ -23,7 +23,6 @@
 package ants
 
 import (
-	"runtime"
 	"testing"
 	"time"
 
@@ -72,10 +71,6 @@ func TestLoopQueue(t *testing.T) {
 }
 
 func TestRotatedQueueSearch(t *testing.T) {
-	if runtime.GOOS == "windows" { // time.Now() doesn't seem to be precise on Windows
-		t.Skip("Skip this test on Windows platform")
-	}
-
 	size := 10
 	q := newWorkerLoopQueue(size)
 

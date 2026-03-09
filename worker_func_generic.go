@@ -44,6 +44,9 @@ type goWorkerWithFuncGeneric[T any] struct {
 
 	// exit signals the goroutine to exit.
 	exit chan struct{}
+
+	// lastUsed will be updated when putting a worker back into queue.
+	lastUsed int64
 }
 
 // run starts a goroutine to repeat the process
@@ -93,4 +96,9 @@ func (w *goWorkerWithFuncGeneric[T]) lastUsedTime() int64 {
 
 func (w *goWorkerWithFuncGeneric[T]) setLastUsedTime(t int64) {
 	atomic.StoreInt64(&w.lastUsed, t)
+	return w.lastUsed
+}
+
+func (w *goWorkerWithFuncGeneric[T]) setLastUsedTime(t int64) {
+	w.lastUsed = t
 }

@@ -41,6 +41,9 @@ type goWorkerWithFunc struct {
 
 	// arg is the argument for the function.
 	arg chan any
+
+	// lastUsed will be updated when putting a worker back into queue.
+	lastUsed int64
 }
 
 // run starts a goroutine to repeat the process
@@ -88,6 +91,11 @@ func (w *goWorkerWithFunc) lastUsedTime() int64 {
 
 func (w *goWorkerWithFunc) setLastUsedTime(t int64) {
 	atomic.StoreInt64(&w.lastUsed, t)
+	return w.lastUsed
+}
+
+func (w *goWorkerWithFunc) setLastUsedTime(t int64) {
+	w.lastUsed = t
 }
 
 func (w *goWorkerWithFunc) inputArg(arg any) {

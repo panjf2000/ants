@@ -23,7 +23,6 @@
 package ants
 
 import (
-	"runtime"
 	"testing"
 	"time"
 
@@ -72,10 +71,6 @@ func TestWorkerStack(t *testing.T) {
 // It seems that something wrong with time.Now() on Windows, not sure whether it is a bug on Windows,
 // so exclude this test from Windows platform temporarily.
 func TestSearch(t *testing.T) {
-	if runtime.GOOS == "windows" { // time.Now() doesn't seem to be precise on Windows
-		t.Skip("Skip this test on Windows platform")
-	}
-
 	q := newWorkerStack(0)
 
 	currTime := time.Now().UnixNano()
