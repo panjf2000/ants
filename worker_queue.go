@@ -33,8 +33,8 @@ var errQueueIsFull = errors.New("the queue is full")
 type worker interface {
 	run()
 	finish()
-	lastUsedTime() time.Time
-	setLastUsedTime(t time.Time)
+	lastUsedTime() int64
+	setLastUsedTime(t int64)
 	inputFunc(func())
 	inputArg(any)
 }

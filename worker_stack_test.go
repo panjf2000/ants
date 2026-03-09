@@ -42,14 +42,14 @@ func TestWorkerStack(t *testing.T) {
 	q := newWorkerQueue(queueType(-1), 0)
 
 	for i := 0; i < 5; i++ {
-		err := q.insert(&goWorker{lastUsed: time.Now()})
+		err := q.insert(&goWorker{lastUsed: time.Now().UnixNano()})
 		if err != nil {
 			break
 		}
 	}
 	require.EqualValues(t, 5, q.len(), "Len error")
 
-	expired := time.Now()
+	expired := time.Now().UnixNano()
 
 	err := q.insert(&goWorker{lastUsed: expired})
 	if err != nil {
@@ -59,7 +59,7 @@ func TestWorkerStack(t *testing.T) {
 	time.Sleep(time.Second)
 
 	for i := 0; i < 6; i++ {
-		err := q.insert(&goWorker{lastUsed: time.Now()})
+		err := q.insert(&goWorker{lastUsed: time.Now().UnixNano()})
 		if err != nil {
 			t.Fatal("Enqueue error")
 		}
@@ -78,35 +78,42 @@ func TestSearch(t *testing.T) {
 
 	q := newWorkerStack(0)
 
+	currTime := time.Now().UnixNano()
+
 	// 1
-	expiry1 := time.Now()
+	expiry1 := currTime
+	currTime++
+	_ = q.insert(&goWorker{lastUsed: currTime})
 
-	_ = q.insert(&goWorker{lastUsed: time.Now()})
-
-	require.EqualValues(t, 0, q.binarySearch(0, q.len()-1, time.Now()), "index should be 0")
+	require.EqualValues(t, 0, q.binarySearch(0, q.len()-1, currTime), "index should be 0")
 	require.EqualValues(t, -1, q.binarySearch(0, q.len()-1, expiry1), "index should be -1")
 
 	// 2
-	expiry2 := time.Now()
-	_ = q.insert(&goWorker{lastUsed: time.Now()})
+	currTime++
+	expiry2 := currTime
+	currTime++
+	_ = q.insert(&goWorker{lastUsed: currTime})
 
 	require.EqualValues(t, -1, q.binarySearch(0, q.len()-1, expiry1), "index should be -1")
 
 	require.EqualValues(t, 0, q.binarySearch(0, q.len()-1, expiry2), "index should be 0")
 
-	require.EqualValues(t, 1, q.binarySearch(0, q.len()-1, time.Now()), "index should be 1")
+	require.EqualValues(t, 1, q.binarySearch(0, q.len()-1, currTime), "index should be 1")
 
 	// more
 	for i := 0; i < 5; i++ {
-		_ = q.insert(&goWorker{lastUsed: time.Now()})
+		currTime++
+		_ = q.insert(&goWorker{lastUsed: currTime})
 	}
 
-	expiry3 := time.Now()
+	currTime++
+	expiry3 := currTime
 
 	_ = q.insert(&goWorker{lastUsed: expiry3})
 
 	for i := 0; i < 10; i++ {
-		_ = q.insert(&goWorker{lastUsed: time.Now()})
+		currTime++
+		_ = q.insert(&goWorker{lastUsed: currTime})
 	}
 
 	require.EqualValues(t, 7, q.binarySearch(0, q.len()-1, expiry3), "index should be 7")

@@ -24,7 +24,6 @@ package ants
 
 import (
 	"runtime/debug"
-	"time"
 )
 
 // goWorkerWithFunc is the actual executor who runs the tasks,
@@ -43,7 +42,7 @@ type goWorkerWithFuncGeneric[T any] struct {
 	exit chan struct{}
 
 	// lastUsed will be updated when putting a worker back into queue.
-	lastUsed time.Time
+	lastUsed int64
 }
 
 // run starts a goroutine to repeat the process
@@ -87,10 +86,10 @@ func (w *goWorkerWithFuncGeneric[T]) finish() {
 	w.exit <- struct{}{}
 }
 
-func (w *goWorkerWithFuncGeneric[T]) lastUsedTime() time.Time {
+func (w *goWorkerWithFuncGeneric[T]) lastUsedTime() int64 {
 	return w.lastUsed
 }
 
-func (w *goWorkerWithFuncGeneric[T]) setLastUsedTime(t time.Time) {
+func (w *goWorkerWithFuncGeneric[T]) setLastUsedTime(t int64) {
 	w.lastUsed = t
 }

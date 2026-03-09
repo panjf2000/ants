@@ -45,7 +45,7 @@ func TestLoopQueue(t *testing.T) {
 	q := newWorkerLoopQueue(size)
 
 	for i := 0; i < 5; i++ {
-		err := q.insert(&goWorker{lastUsed: time.Now()})
+		err := q.insert(&goWorker{lastUsed: time.Now().UnixNano()})
 		if err != nil {
 			break
 		}
@@ -57,14 +57,14 @@ func TestLoopQueue(t *testing.T) {
 	time.Sleep(time.Second)
 
 	for i := 0; i < 6; i++ {
-		err := q.insert(&goWorker{lastUsed: time.Now()})
+		err := q.insert(&goWorker{lastUsed: time.Now().UnixNano()})
 		if err != nil {
 			break
 		}
 	}
 	require.EqualValues(t, 10, q.len(), "Len error")
 
-	err := q.insert(&goWorker{lastUsed: time.Now()})
+	err := q.insert(&goWorker{lastUsed: time.Now().UnixNano()})
 	require.Error(t, err, "Enqueue, error")
 
 	q.refresh(time.Second)
@@ -79,35 +79,42 @@ func TestRotatedQueueSearch(t *testing.T) {
 	size := 10
 	q := newWorkerLoopQueue(size)
 
+	currTime := time.Now().UnixNano()
+
 	// 1
-	expiry1 := time.Now()
+	expiry1 := currTime
+	currTime++
+	_ = q.insert(&goWorker{lastUsed: currTime})
 
-	_ = q.insert(&goWorker{lastUsed: time.Now()})
-
-	require.EqualValues(t, 0, q.binarySearch(time.Now()), "index should be 0")
+	require.EqualValues(t, 0, q.binarySearch(currTime), "index should be 0")
 	require.EqualValues(t, -1, q.binarySearch(expiry1), "index should be -1")
 
 	// 2
-	expiry2 := time.Now()
-	_ = q.insert(&goWorker{lastUsed: time.Now()})
+	currTime++
+	expiry2 := currTime
+	currTime++
+	_ = q.insert(&goWorker{lastUsed: currTime})
 
 	require.EqualValues(t, -1, q.binarySearch(expiry1), "index should be -1")
 
 	require.EqualValues(t, 0, q.binarySearch(expiry2), "index should be 0")
 
-	require.EqualValues(t, 1, q.binarySearch(time.Now()), "index should be 1")
+	require.EqualValues(t, 1, q.binarySearch(currTime), "index should be 1")
 
 	// more
 	for i := 0; i < 5; i++ {
-		_ = q.insert(&goWorker{lastUsed: time.Now()})
+		currTime++
+		_ = q.insert(&goWorker{lastUsed: currTime})
 	}
 
-	expiry3 := time.Now()
+	currTime++
+	expiry3 := currTime
 	_ = q.insert(&goWorker{lastUsed: expiry3})
 
 	var err error
 	for err != errQueueIsFull {
-		err = q.insert(&goWorker{lastUsed: time.Now()})
+		currTime++
+		err = q.insert(&goWorker{lastUsed: currTime})
 	}
 
 	require.EqualValues(t, 7, q.binarySearch(expiry3), "index should be 7")
@@ -117,11 +124,13 @@ func TestRotatedQueueSearch(t *testing.T) {
 		_ = q.detach()
 	}
 
-	expiry4 := time.Now()
+	currTime++
+	expiry4 := currTime
 	_ = q.insert(&goWorker{lastUsed: expiry4})
 
 	for i := 0; i < 4; i++ {
-		_ = q.insert(&goWorker{lastUsed: time.Now()})
+		currTime++
+		_ = q.insert(&goWorker{lastUsed: currTime})
 	}
 	//	head = 6, tail = 5, insert direction ->
 	// [expiry4, time, time, time,  time, nil/tail,  time/head, time, time, time]
@@ -130,7 +139,8 @@ func TestRotatedQueueSearch(t *testing.T) {
 	for i := 0; i < 3; i++ {
 		_ = q.detach()
 	}
-	expiry5 := time.Now()
+	currTime++
+	expiry5 := currTime
 	_ = q.insert(&goWorker{lastUsed: expiry5})
 
 	//	head = 6, tail = 5, insert direction ->
@@ -138,14 +148,15 @@ func TestRotatedQueueSearch(t *testing.T) {
 	require.EqualValues(t, 5, q.binarySearch(expiry5), "index should be 5")
 
 	for i := 0; i < 3; i++ {
-		_ = q.insert(&goWorker{lastUsed: time.Now()})
+		currTime++
+		_ = q.insert(&goWorker{lastUsed: currTime})
 	}
 	//	head = 9, tail = 9, insert direction ->
 	// [expiry4, time, time, time,  time, expiry5,  time, time, time, time/head/tail]
 	require.EqualValues(t, -1, q.binarySearch(expiry2), "index should be -1")
 
 	require.EqualValues(t, 9, q.binarySearch(q.items[9].lastUsedTime()), "index should be 9")
-	require.EqualValues(t, 8, q.binarySearch(time.Now()), "index should be 8")
+	require.EqualValues(t, 8, q.binarySearch(currTime), "index should be 8")
 }
 
 func TestRetrieveExpiry(t *testing.T) {
@@ -156,13 +167,13 @@ func TestRetrieveExpiry(t *testing.T) {
 
 	// test [ time+1s, time+1s, time+1s, time+1s, time+1s, time, time, time, time, time]
 	for i := 0; i < size/2; i++ {
-		_ = q.insert(&goWorker{lastUsed: time.Now()})
+		_ = q.insert(&goWorker{lastUsed: time.Now().UnixNano()})
 	}
 	expirew = append(expirew, q.items[:size/2]...)
 	time.Sleep(u)
 
 	for i := 0; i < size/2; i++ {
-		_ = q.insert(&goWorker{lastUsed: time.Now()})
+		_ = q.insert(&goWorker{lastUsed: time.Now().UnixNano()})
 	}
 	workers := q.refresh(u)
 
@@ -172,7 +183,7 @@ func TestRetrieveExpiry(t *testing.T) {
 	time.Sleep(u)
 
 	for i := 0; i < size/2; i++ {
-		_ = q.insert(&goWorker{lastUsed: time.Now()})
+		_ = q.insert(&goWorker{lastUsed: time.Now().UnixNano()})
 	}
 	expirew = expirew[:0]
 	expirew = append(expirew, q.items[size/2:]...)
@@ -183,13 +194,13 @@ func TestRetrieveExpiry(t *testing.T) {
 
 	// test [ time+1s, time+1s, time+1s, nil, nil, time+1s, time+1s, time+1s, time+1s, time+1s]
 	for i := 0; i < size/2; i++ {
-		_ = q.insert(&goWorker{lastUsed: time.Now()})
+		_ = q.insert(&goWorker{lastUsed: time.Now().UnixNano()})
 	}
 	for i := 0; i < size/2; i++ {
 		_ = q.detach()
 	}
 	for i := 0; i < 3; i++ {
-		_ = q.insert(&goWorker{lastUsed: time.Now()})
+		_ = q.insert(&goWorker{lastUsed: time.Now().UnixNano()})
 	}
 	time.Sleep(u)
 
