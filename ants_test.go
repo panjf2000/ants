@@ -1536,6 +1536,84 @@ func TestMultiPoolWithFuncGeneric(t *testing.T) {
 	mp.Tune(10)
 }
 
+func TestMultiPoolOverloadFallback(t *testing.T) {
+	expiry := 500 * time.Millisecond
+	mp, err := ants.NewMultiPool(2, 2, ants.RoundRobin,
+		ants.WithNonblocking(true), ants.WithExpiryDuration(expiry))
+	require.NoError(t, err)
+
+	atomic.StoreInt32(&stopLongRunningFunc, 0)
+	// RR index starts at MaxUint32: submit1->pool0, submit2->pool1, submit3->pool0, submit4->pool1
+	// Fill pool 0 with 2 long-running tasks (busy workers).
+	require.NoError(t, mp.Submit(longRunningFunc))
+	require.NoError(t, mp.Submit(func() {}))
+	require.NoError(t, mp.Submit(longRunningFunc))
+	// Pool 1 gets 1 long-running + 1 short: the short one completes instantly.
+	require.NoError(t, mp.Submit(func() {}))
+
+	// Wait for short tasks to complete and idle workers to be purged.
+	time.Sleep(expiry*3 + 100*time.Millisecond)
+
+	// Pool 0: 2 busy workers (Running=2, full). Pool 1: purged idle workers (Running<2).
+	// RR next -> pool 0 -> ErrPoolOverload -> fallback to LeastTasks -> pool 1 (lower Running).
+	require.NoError(t, mp.Submit(func() {}))
+
+	atomic.StoreInt32(&stopLongRunningFunc, 1)
+	require.NoError(t, mp.ReleaseTimeout(3*time.Second))
+}
+
+func TestMultiPoolWithFuncOverloadFallback(t *testing.T) {
+	expiry := 500 * time.Millisecond
+	blockCh := make(chan struct{})
+	mp, err := ants.NewMultiPoolWithFunc(2, 2, longRunningPoolFunc, ants.RoundRobin,
+		ants.WithNonblocking(true), ants.WithExpiryDuration(expiry))
+	require.NoError(t, err)
+
+	shortCh1 := make(chan struct{})
+	shortCh2 := make(chan struct{})
+	require.NoError(t, mp.Invoke(blockCh))
+	require.NoError(t, mp.Invoke(shortCh1))
+	require.NoError(t, mp.Invoke(blockCh))
+	require.NoError(t, mp.Invoke(shortCh2))
+	close(shortCh1)
+	close(shortCh2)
+
+	time.Sleep(expiry*3 + 100*time.Millisecond)
+
+	shortCh3 := make(chan struct{})
+	require.NoError(t, mp.Invoke(shortCh3))
+	close(shortCh3)
+
+	close(blockCh)
+	require.NoError(t, mp.ReleaseTimeout(3*time.Second))
+}
+
+func TestMultiPoolWithFuncGenericOverloadFallback(t *testing.T) {
+	expiry := 500 * time.Millisecond
+	mp, err := ants.NewMultiPoolWithFuncGeneric(2, 2, longRunningPoolFuncCh, ants.RoundRobin,
+		ants.WithNonblocking(true), ants.WithExpiryDuration(expiry))
+	require.NoError(t, err)
+
+	blockCh := make(chan struct{})
+	shortCh1 := make(chan struct{})
+	shortCh2 := make(chan struct{})
+	require.NoError(t, mp.Invoke(blockCh))
+	require.NoError(t, mp.Invoke(shortCh1))
+	require.NoError(t, mp.Invoke(blockCh))
+	require.NoError(t, mp.Invoke(shortCh2))
+	close(shortCh1)
+	close(shortCh2)
+
+	time.Sleep(expiry*3 + 100*time.Millisecond)
+
+	shortCh3 := make(chan struct{})
+	require.NoError(t, mp.Invoke(shortCh3))
+	close(shortCh3)
+
+	close(blockCh)
+	require.NoError(t, mp.ReleaseTimeout(3*time.Second))
+}
+
 func TestRebootNewPoolCalc(t *testing.T) {
 	atomic.StoreInt32(&sum, 0)
 	runTimes := 1000
