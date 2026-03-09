@@ -67,7 +67,7 @@ func (ws *workerStack) refresh(duration time.Duration) []worker {
 		return nil
 	}
 
-	expiryTime := time.Now().Add(-duration)
+	expiryTime := time.Now().Add(-duration).UnixNano()
 	index := ws.binarySearch(0, n-1, expiryTime)
 
 	ws.expiry = ws.expiry[:0]
@@ -82,10 +82,10 @@ func (ws *workerStack) refresh(duration time.Duration) []worker {
 	return ws.expiry
 }
 
-func (ws *workerStack) binarySearch(l, r int, expiryTime time.Time) int {
+func (ws *workerStack) binarySearch(l, r int, expiryTime int64) int {
 	for l <= r {
 		mid := l + ((r - l) >> 1) // avoid overflow when computing mid
-		if expiryTime.Before(ws.items[mid].lastUsedTime()) {
+		if expiryTime < ws.items[mid].lastUsedTime() {
 			r = mid - 1
 		} else {
 			l = mid + 1

@@ -323,8 +323,8 @@ func (p *poolCommon) goTicktock() {
 	go p.ticktock()
 }
 
-func (p *poolCommon) nowTime() time.Time {
-	return time.Unix(0, atomic.LoadInt64(&p.now))
+func (p *poolCommon) nowTime() int64 {
+	return atomic.LoadInt64(&p.now)
 }
 
 // Running returns the number of workers currently running.
