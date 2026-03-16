@@ -8,7 +8,6 @@ import (
 	"runtime"
 	"sync"
 	"sync/atomic"
-	"time"
 )
 
 type spinLock uint32
@@ -24,9 +23,6 @@ func (sl *spinLock) Lock() {
 		}
 		if backoff < maxBackoff {
 			backoff <<= 1
-		} else {
-			// Yield to the OS scheduler to prevent starvation under high contention.
-			time.Sleep(time.Millisecond)
 		}
 	}
 }
