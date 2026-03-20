@@ -406,41 +406,13 @@ func (p *poolCommon) Release() {
 
 // ReleaseTimeout is like Release but with a timeout, it waits all workers to exit before timing out.
 func (p *poolCommon) ReleaseTimeout(timeout time.Duration) error {
-	if p.IsClosed() || (!p.options.DisablePurge && p.stopPurge == nil) || p.stopTicktock == nil {
-		return ErrPoolClosed
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	defer cancel()
+	err := p.ReleaseContext(ctx)
+	if errors.Is(err, context.DeadlineExceeded) {
+		return ErrTimeout
 	}
-
-	p.Release()
-
-	var purgeCh <-chan struct{}
-	if !p.options.DisablePurge {
-		purgeCh = p.purgeCtx.Done()
-	} else {
-		purgeCh = p.allDone
-	}
-
-	if p.Running() == 0 {
-		p.once.Do(func() {
-			close(p.allDone)
-		})
-	}
-
-	timer := time.NewTimer(timeout)
-	defer timer.Stop()
-	for {
-		select {
-		case <-timer.C:
-			return ErrTimeout
-		case <-p.allDone:
-			<-purgeCh
-			<-p.ticktockCtx.Done()
-			if p.Running() == 0 &&
-				(p.options.DisablePurge || atomic.LoadInt32(&p.purgeDone) == 1) &&
-				atomic.LoadInt32(&p.ticktockDone) == 1 {
-				return nil
-			}
-		}
-	}
+	return err
 }
 
 // ReleaseContext is like Release but with a context, it waits all workers to exit before the context is done.
