@@ -1614,7 +1614,9 @@ func TestMultiPoolReleaseContext(t *testing.T) {
 	err = mp.ReleaseContext(ctx)
 	require.Error(t, err)
 	atomic.StoreInt32(&stopLongRunningFunc, 1)
-	time.Sleep(time.Second) // let workers drain
+	require.Eventually(t, func() bool {
+		return mp.Running() == 0
+	}, 3*time.Second, 100*time.Millisecond)
 	atomic.StoreInt32(&stopLongRunningFunc, 0)
 
 	// Test reboot after ReleaseContext.
@@ -1689,7 +1691,9 @@ func TestMultiPoolWithFuncReleaseContext(t *testing.T) {
 	err = mp.ReleaseContext(ctx)
 	require.Error(t, err)
 	close(ch)
-	time.Sleep(time.Second) // let workers drain
+	require.Eventually(t, func() bool {
+		return mp.Running() == 0
+	}, 3*time.Second, 100*time.Millisecond)
 }
 
 func TestMultiPoolWithFuncGenericReleaseContext(t *testing.T) {
@@ -1739,7 +1743,9 @@ func TestMultiPoolWithFuncGenericReleaseContext(t *testing.T) {
 	err = mp.ReleaseContext(ctx)
 	require.Error(t, err)
 	close(ch)
-	time.Sleep(time.Second) // let workers drain
+	require.Eventually(t, func() bool {
+		return mp.Running() == 0
+	}, 3*time.Second, 100*time.Millisecond)
 }
 
 func TestRebootNewPoolCalc(t *testing.T) {
