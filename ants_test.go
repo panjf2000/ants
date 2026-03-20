@@ -23,6 +23,7 @@
 package ants_test
 
 import (
+	"context"
 	"log"
 	"os"
 	"runtime"
@@ -1351,6 +1352,34 @@ func TestDefaultPoolReleaseTimeout(t *testing.T) {
 	require.NoError(t, err)
 }
 
+func TestDefaultPoolReleaseContext(t *testing.T) {
+	ants.Reboot()
+	for i := 0; i < 5; i++ {
+		_ = ants.Submit(func() {
+			time.Sleep(time.Second)
+		})
+	}
+	require.NotZero(t, ants.Running())
+	err := ants.ReleaseContext(context.Background())
+	require.NoError(t, err)
+}
+
+func TestReleaseContextWithNil(t *testing.T) {
+	p, err := ants.NewPool(10)
+	require.NoError(t, err)
+	for i := 0; i < 5; i++ {
+		_ = p.Submit(func() {
+			time.Sleep(time.Second)
+		})
+	}
+	require.NotZero(t, p.Running())
+
+	// Passing nil context should release immediately without waiting for workers to exit.
+	err = p.ReleaseContext(nil) //nolint:staticcheck
+	require.NoError(t, err)
+	require.True(t, p.IsClosed())
+}
+
 func TestMultiPool(t *testing.T) {
 	_, err := ants.NewMultiPool(-1, 10, 8)
 	require.ErrorIs(t, err, ants.ErrInvalidMultiPoolSize)
@@ -1534,6 +1563,183 @@ func TestMultiPoolWithFuncGeneric(t *testing.T) {
 	testFn()
 
 	mp.Tune(10)
+}
+
+func TestMultiPoolReleaseContext(t *testing.T) {
+	mp, err := ants.NewMultiPool(10, 5, ants.RoundRobin)
+	require.NoError(t, err)
+
+	for i := 0; i < 50; i++ {
+		err = mp.Submit(longRunningFunc)
+		require.NoError(t, err)
+	}
+	require.EqualValues(t, 50, mp.Running())
+
+	// Signal workers to stop, then release with a background context.
+	atomic.StoreInt32(&stopLongRunningFunc, 1)
+	err = mp.ReleaseContext(context.Background())
+	require.NoError(t, err)
+	require.Zero(t, mp.Running())
+	require.True(t, mp.IsClosed())
+	atomic.StoreInt32(&stopLongRunningFunc, 0)
+
+	// Calling ReleaseContext on a closed pool should return ErrPoolClosed.
+	require.ErrorIs(t, mp.ReleaseContext(context.Background()), ants.ErrPoolClosed)
+
+	// Test with LeastTasks strategy.
+	mp, err = ants.NewMultiPool(10, 5, ants.LeastTasks)
+	require.NoError(t, err)
+	for i := 0; i < 50; i++ {
+		err = mp.Submit(longRunningFunc)
+		require.NoError(t, err)
+	}
+	require.EqualValues(t, 50, mp.Running())
+
+	atomic.StoreInt32(&stopLongRunningFunc, 1)
+	err = mp.ReleaseContext(context.Background())
+	require.NoError(t, err)
+	require.Zero(t, mp.Running())
+	require.True(t, mp.IsClosed())
+	atomic.StoreInt32(&stopLongRunningFunc, 0)
+
+	// Test that a cancelled context returns an error.
+	mp, err = ants.NewMultiPool(10, 5, ants.RoundRobin)
+	require.NoError(t, err)
+	for i := 0; i < 50; i++ {
+		err = mp.Submit(longRunningFunc)
+		require.NoError(t, err)
+	}
+	ctx, cancel := context.WithCancel(context.Background())
+	cancel() // cancel immediately
+	err = mp.ReleaseContext(ctx)
+	require.Error(t, err)
+	atomic.StoreInt32(&stopLongRunningFunc, 1)
+	time.Sleep(time.Second) // let workers drain
+	atomic.StoreInt32(&stopLongRunningFunc, 0)
+
+	// Test reboot after ReleaseContext.
+	mp, err = ants.NewMultiPool(10, 5, ants.RoundRobin)
+	require.NoError(t, err)
+	for i := 0; i < 50; i++ {
+		err = mp.Submit(longRunningFunc)
+		require.NoError(t, err)
+	}
+	atomic.StoreInt32(&stopLongRunningFunc, 1)
+	err = mp.ReleaseContext(context.Background())
+	require.NoError(t, err)
+	atomic.StoreInt32(&stopLongRunningFunc, 0)
+
+	mp.Reboot()
+	require.False(t, mp.IsClosed())
+	for i := 0; i < 50; i++ {
+		err = mp.Submit(longRunningFunc)
+		require.NoError(t, err)
+	}
+	require.EqualValues(t, 50, mp.Running())
+	atomic.StoreInt32(&stopLongRunningFunc, 1)
+	err = mp.ReleaseContext(context.Background())
+	require.NoError(t, err)
+	atomic.StoreInt32(&stopLongRunningFunc, 0)
+}
+
+func TestMultiPoolWithFuncReleaseContext(t *testing.T) {
+	ch := make(chan struct{})
+	mp, err := ants.NewMultiPoolWithFunc(10, 5, longRunningPoolFunc, ants.RoundRobin)
+	require.NoError(t, err)
+
+	for i := 0; i < 50; i++ {
+		err = mp.Invoke(ch)
+		require.NoError(t, err)
+	}
+	require.EqualValues(t, 50, mp.Running())
+
+	close(ch)
+	err = mp.ReleaseContext(context.Background())
+	require.NoError(t, err)
+	require.Zero(t, mp.Running())
+	require.True(t, mp.IsClosed())
+
+	// Calling ReleaseContext on a closed pool should return ErrPoolClosed.
+	require.ErrorIs(t, mp.ReleaseContext(context.Background()), ants.ErrPoolClosed)
+
+	// Test with LeastTasks strategy.
+	ch = make(chan struct{})
+	mp, err = ants.NewMultiPoolWithFunc(10, 5, longRunningPoolFunc, ants.LeastTasks)
+	require.NoError(t, err)
+	for i := 0; i < 50; i++ {
+		err = mp.Invoke(ch)
+		require.NoError(t, err)
+	}
+	close(ch)
+	err = mp.ReleaseContext(context.Background())
+	require.NoError(t, err)
+	require.Zero(t, mp.Running())
+	require.True(t, mp.IsClosed())
+
+	// Test that a cancelled context returns an error.
+	ch = make(chan struct{})
+	mp, err = ants.NewMultiPoolWithFunc(10, 5, longRunningPoolFunc, ants.RoundRobin)
+	require.NoError(t, err)
+	for i := 0; i < 50; i++ {
+		err = mp.Invoke(ch)
+		require.NoError(t, err)
+	}
+	ctx, cancel := context.WithCancel(context.Background())
+	cancel()
+	err = mp.ReleaseContext(ctx)
+	require.Error(t, err)
+	close(ch)
+	time.Sleep(time.Second) // let workers drain
+}
+
+func TestMultiPoolWithFuncGenericReleaseContext(t *testing.T) {
+	ch := make(chan struct{})
+	mp, err := ants.NewMultiPoolWithFuncGeneric(10, 5, longRunningPoolFuncCh, ants.RoundRobin)
+	require.NoError(t, err)
+
+	for i := 0; i < 50; i++ {
+		err = mp.Invoke(ch)
+		require.NoError(t, err)
+	}
+	require.EqualValues(t, 50, mp.Running())
+
+	close(ch)
+	err = mp.ReleaseContext(context.Background())
+	require.NoError(t, err)
+	require.Zero(t, mp.Running())
+	require.True(t, mp.IsClosed())
+
+	// Calling ReleaseContext on a closed pool should return ErrPoolClosed.
+	require.ErrorIs(t, mp.ReleaseContext(context.Background()), ants.ErrPoolClosed)
+
+	// Test with LeastTasks strategy.
+	ch = make(chan struct{})
+	mp, err = ants.NewMultiPoolWithFuncGeneric(10, 5, longRunningPoolFuncCh, ants.LeastTasks)
+	require.NoError(t, err)
+	for i := 0; i < 50; i++ {
+		err = mp.Invoke(ch)
+		require.NoError(t, err)
+	}
+	close(ch)
+	err = mp.ReleaseContext(context.Background())
+	require.NoError(t, err)
+	require.Zero(t, mp.Running())
+	require.True(t, mp.IsClosed())
+
+	// Test that a cancelled context returns an error.
+	ch = make(chan struct{})
+	mp, err = ants.NewMultiPoolWithFuncGeneric(10, 5, longRunningPoolFuncCh, ants.RoundRobin)
+	require.NoError(t, err)
+	for i := 0; i < 50; i++ {
+		err = mp.Invoke(ch)
+		require.NoError(t, err)
+	}
+	ctx, cancel := context.WithCancel(context.Background())
+	cancel()
+	err = mp.ReleaseContext(ctx)
+	require.Error(t, err)
+	close(ch)
+	time.Sleep(time.Second) // let workers drain
 }
 
 func TestRebootNewPoolCalc(t *testing.T) {

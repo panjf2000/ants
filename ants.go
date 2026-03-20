@@ -139,6 +139,14 @@ func ReleaseTimeout(timeout time.Duration) error {
 	return defaultAntsPool.ReleaseTimeout(timeout)
 }
 
+// ReleaseContext is like Release but with a context, it waits all workers to exit before the context is done.
+//
+// Note that if the context is nil, it is the same as Release,
+// just return immediately without waiting for all workers to exit.
+func ReleaseContext(ctx context.Context) error {
+	return defaultAntsPool.ReleaseContext(ctx)
+}
+
 // Reboot reboots the default pool.
 func Reboot() {
 	defaultAntsPool.Reboot()
@@ -423,6 +431,51 @@ func (p *poolCommon) ReleaseTimeout(timeout time.Duration) error {
 		select {
 		case <-timer.C:
 			return ErrTimeout
+		case <-p.allDone:
+			<-purgeCh
+			<-p.ticktockCtx.Done()
+			if p.Running() == 0 &&
+				(p.options.DisablePurge || atomic.LoadInt32(&p.purgeDone) == 1) &&
+				atomic.LoadInt32(&p.ticktockDone) == 1 {
+				return nil
+			}
+		}
+	}
+}
+
+// ReleaseContext is like Release but with a context, it waits all workers to exit before the context is done.
+//
+// Note that if the context is nil, it is the same as Release,
+// just return immediately without waiting for all workers to exit.
+func (p *poolCommon) ReleaseContext(ctx context.Context) error {
+	if p.IsClosed() || (!p.options.DisablePurge && p.stopPurge == nil) || p.stopTicktock == nil {
+		return ErrPoolClosed
+	}
+
+	p.Release()
+
+	// Don't wait for all workers to exit, just return immediately if the context is nil.
+	if ctx == nil {
+		return nil
+	}
+
+	var purgeCh <-chan struct{}
+	if !p.options.DisablePurge {
+		purgeCh = p.purgeCtx.Done()
+	} else {
+		purgeCh = p.allDone
+	}
+
+	if p.Running() == 0 {
+		p.once.Do(func() {
+			close(p.allDone)
+		})
+	}
+
+	for {
+		select {
+		case <-ctx.Done():
+			return ctx.Err()
 		case <-p.allDone:
 			<-purgeCh
 			<-p.ticktockCtx.Done()
