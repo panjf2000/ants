@@ -479,6 +479,18 @@ func (p *poolCommon) Reboot() {
 	}
 	<-p.allDone
 
+	// Wait for the purge and ticktock goroutines to exit completely,
+	// so that their deferred purgeDone/ticktockDone stores don't
+	// race with the resets below.
+	if !p.options.DisablePurge {
+		for atomic.LoadInt32(&p.purgeDone) != 1 {
+			runtime.Gosched()
+		}
+	}
+	for atomic.LoadInt32(&p.ticktockDone) != 1 {
+		runtime.Gosched()
+	}
+
 	if !atomic.CompareAndSwapInt32(&p.state, CLOSED, OPENED) {
 		return
 	}
