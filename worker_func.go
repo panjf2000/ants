@@ -49,7 +49,7 @@ func (w *goWorkerWithFunc) run() {
 	go func() {
 		defer func() {
 			if w.pool.addRunning(-1) == 0 && w.pool.IsClosed() {
-				w.pool.once.Load().Do(func() {
+				w.pool.once.Do(func() {
 					close(w.pool.allDone)
 				})
 			}
