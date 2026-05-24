@@ -57,7 +57,7 @@ func releasePools(ctx context.Context, pools []contextReleaser) error {
 			wg.Go(func() error {
 				err := p.ReleaseContext(ctx)
 				if err != nil {
-					err = fmt.Errorf("pool %d: %v", idx, err)
+					err = fmt.Errorf("pool %d: %w", idx, err)
 				}
 				errCh <- err
 				return err
