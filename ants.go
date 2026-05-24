@@ -183,7 +183,7 @@ type poolCommon struct {
 	// done is used to indicate that all workers are done.
 	allDone chan struct{}
 	// once is used to make sure the pool is closed just once.
-	once *sync.Once
+	once atomic.Pointer[sync.Once]
 
 	// workerCache speeds up the obtainment of a usable worker in function:retrieveWorker.
 	workerCache sync.Pool
@@ -227,9 +227,9 @@ func newPool(size int, options ...Option) (*poolCommon, error) {
 		capacity: int32(size),
 		allDone:  make(chan struct{}),
 		lock:     syncx.NewSpinLock(),
-		once:     &sync.Once{},
 		options:  opts,
 	}
+	p.once.Store(&sync.Once{})
 	if p.options.PreAlloc {
 		if size == -1 {
 			return nil, ErrInvalidPreAllocSize
@@ -439,7 +439,7 @@ func (p *poolCommon) ReleaseContext(ctx context.Context) error {
 	}
 
 	if p.Running() == 0 {
-		p.once.Do(func() {
+		p.once.Load().Do(func() {
 			close(p.allDone)
 		})
 	}
@@ -471,7 +471,7 @@ func (p *poolCommon) Reboot() {
 		atomic.StoreInt32(&p.ticktockDone, 0)
 		p.goTicktock()
 		p.allDone = make(chan struct{})
-		p.once = &sync.Once{}
+		p.once.Store(&sync.Once{})
 	}
 }
 
