@@ -49,10 +49,12 @@ type goWorkerWithFuncGeneric[T any] struct {
 // that performs the function calls.
 func (w *goWorkerWithFuncGeneric[T]) run() {
 	w.pool.addRunning(1)
+	w.pool.workerWg.Add(1)
 	go func() {
+		defer w.pool.workerWg.Done()
 		defer func() {
 			if w.pool.addRunning(-1) == 0 && w.pool.IsClosed() {
-				w.pool.once.Load().Do(func() {
+				w.pool.once.Do(func() {
 					close(w.pool.allDone)
 				})
 			}

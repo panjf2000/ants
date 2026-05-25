@@ -183,7 +183,11 @@ type poolCommon struct {
 	// done is used to indicate that all workers are done.
 	allDone chan struct{}
 	// once is used to make sure the pool is closed just once.
-	once atomic.Pointer[sync.Once]
+	once *sync.Once
+
+	// workerWg tracks all worker goroutine lifetimes so that
+	// Reboot can wait for every goroutine to fully exit.
+	workerWg sync.WaitGroup
 
 	// workerCache speeds up the obtainment of a usable worker in function:retrieveWorker.
 	workerCache sync.Pool
@@ -227,9 +231,9 @@ func newPool(size int, options ...Option) (*poolCommon, error) {
 		capacity: int32(size),
 		allDone:  make(chan struct{}),
 		lock:     syncx.NewSpinLock(),
+		once:     &sync.Once{},
 		options:  opts,
 	}
-	p.once.Store(&sync.Once{})
 	if p.options.PreAlloc {
 		if size == -1 {
 			return nil, ErrInvalidPreAllocSize
@@ -439,7 +443,7 @@ func (p *poolCommon) ReleaseContext(ctx context.Context) error {
 	}
 
 	if p.Running() == 0 {
-		p.once.Load().Do(func() {
+		p.once.Do(func() {
 			close(p.allDone)
 		})
 	}
@@ -473,11 +477,17 @@ func (p *poolCommon) Reboot() {
 	// this prevents data races when Reboot() is called while workers are
 	// still in the process of shutting down.
 	if p.Running() == 0 {
-		p.once.Load().Do(func() {
+		p.once.Do(func() {
 			close(p.allDone)
 		})
 	}
 	<-p.allDone
+
+	// Wait for all worker goroutines to fully exit, not just for the
+	// running count to hit zero. This ensures no goroutine is still
+	// executing deferred cleanup (workerCache.Put, recover, cond.Signal)
+	// when we reset pool state below.
+	p.workerWg.Wait()
 
 	// Wait for the purge and ticktock goroutines to exit completely,
 	// so that their deferred purgeDone/ticktockDone stores don't
@@ -500,7 +510,7 @@ func (p *poolCommon) Reboot() {
 	atomic.StoreInt32(&p.ticktockDone, 0)
 	p.goTicktock()
 	p.allDone = make(chan struct{})
-	p.once.Store(&sync.Once{})
+	p.once = &sync.Once{}
 }
 
 func (p *poolCommon) addRunning(delta int) int {
