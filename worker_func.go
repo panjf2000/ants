@@ -45,8 +45,8 @@ type goWorkerWithFunc struct {
 // run starts a goroutine to repeat the process
 // that performs the function calls.
 func (w *goWorkerWithFunc) run() {
-	w.pool.addRunning(1)
 	w.pool.workerWg.Add(1)
+	w.pool.addRunning(1)
 	go func() {
 		defer w.pool.workerWg.Done()
 		defer func() {
