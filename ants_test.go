@@ -1815,3 +1815,212 @@ func TestRebootNewPoolWithPreAllocCalc(t *testing.T) {
 	wg.Wait()
 	require.EqualValues(t, 499500, sum, "The result should be 499500")
 }
+func TestMultiPoolWithLB_RoundRobin(t *testing.T) {
+	_, err := ants.NewMultiPoolWithLB(-1, 5, ants.NewRoundRobinLB())
+	require.ErrorIs(t, err, ants.ErrInvalidMultiPoolSize)
+	_, err = ants.NewMultiPoolWithLB(10, 5, nil)
+	require.ErrorIs(t, err, ants.ErrInvalidLoadBalancingStrategy)
+	_, err = ants.NewMultiPoolWithLB(10, 5, ants.NewRoundRobinLB(), ants.WithExpiryDuration(-1))
+	require.ErrorIs(t, err, ants.ErrInvalidPoolExpiry)
+
+	mp, err := ants.NewMultiPoolWithLB(10, 5, ants.NewRoundRobinLB())
+	require.NoError(t, err)
+	testFn := func() {
+		for i := 0; i < 50; i++ {
+			err = mp.Submit(longRunningFunc)
+			require.NoError(t, err)
+		}
+		require.EqualValues(t, 50, mp.Running())
+		require.EqualValues(t, 50, mp.Cap())
+		require.EqualValues(t, 0, mp.Free())
+		require.False(t, mp.IsClosed())
+		atomic.StoreInt32(&stopLongRunningFunc, 1)
+		require.NoError(t, mp.ReleaseTimeout(3*time.Second))
+		require.ErrorIs(t, mp.Submit(nil), ants.ErrPoolClosed)
+		require.True(t, mp.IsClosed())
+		atomic.StoreInt32(&stopLongRunningFunc, 0)
+	}
+	testFn()
+	mp.Reboot()
+	testFn()
+}
+
+func TestMultiPoolWithLB_LeastTasks(t *testing.T) {
+	mp, err := ants.NewMultiPoolWithLB(10, 5, ants.NewLeastTasksLB(), ants.WithNonblocking(true))
+	require.NoError(t, err)
+	testFn := func() {
+		for i := 0; i < 50; i++ {
+			_ = mp.Submit(longRunningFunc)
+		}
+		require.False(t, mp.IsClosed())
+		atomic.StoreInt32(&stopLongRunningFunc, 1)
+		require.NoError(t, mp.ReleaseTimeout(3*time.Second))
+		require.ErrorIs(t, mp.Submit(nil), ants.ErrPoolClosed)
+		require.True(t, mp.IsClosed())
+		atomic.StoreInt32(&stopLongRunningFunc, 0)
+	}
+	testFn()
+	mp.Reboot()
+	testFn()
+}
+
+func TestMultiPoolWithLB_LeastWaiting(t *testing.T) {
+	mp, err := ants.NewMultiPoolWithLB(10, 5, ants.NewLeastWaitingLB(), ants.WithNonblocking(true))
+	require.NoError(t, err)
+	testFn := func() {
+		for i := 0; i < 50; i++ {
+			_ = mp.Submit(longRunningFunc)
+		}
+		require.False(t, mp.IsClosed())
+		atomic.StoreInt32(&stopLongRunningFunc, 1)
+		require.NoError(t, mp.ReleaseTimeout(3*time.Second))
+		require.ErrorIs(t, mp.Submit(nil), ants.ErrPoolClosed)
+		require.True(t, mp.IsClosed())
+		atomic.StoreInt32(&stopLongRunningFunc, 0)
+	}
+	testFn()
+	mp.Reboot()
+	testFn()
+}
+
+func TestMultiPoolWithFuncAndLB_RoundRobin(t *testing.T) {
+	_, err := ants.NewMultiPoolWithFuncAndLB(-1, 5, longRunningPoolFunc, ants.NewRoundRobinLB())
+	require.ErrorIs(t, err, ants.ErrInvalidMultiPoolSize)
+	_, err = ants.NewMultiPoolWithFuncAndLB(10, 5, longRunningPoolFunc, nil)
+	require.ErrorIs(t, err, ants.ErrInvalidLoadBalancingStrategy)
+	_, err = ants.NewMultiPoolWithFuncAndLB(10, 5, longRunningPoolFunc, ants.NewRoundRobinLB(), ants.WithExpiryDuration(-1))
+	require.ErrorIs(t, err, ants.ErrInvalidPoolExpiry)
+
+	ch := make(chan struct{})
+	mp, err := ants.NewMultiPoolWithFuncAndLB(10, 5, longRunningPoolFunc, ants.NewRoundRobinLB())
+	require.NoError(t, err)
+	testFn := func() {
+		for i := 0; i < 50; i++ {
+			err = mp.Invoke(ch)
+			require.NoError(t, err)
+		}
+		require.EqualValues(t, 50, mp.Running())
+		require.EqualValues(t, 50, mp.Cap())
+		require.EqualValues(t, 0, mp.Free())
+		require.False(t, mp.IsClosed())
+		close(ch)
+		require.NoError(t, mp.ReleaseTimeout(3*time.Second))
+		require.ErrorIs(t, mp.Invoke(nil), ants.ErrPoolClosed)
+		require.True(t, mp.IsClosed())
+		ch = make(chan struct{})
+	}
+	testFn()
+	mp.Reboot()
+	testFn()
+}
+
+func TestMultiPoolWithFuncAndLB_LeastTasks(t *testing.T) {
+	ch := make(chan struct{})
+	mp, err := ants.NewMultiPoolWithFuncAndLB(10, 5, longRunningPoolFunc, ants.NewLeastTasksLB(), ants.WithNonblocking(true))
+	require.NoError(t, err)
+	testFn := func() {
+		for i := 0; i < 50; i++ {
+			_ = mp.Invoke(ch)
+		}
+		require.False(t, mp.IsClosed())
+		close(ch)
+		require.NoError(t, mp.ReleaseTimeout(3*time.Second))
+		require.ErrorIs(t, mp.Invoke(nil), ants.ErrPoolClosed)
+		require.True(t, mp.IsClosed())
+		ch = make(chan struct{})
+	}
+	testFn()
+	mp.Reboot()
+	testFn()
+}
+
+func TestMultiPoolWithFuncAndLB_LeastWaiting(t *testing.T) {
+	ch := make(chan struct{})
+	mp, err := ants.NewMultiPoolWithFuncAndLB(10, 5, longRunningPoolFunc, ants.NewLeastWaitingLB(), ants.WithNonblocking(true))
+	require.NoError(t, err)
+	testFn := func() {
+		for i := 0; i < 50; i++ {
+			_ = mp.Invoke(ch)
+		}
+		require.False(t, mp.IsClosed())
+		close(ch)
+		require.NoError(t, mp.ReleaseTimeout(3*time.Second))
+		require.ErrorIs(t, mp.Invoke(nil), ants.ErrPoolClosed)
+		require.True(t, mp.IsClosed())
+		ch = make(chan struct{})
+	}
+	testFn()
+	mp.Reboot()
+	testFn()
+}
+
+func TestMultiPoolWithFuncGenericAndLB_RoundRobin(t *testing.T) {
+	_, err := ants.NewMultiPoolWithFuncGenericAndLB(-1, 5, longRunningPoolFuncCh, ants.NewRoundRobinLB())
+	require.ErrorIs(t, err, ants.ErrInvalidMultiPoolSize)
+	_, err = ants.NewMultiPoolWithFuncGenericAndLB(10, 5, longRunningPoolFuncCh, nil)
+	require.ErrorIs(t, err, ants.ErrInvalidLoadBalancingStrategy)
+	_, err = ants.NewMultiPoolWithFuncGenericAndLB(10, 5, longRunningPoolFuncCh, ants.NewRoundRobinLB(), ants.WithExpiryDuration(-1))
+	require.ErrorIs(t, err, ants.ErrInvalidPoolExpiry)
+
+	ch := make(chan struct{})
+	mp, err := ants.NewMultiPoolWithFuncGenericAndLB(10, 5, longRunningPoolFuncCh, ants.NewRoundRobinLB())
+	require.NoError(t, err)
+	testFn := func() {
+		for i := 0; i < 50; i++ {
+			err = mp.Invoke(ch)
+			require.NoError(t, err)
+		}
+		require.EqualValues(t, 50, mp.Running())
+		require.EqualValues(t, 50, mp.Cap())
+		require.EqualValues(t, 0, mp.Free())
+		require.False(t, mp.IsClosed())
+		close(ch)
+		require.NoError(t, mp.ReleaseTimeout(3*time.Second))
+		require.ErrorIs(t, mp.Invoke(nil), ants.ErrPoolClosed)
+		require.True(t, mp.IsClosed())
+		ch = make(chan struct{})
+	}
+	testFn()
+	mp.Reboot()
+	testFn()
+}
+
+func TestMultiPoolWithFuncGenericAndLB_LeastTasks(t *testing.T) {
+	ch := make(chan struct{})
+	mp, err := ants.NewMultiPoolWithFuncGenericAndLB(10, 5, longRunningPoolFuncCh, ants.NewLeastTasksLB(), ants.WithNonblocking(true))
+	require.NoError(t, err)
+	testFn := func() {
+		for i := 0; i < 50; i++ {
+			_ = mp.Invoke(ch)
+		}
+		require.False(t, mp.IsClosed())
+		close(ch)
+		require.NoError(t, mp.ReleaseTimeout(3*time.Second))
+		require.ErrorIs(t, mp.Invoke(nil), ants.ErrPoolClosed)
+		require.True(t, mp.IsClosed())
+		ch = make(chan struct{})
+	}
+	testFn()
+	mp.Reboot()
+	testFn()
+}
+
+func TestMultiPoolWithFuncGenericAndLB_LeastWaiting(t *testing.T) {
+	ch := make(chan struct{})
+	mp, err := ants.NewMultiPoolWithFuncGenericAndLB(10, 5, longRunningPoolFuncCh, ants.NewLeastWaitingLB(), ants.WithNonblocking(true))
+	require.NoError(t, err)
+	testFn := func() {
+		for i := 0; i < 50; i++ {
+			_ = mp.Invoke(ch)
+		}
+		require.False(t, mp.IsClosed())
+		close(ch)
+		require.NoError(t, mp.ReleaseTimeout(3*time.Second))
+		require.ErrorIs(t, mp.Invoke(nil), ants.ErrPoolClosed)
+		require.True(t, mp.IsClosed())
+		ch = make(chan struct{})
+	}
+	testFn()
+	mp.Reboot()
+	testFn()
+}

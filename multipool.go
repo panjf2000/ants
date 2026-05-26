@@ -26,23 +26,11 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"math"
 	"strings"
 	"sync/atomic"
 	"time"
 
 	"golang.org/x/sync/errgroup"
-)
-
-// LoadBalancingStrategy represents the type of load-balancing algorithm.
-type LoadBalancingStrategy int
-
-const (
-	// RoundRobin distributes task to a list of pools in rotation.
-	RoundRobin LoadBalancingStrategy = 1 << (iota + 1)
-
-	// LeastTasks always selects the pool with the least number of pending tasks.
-	LeastTasks
 )
 
 type contextReleaser interface {
@@ -88,10 +76,10 @@ func releasePools(ctx context.Context, pools []contextReleaser) error {
 // MultiPool is a good fit for the scenario where you have a large number of
 // tasks to submit, and you don't want the single pool to be the bottleneck.
 type MultiPool struct {
-	pools []*Pool
-	index uint32
-	state int32
-	lbs   LoadBalancingStrategy
+	pools   []*Pool
+	metrics []PoolMetrics
+	lb      LoadBalancer
+	state   int32
 }
 
 // NewMultiPool instantiates a MultiPool with a size of the pool list and a size
@@ -100,11 +88,24 @@ func NewMultiPool(size, sizePerPool int, lbs LoadBalancingStrategy, options ...O
 	if size <= 0 {
 		return nil, ErrInvalidMultiPoolSize
 	}
+	lb, err := newBuiltinLB(lbs)
+	if err != nil {
+		return nil, err
+	}
+	return NewMultiPoolWithLB(size, sizePerPool, lb, options...)
+}
 
-	if lbs != RoundRobin && lbs != LeastTasks {
+// NewMultiPoolWithLB instantiates a MultiPool with a given LoadBalancer.
+func NewMultiPoolWithLB(size, sizePerPool int, lb LoadBalancer, options ...Option) (*MultiPool, error) {
+	if size <= 0 {
+		return nil, ErrInvalidMultiPoolSize
+	}
+	if lb == nil {
 		return nil, ErrInvalidLoadBalancingStrategy
 	}
+
 	pools := make([]*Pool, size)
+	metrics := make([]PoolMetrics, size)
 	for i := 0; i < size; i++ {
 		pool, err := NewPool(sizePerPool, options...)
 		if err != nil {
@@ -115,25 +116,10 @@ func NewMultiPool(size, sizePerPool int, lbs LoadBalancingStrategy, options ...O
 			return nil, err
 		}
 		pools[i] = pool
+		metrics[i] = pool
 	}
-	return &MultiPool{pools: pools, index: math.MaxUint32, lbs: lbs}, nil
-}
 
-func (mp *MultiPool) next(lbs LoadBalancingStrategy) (idx int) {
-	switch lbs {
-	case RoundRobin:
-		return int(atomic.AddUint32(&mp.index, 1) % uint32(len(mp.pools)))
-	case LeastTasks:
-		leastTasks := math.MaxInt32
-		for i, pool := range mp.pools {
-			if n := pool.Running(); n < leastTasks {
-				leastTasks = n
-				idx = i
-			}
-		}
-		return
-	}
-	return -1
+	return &MultiPool{pools: pools, metrics: metrics, lb: lb}, nil
 }
 
 // Submit submits a task to a pool selected by the load-balancing strategy.
@@ -141,11 +127,12 @@ func (mp *MultiPool) Submit(task func()) (err error) {
 	if mp.IsClosed() {
 		return ErrPoolClosed
 	}
-	if err = mp.pools[mp.next(mp.lbs)].Submit(task); err == nil {
-		return
-	}
-	if err == ErrPoolOverload && mp.lbs == RoundRobin {
-		return mp.pools[mp.next(LeastTasks)].Submit(task)
+
+	idx := mp.lb.Pick(mp.metrics)
+	if err = mp.pools[idx].Submit(task); err == ErrPoolOverload {
+		if fb := mp.lb.Fallback(mp.metrics); fb >= 0 {
+			return mp.pools[fb].Submit(task)
+		}
 	}
 	return
 }
@@ -246,7 +233,6 @@ func (mp *MultiPool) ReleaseContext(ctx context.Context) error {
 // Reboot reboots a released multi-pool.
 func (mp *MultiPool) Reboot() {
 	if atomic.CompareAndSwapInt32(&mp.state, CLOSED, OPENED) {
-		atomic.StoreUint32(&mp.index, 0)
 		for _, pool := range mp.pools {
 			pool.Reboot()
 		}

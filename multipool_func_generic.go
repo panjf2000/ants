@@ -24,17 +24,16 @@ package ants
 
 import (
 	"context"
-	"math"
 	"sync/atomic"
 	"time"
 )
 
 // MultiPoolWithFuncGeneric is the generic version of MultiPoolWithFunc.
 type MultiPoolWithFuncGeneric[T any] struct {
-	pools []*PoolWithFuncGeneric[T]
-	index uint32
-	state int32
-	lbs   LoadBalancingStrategy
+	pools   []*PoolWithFuncGeneric[T]
+	metrics []PoolMetrics
+	lb      LoadBalancer
+	state   int32
 }
 
 // NewMultiPoolWithFuncGeneric instantiates a MultiPoolWithFunc with a size of the pool list and a size
@@ -43,11 +42,24 @@ func NewMultiPoolWithFuncGeneric[T any](size, sizePerPool int, fn func(T), lbs L
 	if size <= 0 {
 		return nil, ErrInvalidMultiPoolSize
 	}
+	lb, err := newBuiltinLB(lbs)
+	if err != nil {
+		return nil, err
+	}
+	return NewMultiPoolWithFuncGenericAndLB(size, sizePerPool, fn, lb, options...)
+}
 
-	if lbs != RoundRobin && lbs != LeastTasks {
+// NewMultiPoolWithFuncGenericAndLB instantiates a MultiPoolWithFuncGeneric with a given LoadBalancer.
+func NewMultiPoolWithFuncGenericAndLB[T any](size, sizePerPool int, fn func(T), lb LoadBalancer, options ...Option) (*MultiPoolWithFuncGeneric[T], error) {
+	if size <= 0 {
+		return nil, ErrInvalidMultiPoolSize
+	}
+	if lb == nil {
 		return nil, ErrInvalidLoadBalancingStrategy
 	}
+
 	pools := make([]*PoolWithFuncGeneric[T], size)
+	metrics := make([]PoolMetrics, size)
 	for i := 0; i < size; i++ {
 		pool, err := NewPoolWithFuncGeneric(sizePerPool, fn, options...)
 		if err != nil {
@@ -58,25 +70,9 @@ func NewMultiPoolWithFuncGeneric[T any](size, sizePerPool int, fn func(T), lbs L
 			return nil, err
 		}
 		pools[i] = pool
+		metrics[i] = pool
 	}
-	return &MultiPoolWithFuncGeneric[T]{pools: pools, index: math.MaxUint32, lbs: lbs}, nil
-}
-
-func (mp *MultiPoolWithFuncGeneric[T]) next(lbs LoadBalancingStrategy) (idx int) {
-	switch lbs {
-	case RoundRobin:
-		return int(atomic.AddUint32(&mp.index, 1) % uint32(len(mp.pools)))
-	case LeastTasks:
-		leastTasks := math.MaxInt32
-		for i, pool := range mp.pools {
-			if n := pool.Running(); n < leastTasks {
-				leastTasks = n
-				idx = i
-			}
-		}
-		return
-	}
-	return -1
+	return &MultiPoolWithFuncGeneric[T]{pools: pools, metrics: metrics, lb: lb}, nil
 }
 
 // Invoke submits a task to a pool selected by the load-balancing strategy.
@@ -84,12 +80,11 @@ func (mp *MultiPoolWithFuncGeneric[T]) Invoke(args T) (err error) {
 	if mp.IsClosed() {
 		return ErrPoolClosed
 	}
-
-	if err = mp.pools[mp.next(mp.lbs)].Invoke(args); err == nil {
-		return
-	}
-	if err == ErrPoolOverload && mp.lbs == RoundRobin {
-		return mp.pools[mp.next(LeastTasks)].Invoke(args)
+	idx := mp.lb.Pick(mp.metrics)
+	if err = mp.pools[idx].Invoke(args); err == ErrPoolOverload {
+		if fb := mp.lb.Fallback(mp.metrics); fb >= 0 {
+			return mp.pools[fb].Invoke(args)
+		}
 	}
 	return
 }
@@ -190,7 +185,6 @@ func (mp *MultiPoolWithFuncGeneric[T]) ReleaseContext(ctx context.Context) error
 // Reboot reboots a released multi-pool.
 func (mp *MultiPoolWithFuncGeneric[T]) Reboot() {
 	if atomic.CompareAndSwapInt32(&mp.state, CLOSED, OPENED) {
-		atomic.StoreUint32(&mp.index, 0)
 		for _, pool := range mp.pools {
 			pool.Reboot()
 		}
