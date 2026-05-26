@@ -86,8 +86,11 @@ func (mp *MultiPoolWithFunc) Invoke(args any) (err error) {
 		return ErrPoolClosed
 	}
 	idx := mp.lb.Pick(mp.metrics)
+	if !validIdx(idx, len(mp.pools)) {
+		return ErrInvalidPoolIndex
+	}
 	if err = mp.pools[idx].Invoke(args); err == ErrPoolOverload {
-		if fb := mp.lb.Fallback(mp.metrics); fb >= 0 {
+		if fb := mp.lb.Fallback(mp.metrics); validIdx(fb, len(mp.pools)) {
 			return mp.pools[fb].Invoke(args)
 		}
 	}

@@ -122,6 +122,11 @@ func (l *leastWaiting) Fallback(pools []PoolMetrics) int {
 	return -1
 }
 
+// validIdx checks that idx returned by a LoadBalancer is within bounds.
+func validIdx(idx, n int) bool {
+	return idx >= 0 && idx < n
+}
+
 func newBuiltinLB(lbs LoadBalancingStrategy) (LoadBalancer, error) {
 	switch lbs {
 	case RoundRobin:
