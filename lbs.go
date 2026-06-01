@@ -1,6 +1,6 @@
 // MIT License
 
-// Copyright (c) 2023 Andy Pan
+// Copyright (c) 2026. Ants Authors. All rights reserved.
 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -49,9 +49,9 @@ type PoolMetrics interface {
 // LoadBalancer picks a pool index from a slice of PoolMetrics.
 type LoadBalancer interface {
 	Pick(pools []PoolMetrics) int
-	// Fallback is called when the pool chosen by Pick is overloaded.
+	// FallBack is called when the pool chosen by Pick is overloaded.
 	// Return -1 to indicate no fallback is supported.
-	Fallback(pools []PoolMetrics) int
+	FallBack(pools []PoolMetrics) int
 }
 
 // roundRobinLB distributes tasks across pools in rotation.
@@ -68,7 +68,7 @@ func (r *roundRobinLB) Pick(pools []PoolMetrics) int {
 	return int(atomic.AddUint32(&r.index, 1) % uint32(len(pools)))
 }
 
-func (r *roundRobinLB) Fallback(pools []PoolMetrics) int {
+func (r *roundRobinLB) FallBack(pools []PoolMetrics) int {
 	return leastTasksPick(pools)
 }
 
@@ -95,7 +95,7 @@ func (l *leastTasksLB) Pick(pools []PoolMetrics) int {
 	return leastTasksPick(pools)
 }
 
-func (l *leastTasksLB) Fallback(pools []PoolMetrics) int {
+func (l *leastTasksLB) FallBack(_ []PoolMetrics) int {
 	return -1
 }
 
@@ -118,7 +118,7 @@ func (l *leastWaiting) Pick(pools []PoolMetrics) int {
 	return idx
 }
 
-func (l *leastWaiting) Fallback(pools []PoolMetrics) int {
+func (l *leastWaiting) FallBack(_ []PoolMetrics) int {
 	return -1
 }
 

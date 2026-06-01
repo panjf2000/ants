@@ -317,7 +317,7 @@ func (r *randomLB) Pick(pools []ants.PoolMetrics) int {
 	return rand.Intn(len(pools))
 }
 
-func (r *randomLB) Fallback(pools []ants.PoolMetrics) int {
+func (r *randomLB) FallBack(_ []ants.PoolMetrics) int {
 	return -1
 }
 

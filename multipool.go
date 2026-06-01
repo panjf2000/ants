@@ -133,7 +133,7 @@ func (mp *MultiPool) Submit(task func()) (err error) {
 		return ErrInvalidPoolIndex
 	}
 	if err = mp.pools[idx].Submit(task); err == ErrPoolOverload {
-		if fb := mp.lb.Fallback(mp.metrics); validIdx(fb, len(mp.pools)) {
+		if fb := mp.lb.FallBack(mp.metrics); validIdx(fb, len(mp.pools)) {
 			return mp.pools[fb].Submit(task)
 		}
 	}

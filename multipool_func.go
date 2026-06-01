@@ -90,7 +90,7 @@ func (mp *MultiPoolWithFunc) Invoke(args any) (err error) {
 		return ErrInvalidPoolIndex
 	}
 	if err = mp.pools[idx].Invoke(args); err == ErrPoolOverload {
-		if fb := mp.lb.Fallback(mp.metrics); validIdx(fb, len(mp.pools)) {
+		if fb := mp.lb.FallBack(mp.metrics); validIdx(fb, len(mp.pools)) {
 			return mp.pools[fb].Invoke(args)
 		}
 	}
