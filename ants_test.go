@@ -1815,6 +1815,7 @@ func TestRebootNewPoolWithPreAllocCalc(t *testing.T) {
 	wg.Wait()
 	require.EqualValues(t, 499500, sum, "The result should be 499500")
 }
+
 func TestMultiPoolWithLB_RoundRobin(t *testing.T) {
 	_, err := ants.NewMultiPoolWithLB(-1, 5, ants.NewRoundRobinLB())
 	require.ErrorIs(t, err, ants.ErrInvalidMultiPoolSize)
