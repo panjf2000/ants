@@ -8,7 +8,6 @@
 <a title="Tag" target="_blank" href="https://github.com/panjf2000/ants/tags"><img src="https://img.shields.io/github/v/tag/panjf2000/ants?color=%23ff8936&logo=fitbit&style=flat-square" /></a>
 <br/>
 <a title="Minimum Go Version" target="_blank" href="https://github.com/panjf2000/gnet"><img src="https://img.shields.io/badge/go-%3E%3D1.19-30dff3?style=flat-square&logo=go" /></a>
-<a title="Go Report Card" target="_blank" href="https://goreportcard.com/report/github.com/panjf2000/ants"><img src="https://goreportcard.com/badge/github.com/panjf2000/ants?style=flat-square" /></a>
 <a title="Doc for ants" target="_blank" href="https://pkg.go.dev/github.com/panjf2000/ants/v2?tab=doc"><img src="https://img.shields.io/badge/go.dev-doc-007d9c?style=flat-square&logo=read-the-docs" /></a>
 <a title="Mentioned in Awesome Go" target="_blank" href="https://github.com/avelino/awesome-go#goroutines"><img src="https://awesome.re/mentioned-badge-flat.svg" /></a>
 </p>
@@ -210,24 +209,24 @@ Trusted by the following corporations/organizations.
       </td>
       <td align="center" valign="middle">
         <a href="https://www.huaweicloud.com/intl/en-us/" target="_blank">
-          <img src="https://res-static.hc-cdn.cn/cloudbu-site/china/zh-cn/%E7%BB%84%E4%BB%B6%E9%AA%8C%E8%AF%81/pep-common-header/logo-en.png" width="250" />
+          <img src="https://res.strikefreedom.top/static_res/logos/huawei-cloud-logo.png" width="250" />
         </a>
       </td>
       <td align="center" valign="middle">
         <a href="https://www.matrixorigin.io/" target="_blank">
-          <img src="https://www.matrixorigin.io/_next/static/media/logo-light-en.b8e29d17.svg" width="250" />
+          <img src="https://res.strikefreedom.top/static_res/logos/matrix-origin-logo.svg" width="250" />
         </a>
       </td>
     </tr>
     <tr>
       <td align="center" valign="middle">
         <a href="https://adguard-dns.io/" target="_blank">
-          <img src="https://cdn.adtidy.org/website/images/AdGuardDNS_black.svg" width="250" />
+          <img src="https://res.strikefreedom.top/static_res/logos/adguard-dns-black.svg" width="250" />
         </a>
       </td>
       <td align="center" valign="middle">
         <a href="https://bk.tencent.com/" target="_blank">
-          <img src="https://static.apiseven.com/2022/11/14/6371adab14119.png" width="250" />
+          <img src="https://res.strikefreedom.top/static_res/logos/tencent-bk-logo.png" width="250" />
         </a>
       </td>
       <td align="center" valign="middle">
