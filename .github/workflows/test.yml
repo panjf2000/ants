@@ -45,14 +45,11 @@ jobs:
           go-version: '^1.20'
           cache: false
 
-      - name: Setup golangci-lint
+      - name: Setup and run golangci-lint
         uses: golangci/golangci-lint-action@v9
         with:
           version: v2.13.2
-          install-only: true
-
-      - name: Run golangci-lint
-        run: golangci-lint run --timeout=5m -v -E=gocritic -E=misspell -E=revive -E=godot
+          args: --timeout=5m -v -E=gocritic -E=misspell -E=revive -E=godot
 
       - name: Check Go formatting
         run: golangci-lint fmt --diff -E=gofumpt
