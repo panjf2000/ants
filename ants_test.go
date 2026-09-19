@@ -282,14 +282,15 @@ func TestNoPool(t *testing.T) {
 }
 
 func TestAntsPool(t *testing.T) {
+	ants.Reboot() // A previous test or iteration may have released the default pool.
 	defer ants.Release()
 	var wg sync.WaitGroup
 	for i := 0; i < n; i++ {
 		wg.Add(1)
-		_ = ants.Submit(func() {
+		require.NoError(t, ants.Submit(func() {
 			demoFunc()
 			wg.Done()
-		})
+		}))
 	}
 	wg.Wait()
 
