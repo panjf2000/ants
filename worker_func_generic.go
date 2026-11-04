@@ -49,11 +49,14 @@ type goWorkerWithFuncGeneric[T any] struct {
 // that performs the function calls.
 func (w *goWorkerWithFuncGeneric[T]) run() {
 	w.pool.addRunning(1)
+	// run() is called with the pool lock held, take the allDone channel of the
+	// pool generation this worker belongs to here, as Reboot() replaces them.
+	allDone, once := w.pool.allDone, w.pool.once
 	go func() {
 		defer func() {
 			if w.pool.addRunning(-1) == 0 && w.pool.IsClosed() {
-				w.pool.once.Do(func() {
-					close(w.pool.allDone)
+				once.Do(func() {
+					close(allDone)
 				})
 			}
 			w.pool.workerCache.Put(w)
