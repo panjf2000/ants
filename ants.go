@@ -397,20 +397,21 @@ func (p *poolCommon) Release() {
 
 	p.lock.Lock()
 	p.workers.reset()
-	p.lock.Unlock()
-
-	// There might be some callers waiting in retrieveWorker(), so we need to wake them up to prevent
-	// those callers blocking infinitely.
-	p.cond.Broadcast()
-
 	// If there are no running workers at the time of Release, close allDone immediately
 	// so that Reboot() or ReleaseContext() won't block on <-p.allDone indefinitely.
 	// If workers are still running, the last one to exit will close allDone in its defer.
+	// No new worker can be started from here on, as retrieveWorker() checks the state
+	// under the lock.
 	if p.Running() == 0 {
 		p.once.Do(func() {
 			close(p.allDone)
 		})
 	}
+	p.lock.Unlock()
+
+	// There might be some callers waiting in retrieveWorker(), so we need to wake them up to prevent
+	// those callers blocking infinitely.
+	p.cond.Broadcast()
 }
 
 // ReleaseTimeout is like Release but with a timeout, it waits all workers to exit before timing out.
@@ -488,16 +489,23 @@ func (p *poolCommon) Reboot() {
 		runtime.Gosched()
 	}
 
-	if !atomic.CompareAndSwapInt32(&p.state, CLOSED, OPENED) {
+	// Replace allDone before reopening the pool and under the lock, so that every
+	// worker started after the reboot sees the new channel, while a worker of the
+	// previous generation that is still on its way out keeps using the old one.
+	p.lock.Lock()
+	if atomic.LoadInt32(&p.state) != CLOSED {
+		p.lock.Unlock()
 		return
 	}
+	p.allDone = make(chan struct{})
+	p.once = &sync.Once{}
+	atomic.StoreInt32(&p.state, OPENED)
+	p.lock.Unlock()
 
 	atomic.StoreInt32(&p.purgeDone, 0)
 	p.goPurge()
 	atomic.StoreInt32(&p.ticktockDone, 0)
 	p.goTicktock()
-	p.allDone = make(chan struct{})
-	p.once = &sync.Once{}
 }
 
 func (p *poolCommon) addRunning(delta int) int {
@@ -513,6 +521,13 @@ func (p *poolCommon) retrieveWorker() (w worker, err error) {
 	p.lock.Lock()
 
 retry:
+	// Release() may have run since the caller checked IsClosed(), handing out a
+	// worker now would run the task after the pool has been released.
+	if p.IsClosed() {
+		p.lock.Unlock()
+		return nil, ErrPoolClosed
+	}
+
 	// First try to fetch the worker from the queue.
 	if w = p.workers.detach(); w != nil {
 		p.lock.Unlock()
@@ -538,11 +553,6 @@ retry:
 	p.addWaiting(1)
 	p.cond.Wait() // block and wait for an available worker
 	p.addWaiting(-1)
-
-	if p.IsClosed() {
-		p.lock.Unlock()
-		return nil, ErrPoolClosed
-	}
 
 	goto retry
 }
